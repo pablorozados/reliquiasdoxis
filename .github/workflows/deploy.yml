@@ -3,7 +3,7 @@ name: Deploy GitHub Pages
 on:
   push:
     branches:
-      - main  # O deploy será acionado ao fazer push no branch 'main'
+      - main  # O deploy será acionado com push no branch 'main'
 
 jobs:
   deploy:
