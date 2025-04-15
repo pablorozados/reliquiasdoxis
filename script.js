@@ -1,36 +1,49 @@
-let map;
+// Dados de locais e resenhas
+const locais = [
+  {
+    nome: "Xis do João",
+    lat: -30.0346,
+    lng: -51.2177,
+    resenha: "O xis é incrível, muito recheado! Atendimento excelente.",
+  },
+  {
+    nome: "Xis da Maria",
+    lat: -30.0350,
+    lng: -51.2250,
+    resenha: "Ótimo custo-benefício, mas o pão veio um pouco queimado.",
+  },
+  {
+    nome: "Xis do Zé",
+    lat: -30.0330,
+    lng: -51.2100,
+    resenha: "Experiência mediana, mas o molho especial salva o lanche.",
+  },
+];
 
 function initMap() {
-  // Inicializa o mapa centrado em Porto Alegre, RS
-  map = new google.maps.Map(document.getElementById("map"), {
-    center: { lat: -30.0346, lng: -51.2177 },
-    zoom: 12,
+  // Centraliza o mapa
+  const centro = { lat: -30.0346, lng: -51.2177 }; // Exemplo: Porto Alegre
+  const map = new google.maps.Map(document.getElementById("map"), {
+    zoom: 14,
+    center: centro,
   });
 
-  // Adiciona um evento de clique para criar marcadores
-  map.addListener("click", (event) => {
-    const latLng = event.latLng;
-    const title = prompt("Digite o nome do local:");
-    const description = prompt("Escreva sua resenha:");
-    if (title && description) {
-      addMarker(latLng, title, description);
-    }
-  });
-}
+  // Adiciona marcadores para cada local
+  locais.forEach((local) => {
+    const marker = new google.maps.Marker({
+      position: { lat: local.lat, lng: local.lng },
+      map: map,
+      title: local.nome,
+    });
 
-// Adiciona um marcador no mapa
-function addMarker(location, title, description) {
-  const marker = new google.maps.Marker({
-    position: location,
-    map: map,
-    title: title,
-  });
+    // InfoWindow para exibir a resenha
+    const infoWindow = new google.maps.InfoWindow({
+      content: `<h2>${local.nome}</h2><p>${local.resenha}</p>`,
+    });
 
-  const infoWindow = new google.maps.InfoWindow({
-    content: `<h3>${title}</h3><p>${description}</p>`,
-  });
-
-  marker.addListener("click", () => {
-    infoWindow.open(map, marker);
+    // Exibir InfoWindow ao clicar no marcador
+    marker.addListener("click", () => {
+      infoWindow.open(map, marker);
+    });
   });
 }
