@@ -1,8 +1,7 @@
-// Importa o Firebase
+// Importa Firebase e Cloudinary
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-storage.js";
+import { getAuth, signInWithPopup, GithubAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
 
 // Configuração do Firebase
 const firebaseConfig = {
@@ -14,11 +13,14 @@ const firebaseConfig = {
   appId: "SEU_APP_ID"
 };
 
-// Inicializa o Firebase
+// Inicializa Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const storage = getStorage(app);
+
+// Configuração do Cloudinary
+const cloudName = "SEU_CLOUD_NAME";
+const uploadPreset = "preset_padrao";
 
 // Inicializa o mapa
 let map;
@@ -29,17 +31,85 @@ function initMap() {
     zoom: 14,
     center: centro,
   });
-
-  // Carregar locais do Firestore
-  getDocs(collection(db, "locais")).then((querySnapshot) => {
-    querySnapshot.forEach((doc) => {
-      const local = doc.data();
-      adicionarMarcador(local);
-    });
-  });
 }
 
-// Adiciona um marcador ao mapa
+// Função de Login com GitHub
+document.getElementById("login-github").addEventListener("click", () => {
+  const provider = new GithubAuthProvider();
+
+  signInWithPopup(auth, provider)
+    .then((result) => {
+      console.log("Usuário autenticado:", result.user);
+      document.getElementById("login-section").style.display = "none";
+      document.getElementById("add-location-section").style.display = "block";
+    })
+    .catch((error) => {
+      console.error("Erro no login:", error);
+      document.getElementById("login-error").textContent = "Erro no login. Tente novamente.";
+    });
+});
+
+// Logout
+document.getElementById("logout").addEventListener("click", () => {
+  signOut(auth).then(() => {
+    document.getElementById("login-section").style.display = "block";
+    document.getElementById("add-location-section").style.display = "none";
+  });
+});
+
+// Função para fazer upload de imagens no Cloudinary
+async function uploadImage(file) {
+  const url = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+  const formData = new FormData();
+
+  formData.append("file", file);
+  formData.append("upload_preset", uploadPreset);
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      console.log("Imagem enviada:", data);
+      return data.secure_url; // URL da imagem hospedada
+    } else {
+      console.error("Erro ao enviar imagem:", response.statusText);
+    }
+  } catch (error) {
+    console.error("Erro de rede:", error);
+  }
+}
+
+// Adicionar evento ao formulário
+document.getElementById("add-location-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+
+  const nome = document.getElementById("nome").value;
+  const lat = parseFloat(document.getElementById("latitude").value);
+  const lng = parseFloat(document.getElementById("longitude").value);
+  const resenha = document.getElementById("resenha").value;
+  const imagemInput = document.getElementById("imagem");
+  let imagemUrl = "";
+
+  if (imagemInput.files.length > 0) {
+    const imagemFile = imagemInput.files[0];
+    imagemUrl = await uploadImage(imagemFile); // Faz o upload da imagem
+  }
+
+  // Salvar no Firestore
+  await addDoc(collection(db, "locais"), { nome, lat, lng, resenha, imagem: imagemUrl });
+
+  // Adicionar marcador no mapa
+  adicionarMarcador({ nome, lat, lng, resenha, imagem: imagemUrl });
+
+  // Limpar formulário
+  event.target.reset();
+});
+
+// Adicionar marcador no mapa
 function adicionarMarcador(local) {
   const marker = new google.maps.Marker({
     position: { lat: local.lat, lng: local.lng },
@@ -61,56 +131,3 @@ function adicionarMarcador(local) {
     infoWindow.open(map, marker);
   });
 }
-
-// Login
-document.getElementById("login-form").addEventListener("submit", (event) => {
-  event.preventDefault();
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  signInWithEmailAndPassword(auth, email, password)
-    .then(() => {
-      document.getElementById("login-section").style.display = "none";
-      document.getElementById("add-location-section").style.display = "block";
-    })
-    .catch((error) => {
-      document.getElementById("login-error").textContent = error.message;
-    });
-});
-
-// Logout
-document.getElementById("logout").addEventListener("click", () => {
-  signOut(auth).then(() => {
-    document.getElementById("login-section").style.display = "block";
-    document.getElementById("add-location-section").style.display = "none";
-  });
-});
-
-// Adicionar Local
-document.getElementById("add-location-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-
-  const nome = document.getElementById("nome").value;
-  const lat = parseFloat(document.getElementById("latitude").value);
-  const lng = parseFloat(document.getElementById("longitude").value);
-  const resenha = document.getElementById("resenha").value;
-  const imagemInput = document.getElementById("imagem");
-  let imagemUrl = "";
-
-  // Upload da imagem para o Firebase Storage
-  if (imagemInput.files.length > 0) {
-    const imagemFile = imagemInput.files[0];
-    const imagemRef = ref(storage, `imagens/${imagemFile.name}`);
-    await uploadBytes(imagemRef, imagemFile);
-    imagemUrl = await getDownloadURL(imagemRef);
-  }
-
-  // Salvar no Firestore
-  await addDoc(collection(db, "locais"), { nome, lat, lng, resenha, imagem: imagemUrl });
-
-  // Adicionar o marcador no mapa
-  adicionarMarcador({ nome, lat, lng, resenha, imagem: imagemUrl });
-
-  // Limpar o formulário
-  event.target.reset();
-});
