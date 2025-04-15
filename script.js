@@ -1,7 +1,6 @@
-// Importa Firebase e Cloudinary
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
-import { getAuth, signInWithPopup, GithubAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
+// Configurações do Cloudinary
+const cloudName = "SEU_CLOUD_NAME"; // Substitua pelo seu Cloud Name
+const uploadPreset = "preset_padrao"; // Crie um upload preset no Cloudinary
 
 // Configuração do Firebase
 const firebaseConfig = {
@@ -14,16 +13,14 @@ const firebaseConfig = {
 };
 
 // Inicializa Firebase
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+const app = firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-// Configuração do Cloudinary
-const cloudName = "SEU_CLOUD_NAME";
-const uploadPreset = "preset_padrao";
-
-// Inicializa o mapa
+// Variável global para controle do mapa
 let map;
+
+// Inicializa o mapa do Google Maps
 function initMap() {
   const centro = { lat: -30.0346, lng: -51.2177 }; // Exemplo: Porto Alegre
   map = new google.maps.Map(document.getElementById("map"), {
@@ -32,25 +29,28 @@ function initMap() {
   });
 }
 
-// Função de Login com GitHub
-document.getElementById("login-github").addEventListener("click", () => {
-  const provider = new GithubAuthProvider();
+// Função para autenticação com e-mail e senha
+document.getElementById("login-form").addEventListener("submit", (event) => {
+  event.preventDefault();
 
-  signInWithPopup(auth, provider)
-    .then((result) => {
-      console.log("Usuário autenticado:", result.user);
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  auth.signInWithEmailAndPassword(email, password)
+    .then((userCredential) => {
+      console.log("Usuário autenticado:", userCredential.user);
       document.getElementById("login-section").style.display = "none";
       document.getElementById("add-location-section").style.display = "block";
     })
     .catch((error) => {
       console.error("Erro no login:", error);
-      document.getElementById("login-error").textContent = "Erro no login. Tente novamente.";
+      document.getElementById("login-error").textContent = "Erro no login. Verifique e-mail e senha.";
     });
 });
 
-// Função de Logout
+// Função para logout
 document.getElementById("logout").addEventListener("click", () => {
-  signOut(auth).then(() => {
+  auth.signOut().then(() => {
     document.getElementById("login-section").style.display = "block";
     document.getElementById("add-location-section").style.display = "none";
   });
@@ -82,7 +82,7 @@ async function uploadImage(file) {
   }
 }
 
-// Adicionar evento ao formulário
+// Adicionar evento ao formulário de resenhas
 document.getElementById("add-location-form").addEventListener("submit", async (event) => {
   event.preventDefault();
 
@@ -98,13 +98,21 @@ document.getElementById("add-location-form").addEventListener("submit", async (e
     imagemUrl = await uploadImage(imagemFile); // Faz o upload da imagem
   }
 
-  // Salvar no Firestore
-  await addDoc(collection(db, "locais"), { nome, lat, lng, resenha, imagem: imagemUrl });
+  // Salvar os dados no Firestore
+  db.collection("locais").add({
+    nome,
+    lat,
+    lng,
+    resenha,
+    imagem: imagemUrl,
+  }).then((docRef) => {
+    console.log("Local adicionado com ID:", docRef.id);
+    adicionarMarcador({ nome, lat, lng, resenha, imagem: imagemUrl });
+  }).catch((error) => {
+    console.error("Erro ao salvar local:", error);
+  });
 
-  // Adicionar marcador no mapa
-  adicionarMarcador({ nome, lat, lng, resenha, imagem: imagemUrl });
-
-  // Limpar formulário
+  // Limpar o formulário
   event.target.reset();
 });
 
