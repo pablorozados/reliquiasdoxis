@@ -3,7 +3,7 @@ name: Deploy GitHub Pages
 on:
   push:
     branches:
-      - main  # Dispara o workflow quando há push no branch "main"
+      - main  # O deploy será acionado quando houver push no branch 'main'
 
 jobs:
   deploy:
@@ -14,12 +14,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Substituir a chave de API no arquivo index.html (se necessário)
+      # 2. Substituir a chave de API no index.html
       - name: Replace API key in index.html
         run: |
           sed -i "s/YOUR_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" index.html
 
-      # 3. Fazer o deploy no branch gh-pages
+      # 3. Fazer o deploy no GitHub Pages
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
