@@ -10,7 +10,7 @@ const firebaseConfig = {
   projectId: "SEU_PROJECT_ID",
   storageBucket: "SEU_STORAGE_BUCKET",
   messagingSenderId: "SEU_MESSAGING_SENDER_ID",
-  appId: "SEU_APP_ID"
+  appId: "SEU_APP_ID",
 };
 
 // Inicializa Firebase
@@ -24,7 +24,6 @@ const uploadPreset = "preset_padrao";
 
 // Inicializa o mapa
 let map;
-
 function initMap() {
   const centro = { lat: -30.0346, lng: -51.2177 }; // Exemplo: Porto Alegre
   map = new google.maps.Map(document.getElementById("map"), {
@@ -49,7 +48,7 @@ document.getElementById("login-github").addEventListener("click", () => {
     });
 });
 
-// Logout
+// Função de Logout
 document.getElementById("logout").addEventListener("click", () => {
   signOut(auth).then(() => {
     document.getElementById("login-section").style.display = "block";
