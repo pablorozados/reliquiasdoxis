@@ -8,22 +8,15 @@
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-storage.js"></script>
   <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
 </head>
 <body>
   <h1>Mapa de Resenhas de Xis</h1>
-  
-  <!-- Login -->
+
+  <!-- Login Section -->
   <div id="login-section">
     <h2>Login</h2>
-    <form id="login-form">
-      <label for="email">E-mail:</label>
-      <input type="email" id="email" required>
-      <label for="password">Senha:</label>
-      <input type="password" id="password" required>
-      <button type="submit">Login</button>
-    </form>
+    <button id="login-github">Entrar com GitHub</button>
     <p id="login-error" style="color: red;"></p>
   </div>
 
