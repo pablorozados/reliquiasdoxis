@@ -1,5 +1,5 @@
 // Configurações do Cloudinary
-const cloudName = "SEU_CLOUD_NAME"; // Substitua pelo seu Cloud Name
+const cloudName = "dgdjaz541"; // Substitua pelo seu Cloud Name
 const uploadPreset = "preset_padrao"; // Crie um upload preset no Cloudinary
 
 // Configuração do Firebase
