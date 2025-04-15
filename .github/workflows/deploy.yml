@@ -3,7 +3,7 @@ name: Deploy GitHub Pages
 on:
   push:
     branches:
-      - main  # O deploy será acionado quando houver push no branch 'main'
+      - main  # O deploy será acionado ao fazer push no branch 'main'
 
 jobs:
   deploy:
@@ -14,12 +14,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Substituir a chave de API no index.html
+      # 2. Verificar se o GITHUB_TOKEN está sendo gerado
+      - name: Verificar GITHUB_TOKEN
+        run: echo "Token gerado com sucesso: ${{ secrets.GITHUB_TOKEN }}"
+
+      # 3. Substituir a chave de API no index.html (opcional)
       - name: Replace API key in index.html
         run: |
           sed -i "s/YOUR_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" index.html
 
-      # 3. Fazer o deploy no GitHub Pages
+      # 4. Fazer o deploy no branch gh-pages
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
