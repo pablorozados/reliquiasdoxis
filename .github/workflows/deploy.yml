@@ -16,10 +16,11 @@ jobs:
 
       # 2. Verificar se o GITHUB_TOKEN está sendo gerado
       - name: Verificar GITHUB_TOKEN
-        run: echo "Token gerado com sucesso: ${{ secrets.GITHUB_TOKEN }}"
+        run: echo "Token gerado com sucesso"
 
       # 3. Substituir a chave de API no index.html (opcional)
       - name: Replace API key in index.html
+        if: ${{ secrets.GOOGLE_MAPS_API_KEY != '' }}
         run: |
           if [ -f index.html ]; then
             sed -i "s/YOUR_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" index.html
