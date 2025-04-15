@@ -14,16 +14,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Verificar se o GITHUB_TOKEN está sendo gerado
+      # 2. Verificar se o arquivo index.html existe
+      - name: Verificar existência do arquivo index.html
+        run: |
+          if [ ! -f index.html ]; then
+            echo "Erro: O arquivo index.html não foi encontrado!"
+            exit 1
+          fi
+
+      # 3. Verificar se o GITHUB_TOKEN está sendo gerado
       - name: Verificar GITHUB_TOKEN
         run: echo "Token gerado com sucesso: ${{ secrets.GITHUB_TOKEN }}"
 
-      # 3. Substituir a chave de API no index.html (opcional)
+      # 4. Substituir a chave de API no index.html (opcional)
       - name: Replace API key in index.html
         run: |
           sed -i "s/YOUR_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" index.html
 
-      # 4. Fazer o deploy no branch gh-pages
+      # 5. Fazer o deploy no branch gh-pages
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
