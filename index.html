@@ -3,57 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mapa de Resenhas de Xis</title>
+  <title>Xis de POA - Resenhas</title>
   <link rel="stylesheet" href="style.css">
+  <!-- Firebase (só Firestore) -->
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js"></script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap" async defer></script>
+  <!-- Google Maps -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=SUA_CHAVE&callback=initMap" async defer></script>
 </head>
 <body>
-  <h1>Mapa de Resenhas de Xis</h1>
+  <header>
+    <h1>Xis de Porto Alegre</h1>
+    <p>Minhas resenhas gastronômicas</p>
+    <a href="admin.html" id="admin-link">Área do Dono</a> <!-- Link escondido ou com acesso restrito -->
+  </header>
 
-  <!-- Login Section -->
-  <div id="login-section">
-    <h2>Login</h2>
-    <form id="login-form">
-      <label for="email">E-mail:</label>
-      <input type="email" id="email" required>
-      
-      <label for="password">Senha:</label>
-      <input type="password" id="password" required>
-      
-      <button type="submit">Entrar</button>
-    </form>
-    <p id="login-error" style="color: red;"></p>
-  </div>
-
-  <!-- Formulário para Adicionar Locais -->
-  <div id="add-location-section" style="display: none;">
-    <form id="add-location-form">
-      <label for="nome">Nome do Local:</label>
-      <input type="text" id="nome" required>
-      
-      <label for="latitude">Latitude:</label>
-      <input type="number" id="latitude" step="any" required>
-      
-      <label for="longitude">Longitude:</label>
-      <input type="number" id="longitude" step="any" required>
-      
-      <label for="resenha">Resenha:</label>
-      <textarea id="resenha" required></textarea>
-      
-      <label for="imagem">Imagem do Local:</label>
-      <input type="file" id="imagem" accept="image/*">
-      
-      <button type="submit">Adicionar Local</button>
-    </form>
-    <button id="logout">Logout</button>
-  </div>
-
-  <!-- Div para o Mapa -->
   <div id="map"></div>
-  
-  <script src="script.js"></script>
+  <div id="reviews-container"></div> <!-- Lista de resenhas -->
+
+  <script src="script.js"></script> <!-- Código compartilhado -->
 </body>
 </html>
