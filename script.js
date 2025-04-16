@@ -1,6 +1,6 @@
 // Configurações do Cloudinary
 const cloudName = "dgdjaz541"; // Substitua pelo seu Cloud Name
-const uploadPreset = "preset_padrao"; // Crie um upload preset no Cloudinary
+const uploadPreset = "preset_padrao"; // Seu upload preset
 
 // Configuração do Firebase
 const firebaseConfig = {
@@ -9,7 +9,7 @@ const firebaseConfig = {
   projectId: "SEU_PROJECT_ID",
   storageBucket: "SEU_STORAGE_BUCKET",
   messagingSenderId: "SEU_MESSAGING_SENDER_ID",
-  appId: "SEU_APP_ID",
+  appId: "SEU_APP_ID"
 };
 
 // Inicializa Firebase
@@ -17,7 +17,7 @@ const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Variável global para controle do mapa
+// Variáveis globais
 let map;
 
 // Verifica autenticação ao carregar a página
@@ -26,7 +26,7 @@ auth.onAuthStateChanged((user) => {
     console.log("Usuário logado:", user.email);
     document.getElementById("login-section").style.display = "none";
     document.getElementById("add-location-section").style.display = "block";
-    carregarLocais(); // Carrega locais existentes
+    carregarLocais();
   } else {
     console.log("Nenhum usuário logado.");
     document.getElementById("login-section").style.display = "block";
@@ -34,7 +34,7 @@ auth.onAuthStateChanged((user) => {
   }
 });
 
-// Inicializa o mapa do Google Maps
+// Inicializa o mapa
 function initMap() {
   const centro = { lat: -30.0346, lng: -51.2177 }; // Porto Alegre
   map = new google.maps.Map(document.getElementById("map"), {
@@ -43,41 +43,52 @@ function initMap() {
   });
 }
 
-// Função de login
-document.getElementById("login-form").addEventListener("submit", (event) => {
-  event.preventDefault();
+// Buscador de endereços (Google Places API)
+function initAutocomplete() {
+  const input = document.getElementById("endereco");
+  const autocomplete = new google.maps.places.Autocomplete(input);
+  
+  autocomplete.addListener("place_changed", () => {
+    const place = autocomplete.getPlace();
+    if (!place.geometry) return;
+    
+    document.getElementById("nome").value = place.name;
+    document.getElementById("latitude").value = place.geometry.location.lat();
+    document.getElementById("longitude").value = place.geometry.location.lng();
+  });
+}
+
+// Login
+document.getElementById("login-form").addEventListener("submit", (e) => {
+  e.preventDefault();
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
   auth.signInWithEmailAndPassword(email, password)
-    .then((userCredential) => {
-      console.log("Usuário autenticado:", userCredential.user);
-    })
+    .then(() => console.log("Login feito!"))
     .catch((error) => {
       console.error("Erro no login:", error);
-      document.getElementById("login-error").textContent = "Erro no login. Verifique e-mail e senha.";
+      document.getElementById("login-error").textContent = "E-mail ou senha inválidos.";
     });
 });
 
-// Função de logout
+// Logout
 document.getElementById("logout").addEventListener("click", () => {
-  auth.signOut().then(() => {
-    console.log("Usuário deslogado");
-  });
+  auth.signOut().then(() => console.log("Usuário deslogado"));
 });
 
 // Carrega locais do Firestore
 function carregarLocais() {
-  db.collection("locais").get().then((querySnapshot) => {
-    querySnapshot.forEach((doc) => {
-      adicionarMarcador(doc.data());
+  db.collection("locais").orderBy("timestamp", "desc").get()
+    .then((querySnapshot) => {
+      querySnapshot.forEach((doc) => adicionarMarcador(doc.data()));
+    })
+    .catch((error) => {
+      console.error("Erro ao carregar locais:", error);
     });
-  }).catch((error) => {
-    console.error("Erro ao carregar locais:", error);
-  });
 }
 
-// Upload de imagem para Cloudinary (com tratamento de erros)
+// Upload de imagem para Cloudinary
 async function uploadImage(file) {
   const url = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
   const formData = new FormData();
@@ -96,47 +107,39 @@ async function uploadImage(file) {
   }
 }
 
-// Adiciona novo local (com validação)
-document.getElementById("add-location-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-
+// Envio do formulário
+document.getElementById("add-location-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  
   const nome = document.getElementById("nome").value;
   const lat = parseFloat(document.getElementById("latitude").value);
   const lng = parseFloat(document.getElementById("longitude").value);
   const resenha = document.getElementById("resenha").value;
-  const imagemInput = document.getElementById("imagem");
+  const imagemFile = document.getElementById("imagem").files[0];
 
-  // Valida coordenadas
-  if (isNaN(lat) || isNaN(lng)) {
-    alert("Coordenadas inválidas!");
+  if (!nome || !resenha || isNaN(lat) || isNaN(lng)) {
+    alert("Preencha todos os campos obrigatórios!");
     return;
   }
 
   // Upload da imagem (se existir)
   let imagemUrl = "";
-  if (imagemInput.files.length > 0) {
-    imagemUrl = await uploadImage(imagemInput.files[0]);
-    if (!imagemUrl) return; // Interrompe se falhar
+  if (imagemFile) {
+    imagemUrl = await uploadImage(imagemFile);
+    if (!imagemUrl) return;
   }
 
   // Salva no Firestore
-  db.collection("locais").add({
-    nome,
-    lat,
-    lng,
-    resenha,
-    imagem: imagemUrl,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp() // Ordenação
-  }).then(() => {
-    alert("Local salvo com sucesso!");
-    event.target.reset();
-  }).catch((error) => {
-    console.error("Erro ao salvar:", error);
-    alert("Erro ao salvar local.");
+  await db.collection("locais").add({
+    nome, lat, lng, resenha, imagem: imagemUrl,
+    timestamp: firebase.firestore.FieldValue.serverTimestamp()
   });
+  
+  alert("Resenha publicada com sucesso!");
+  e.target.reset();
 });
 
-// Adiciona marcador no mapa (com InfoWindow)
+// Adiciona marcador no mapa
 function adicionarMarcador(local) {
   const marker = new google.maps.Marker({
     position: { lat: local.lat, lng: local.lng },
@@ -152,10 +155,9 @@ function adicionarMarcador(local) {
     `,
   });
 
-  marker.addListener("click", () => {
-    infoWindow.open(map, marker);
-  });
+  marker.addListener("click", () => infoWindow.open(map, marker));
 }
 
-// Inicializa o mapa quando a API do Google é carregada
+// Inicializa tudo
 window.initMap = initMap;
+window.initAutocomplete = initAutocomplete;
