@@ -1,4 +1,4 @@
-// Configuração do Firebase (repetida aqui para evitar dependências)
+// Configuração do Firebase
 const firebaseConfig = {
   apiKey: "SUA_API_KEY",
   authDomain: "SEU_AUTH_DOMAIN",
@@ -13,42 +13,77 @@ const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Verificação de autenticação (redireciona se não estiver logado)
+// Elementos da UI
+const loginSection = document.getElementById("login-section");
+const adminPanel = document.getElementById("admin-panel");
+const loginForm = document.getElementById("login-form");
+const loginError = document.getElementById("login-error");
+const logoutBtn = document.getElementById("logout");
+
+// Estado de autenticação
+let isRedirecting = false;
+
+// Verificação de autenticação (com tratamento de redirecionamento)
 auth.onAuthStateChanged((user) => {
-  if (!user) {
-    window.location.href = "index.html"; // Força redirecionamento
-  } else {
-    document.getElementById("login-section").style.display = "none";
-    document.getElementById("admin-panel").style.display = "block";
+  if (!user && !isRedirecting) {
+    isRedirecting = true;
+    console.log("Usuário não autenticado. Redirecionando em 2 segundos...");
+    setTimeout(() => {
+      window.location.href = "index.html";
+    }, 2000); // Delay para evitar flicker
+  } else if (user) {
+    loginSection.style.display = "none";
+    adminPanel.style.display = "block";
   }
 });
 
-// Login
-document.getElementById("login-form").addEventListener("submit", (e) => {
+// Login com feedback visual
+loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
+  
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
+  const loginBtn = loginForm.querySelector("button[type='submit']");
 
-  auth.signInWithEmailAndPassword(email, password)
-    .catch((error) => {
-      document.getElementById("login-error").textContent = "E-mail ou senha inválidos.";
-    });
+  // Feedback visual
+  loginBtn.disabled = true;
+  loginBtn.textContent = "Entrando...";
+  loginError.textContent = "";
+
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+    loginBtn.textContent = "✓ Login bem-sucedido!";
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Feedback visual
+  } catch (error) {
+    loginError.textContent = "E-mail ou senha inválidos.";
+    loginBtn.textContent = "Entrar";
+    loginBtn.disabled = false;
+    console.error("Erro no login:", error);
+  }
 });
 
 // Logout
-document.getElementById("logout").addEventListener("click", () => {
-  auth.signOut().then(() => window.location.reload());
+logoutBtn.addEventListener("click", () => {
+  auth.signOut()
+    .then(() => {
+      console.log("Logout realizado");
+      window.location.href = "index.html";
+    });
 });
 
 // Buscador de endereços (Google Places)
 function initAutocomplete() {
   const autocomplete = new google.maps.places.Autocomplete(
-    document.getElementById("endereco")
+    document.getElementById("endereco"),
+    { types: ["establishment"] }
   );
 
   autocomplete.addListener("place_changed", () => {
     const place = autocomplete.getPlace();
-    if (!place.geometry) return;
+    if (!place.geometry) {
+      console.log("Local não encontrado");
+      return;
+    }
 
     document.getElementById("nome").value = place.name;
     document.getElementById("latitude").value = place.geometry.location.lat();
@@ -56,54 +91,73 @@ function initAutocomplete() {
   });
 }
 
-// Envio do formulário
+// Envio do formulário (com tratamento aprimorado)
 document.getElementById("add-location-form").addEventListener("submit", async (e) => {
   e.preventDefault();
+  
+  const form = e.target;
+  const submitBtn = form.querySelector("button[type='submit']");
+  const originalBtnText = submitBtn.textContent;
 
-  const nome = document.getElementById("nome").value;
-  const lat = parseFloat(document.getElementById("latitude").value);
-  const lng = parseFloat(document.getElementById("longitude").value);
-  const resenha = document.getElementById("resenha").value;
-  const imagemFile = document.getElementById("imagem").files[0];
+  try {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Publicando...";
 
-  if (!nome || !resenha || isNaN(lat) || isNaN(lng)) {
-    alert("Preencha todos os campos obrigatórios!");
-    return;
-  }
+    // Validação
+    const nome = form.nome.value;
+    const lat = parseFloat(form.latitude.value);
+    const lng = parseFloat(form.longitude.value);
+    const resenha = form.resenha.value;
 
-  // Upload da imagem (se existir)
-  let imagemUrl = "";
-  if (imagemFile) {
-    const cloudName = "dgdjaz541";
-    const uploadPreset = "preset_padrao";
-    const formData = new FormData();
-    formData.append("file", imagemFile);
-    formData.append("upload_preset", uploadPreset);
-
-    try {
-      const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-        method: "POST",
-        body: formData
-      });
-      const data = await response.json();
-      imagemUrl = data.secure_url;
-    } catch (error) {
-      console.error("Erro no upload:", error);
-      alert("Falha ao enviar imagem. Tente novamente!");
-      return;
+    if (!nome || !resenha || isNaN(lat) || isNaN(lng)) {
+      throw new Error("Preencha todos os campos obrigatórios!");
     }
-  }
 
-  // Salva no Firestore
-  await db.collection("locais").add({
-    nome,
-    lat,
-    lng,
-    resenha,
-    imagem: imagemUrl,
-    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    // Upload de imagem (se existir)
+    let imagemUrl = "";
+    if (form.imagem.files[0]) {
+      const uploadData = await handleImageUpload(form.imagem.files[0]);
+      imagemUrl = uploadData.secure_url;
+    }
+
+    // Salva no Firestore
+    await db.collection("locais").add({
+      nome,
+      lat,
+      lng,
+      resenha,
+      imagem: imagemUrl,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    submitBtn.textContent = "✓ Publicado!";
+    form.reset();
+    await new Promise(resolve => setTimeout(resolve, 1500));
+  } catch (error) {
+    console.error("Erro:", error);
+    alert(error.message);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalBtnText;
+  }
+});
+
+// Upload de imagem para Cloudinary
+async function handleImageUpload(file) {
+  const cloudName = "dgdjaz541";
+  const uploadPreset = "preset_padrao";
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", uploadPreset);
+
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+    method: "POST",
+    body: formData
   });
 
-  alert("Resenha publicada com sucesso!");
-  e.target.reset();
-});
+  if (!response.ok) throw new Error("Falha no upload da imagem");
+  return await response.json();
+}
+
+// Inicializa o Places API
+window.initAutocomplete = initAutocomplete;
