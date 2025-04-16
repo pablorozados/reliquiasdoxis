@@ -8,24 +8,38 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      # 1. Baixa o código do repositório
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Replace API keys
+      # 2. Substitui TODAS as chaves sensíveis (Maps + Firebase)
+      - name: Replace sensitive keys
         run: |
-          # Substitui a chave do Google Maps em todos os arquivos HTML
+          # Google Maps (HTML files)
           sed -i "s/GOOGLE_MAPS_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" index.html
           sed -i "s/GOOGLE_MAPS_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" admin.html
           
-          # Opcional: Valida se a substituição foi feita
+          # Firebase (JavaScript files)
+          sed -i "s/SUA_API_KEY/${{ secrets.FIREBASE_API_KEY }}/g" script.js
+          sed -i "s/SEU_PROJECT_ID/${{ secrets.FIREBASE_PROJECT_ID }}/g" script.js
+          sed -i "s/SEU_PROJECT_ID/${{ secrets.FIREBASE_PROJECT_ID }}/g" admin.js
+          
+          # Validações extras
           if ! grep -q "${{ secrets.GOOGLE_MAPS_API_KEY }}" index.html; then
-            echo "Erro: Chave do Google Maps não substituída no index.html!"
+            echo "❌ Google Maps Key not replaced in index.html!"
+            exit 1
+          fi
+          
+          if ! grep -q "${{ secrets.FIREBASE_API_KEY }}" script.js; then
+            echo "❌ Firebase API Key not replaced in script.js!"
             exit 1
           fi
 
+      # 3. Faz o deploy
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./
           force_orphan: true
+          keep_files: false  # Garante que o branch gh-pages fique limpo
