@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Xis de POA - Resenhas</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Firebase (só Firestore) -->
-  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js"></script>
+  <!-- Firebase (apenas Firestore) -->
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
   <!-- Google Maps -->
   <script src="https://maps.googleapis.com/maps/api/js?key=SUA_CHAVE&callback=initMap" async defer></script>
 </head>
@@ -15,12 +15,12 @@
   <header>
     <h1>Xis de Porto Alegre</h1>
     <p>Minhas resenhas gastronômicas</p>
-    <a href="admin.html" id="admin-link">Área do Dono</a> <!-- Link escondido ou com acesso restrito -->
+    <a href="admin.html" id="admin-link">🔒 Área do Dono</a>
   </header>
 
   <div id="map"></div>
-  <div id="reviews-container"></div> <!-- Lista de resenhas -->
+  <div id="reviews-container"></div>
 
-  <script src="script.js"></script> <!-- Código compartilhado -->
+  <script src="script.js"></script>
 </body>
 </html>
