@@ -10,7 +10,16 @@
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
   <!-- Google Maps + Places (API key substituída pelo GitHub Actions) -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places&callback=initAutocomplete" async defer></script>
+  <script>
+  function loadMapsAPI() {
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&callback=initMap`;
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+  }
+  window.addEventListener('DOMContentLoaded', loadMapsAPI);
+</script>
 </head>
 <body>
   <div id="login-section">
