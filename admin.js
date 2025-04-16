@@ -13,9 +13,6 @@ const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Variável para controlar o redirecionamento
-let shouldCheckAuth = false;
-
 // Elementos da UI
 const loginSection = document.getElementById("login-section");
 const adminPanel = document.getElementById("admin-panel");
@@ -25,35 +22,15 @@ const logoutBtn = document.getElementById("logout");
 
 // Verificação de autenticação MODIFICADA
 auth.onAuthStateChanged((user) => {
-  if (!shouldCheckAuth) return; // Não faz nada até a página estar pronta
-  
   if (user) {
-    // Usuário logado - mostra painel admin
+    console.log("Usuário autenticado:", user.email);
     loginSection.style.display = "none";
     adminPanel.style.display = "block";
   } else {
-    // Usuário não logado - mostra formulário de login
+    console.log("Nenhum usuário autenticado");
     loginSection.style.display = "block";
     adminPanel.style.display = "none";
   }
-});
-
-// Quando a página estiver totalmente carregada
-window.addEventListener('DOMContentLoaded', () => {
-  // Habilita a verificação de autenticação
-  shouldCheckAuth = true;
-  
-  // Força uma verificação do estado atual
-  auth.currentUser?.reload().then(() => {
-    // Atualiza a UI baseada no estado de autenticação
-    if (auth.currentUser) {
-      loginSection.style.display = "none";
-      adminPanel.style.display = "block";
-    } else {
-      loginSection.style.display = "block";
-      adminPanel.style.display = "none";
-    }
-  });
 });
 
 // Sistema de Login Aprimorado
@@ -70,13 +47,18 @@ loginForm.addEventListener("submit", async (e) => {
   loginError.textContent = "";
 
   try {
-    await auth.signInWithEmailAndPassword(email, password);
-    // Login bem-sucedido - a mudança será tratada pelo onAuthStateChanged
+    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+    console.log("Login bem-sucedido:", userCredential.user);
+    loginBtn.textContent = "✓ Login realizado!";
+    
+    // Pequeno delay para feedback visual
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
   } catch (error) {
-    loginError.textContent = "E-mail ou senha inválidos.";
+    console.error("Erro no login:", error);
+    loginError.textContent = getErrorMessage(error.code);
     loginBtn.textContent = "Entrar";
     loginBtn.disabled = false;
-    console.error("Erro no login:", error);
   }
 });
 
@@ -84,9 +66,45 @@ loginForm.addEventListener("submit", async (e) => {
 logoutBtn.addEventListener("click", () => {
   auth.signOut()
     .then(() => {
-      window.location.href = "index.html"; // Redireciona após logout
+      console.log("Logout realizado com sucesso");
+      window.location.href = "index.html";
+    })
+    .catch((error) => {
+      console.error("Erro no logout:", error);
     });
 });
 
-// Restante do seu código (Places API, formulário, etc.)...
-// [Manter todo o restante do código que já estava funcionando]
+// Helper para mensagens de erro
+function getErrorMessage(errorCode) {
+  const messages = {
+    "auth/invalid-email": "E-mail inválido",
+    "auth/user-disabled": "Conta desativada",
+    "auth/user-not-found": "Usuário não encontrado",
+    "auth/wrong-password": "Senha incorreta",
+    "auth/too-many-requests": "Muitas tentativas. Tente mais tarde."
+  };
+  return messages[errorCode] || "Erro ao fazer login";
+}
+
+// Buscador de endereços (Google Places)
+function initAutocomplete() {
+  const autocomplete = new google.maps.places.Autocomplete(
+    document.getElementById("endereco"),
+    { types: ["establishment"] }
+  );
+
+  autocomplete.addListener("place_changed", () => {
+    const place = autocomplete.getPlace();
+    if (!place.geometry) {
+      console.log("Local não encontrado");
+      return;
+    }
+
+    document.getElementById("nome").value = place.name;
+    document.getElementById("latitude").value = place.geometry.location.lat();
+    document.getElementById("longitude").value = place.geometry.location.lng();
+  });
+}
+
+// Inicializa o Places API
+window.initAutocomplete = initAutocomplete;
