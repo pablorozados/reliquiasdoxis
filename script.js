@@ -20,27 +20,38 @@ const db = firebase.firestore();
 // Variável global para controle do mapa
 let map;
 
+// Verifica autenticação ao carregar a página
+auth.onAuthStateChanged((user) => {
+  if (user) {
+    console.log("Usuário logado:", user.email);
+    document.getElementById("login-section").style.display = "none";
+    document.getElementById("add-location-section").style.display = "block";
+    carregarLocais(); // Carrega locais existentes
+  } else {
+    console.log("Nenhum usuário logado.");
+    document.getElementById("login-section").style.display = "block";
+    document.getElementById("add-location-section").style.display = "none";
+  }
+});
+
 // Inicializa o mapa do Google Maps
 function initMap() {
-  const centro = { lat: -30.0346, lng: -51.2177 }; // Exemplo: Porto Alegre
+  const centro = { lat: -30.0346, lng: -51.2177 }; // Porto Alegre
   map = new google.maps.Map(document.getElementById("map"), {
     zoom: 14,
     center: centro,
   });
 }
 
-// Função para autenticação com e-mail e senha
+// Função de login
 document.getElementById("login-form").addEventListener("submit", (event) => {
   event.preventDefault();
-
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
 
   auth.signInWithEmailAndPassword(email, password)
     .then((userCredential) => {
       console.log("Usuário autenticado:", userCredential.user);
-      document.getElementById("login-section").style.display = "none";
-      document.getElementById("add-location-section").style.display = "block";
     })
     .catch((error) => {
       console.error("Erro no login:", error);
@@ -48,41 +59,44 @@ document.getElementById("login-form").addEventListener("submit", (event) => {
     });
 });
 
-// Função para logout
+// Função de logout
 document.getElementById("logout").addEventListener("click", () => {
   auth.signOut().then(() => {
-    document.getElementById("login-section").style.display = "block";
-    document.getElementById("add-location-section").style.display = "none";
+    console.log("Usuário deslogado");
   });
 });
 
-// Função para fazer upload de imagens no Cloudinary
+// Carrega locais do Firestore
+function carregarLocais() {
+  db.collection("locais").get().then((querySnapshot) => {
+    querySnapshot.forEach((doc) => {
+      adicionarMarcador(doc.data());
+    });
+  }).catch((error) => {
+    console.error("Erro ao carregar locais:", error);
+  });
+}
+
+// Upload de imagem para Cloudinary (com tratamento de erros)
 async function uploadImage(file) {
   const url = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
   const formData = new FormData();
-
   formData.append("file", file);
   formData.append("upload_preset", uploadPreset);
 
   try {
-    const response = await fetch(url, {
-      method: "POST",
-      body: formData,
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      console.log("Imagem enviada:", data);
-      return data.secure_url; // URL da imagem hospedada
-    } else {
-      console.error("Erro ao enviar imagem:", response.statusText);
-    }
+    const response = await fetch(url, { method: "POST", body: formData });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error.message);
+    return data.secure_url;
   } catch (error) {
-    console.error("Erro de rede:", error);
+    console.error("Falha no upload:", error);
+    alert("Erro ao enviar imagem. Tente novamente!");
+    return null;
   }
 }
 
-// Adicionar evento ao formulário de resenhas
+// Adiciona novo local (com validação)
 document.getElementById("add-location-form").addEventListener("submit", async (event) => {
   event.preventDefault();
 
@@ -91,32 +105,38 @@ document.getElementById("add-location-form").addEventListener("submit", async (e
   const lng = parseFloat(document.getElementById("longitude").value);
   const resenha = document.getElementById("resenha").value;
   const imagemInput = document.getElementById("imagem");
-  let imagemUrl = "";
 
-  if (imagemInput.files.length > 0) {
-    const imagemFile = imagemInput.files[0];
-    imagemUrl = await uploadImage(imagemFile); // Faz o upload da imagem
+  // Valida coordenadas
+  if (isNaN(lat) || isNaN(lng)) {
+    alert("Coordenadas inválidas!");
+    return;
   }
 
-  // Salvar os dados no Firestore
+  // Upload da imagem (se existir)
+  let imagemUrl = "";
+  if (imagemInput.files.length > 0) {
+    imagemUrl = await uploadImage(imagemInput.files[0]);
+    if (!imagemUrl) return; // Interrompe se falhar
+  }
+
+  // Salva no Firestore
   db.collection("locais").add({
     nome,
     lat,
     lng,
     resenha,
     imagem: imagemUrl,
-  }).then((docRef) => {
-    console.log("Local adicionado com ID:", docRef.id);
-    adicionarMarcador({ nome, lat, lng, resenha, imagem: imagemUrl });
+    timestamp: firebase.firestore.FieldValue.serverTimestamp() // Ordenação
+  }).then(() => {
+    alert("Local salvo com sucesso!");
+    event.target.reset();
   }).catch((error) => {
-    console.error("Erro ao salvar local:", error);
+    console.error("Erro ao salvar:", error);
+    alert("Erro ao salvar local.");
   });
-
-  // Limpar o formulário
-  event.target.reset();
 });
 
-// Adicionar marcador no mapa
+// Adiciona marcador no mapa (com InfoWindow)
 function adicionarMarcador(local) {
   const marker = new google.maps.Marker({
     position: { lat: local.lat, lng: local.lng },
@@ -124,17 +144,18 @@ function adicionarMarcador(local) {
     title: local.nome,
   });
 
-  const infoWindowContent = `
-    <h2>${local.nome}</h2>
-    <p>${local.resenha}</p>
-    ${local.imagem ? `<img src="${local.imagem}" alt="${local.nome}" style="max-width: 100px;">` : ""}
-  `;
-
   const infoWindow = new google.maps.InfoWindow({
-    content: infoWindowContent,
+    content: `
+      <h3>${local.nome}</h3>
+      <p>${local.resenha}</p>
+      ${local.imagem ? `<img src="${local.imagem}" alt="${local.nome}" style="max-width: 200px;">` : ""}
+    `,
   });
 
   marker.addListener("click", () => {
     infoWindow.open(map, marker);
   });
 }
+
+// Inicializa o mapa quando a API do Google é carregada
+window.initMap = initMap;
