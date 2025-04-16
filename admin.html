@@ -9,41 +9,104 @@
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
-  <!-- Google Maps + Places (API key substituída pelo GitHub Actions) -->
+  <!-- Google Maps + Places -->
   <script>
-  function loadMapsAPI() {
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&callback=initMap`;
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
-  }
-  window.addEventListener('DOMContentLoaded', loadMapsAPI);
-</script>
+    function loadMapsAPI() {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places&callback=initAutocomplete`;
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+    window.addEventListener('DOMContentLoaded', loadMapsAPI);
+  </script>
+  <style>
+    /* Estilos específicos para a página admin */
+    #login-section, #admin-panel {
+      max-width: 500px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    #login-form input, 
+    #add-location-form input,
+    #add-location-form textarea {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    
+    button[type="submit"], #logout {
+      background: #ff6b6b;
+      color: white;
+      border: none;
+      padding: 12px;
+      width: 100%;
+      font-size: 16px;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background 0.3s;
+    }
+    
+    button[type="submit"]:hover, #logout:hover {
+      background: #e05555;
+    }
+    
+    #login-error {
+      margin-top: 1rem;
+      text-align: center;
+    }
+  </style>
 </head>
 <body>
   <div id="login-section">
-    <h2>Login do Dono</h2>
+    <h2 style="text-align: center; margin-bottom: 1.5rem;">Área do Dono</h2>
     <form id="login-form">
       <input type="email" id="email" placeholder="Seu e-mail" required>
       <input type="password" id="password" placeholder="Sua senha" required>
       <button type="submit">Entrar</button>
     </form>
-    <p id="login-error" style="color: red;"></p>
+    <p id="login-error"></p>
   </div>
 
   <div id="admin-panel" style="display: none;">
-    <h2>Adicionar Novo Xis</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+      <h2 style="margin: 0;">Adicionar Novo Xis</h2>
+      <button id="logout">Sair</button>
+    </div>
+    
     <form id="add-location-form">
-      <input type="text" id="endereco" placeholder="Buscar endereço...">
-      <input type="text" id="nome" placeholder="Nome do lugar" required>
-      <input type="text" id="latitude" placeholder="Latitude" readonly>
-      <input type="text" id="longitude" placeholder="Longitude" readonly>
-      <textarea id="resenha" placeholder="Escreva sua resenha..." required></textarea>
+      <label for="endereco">Buscar local:</label>
+      <input type="text" id="endereco" placeholder="Digite o endereço ou nome do lugar">
+      
+      <label for="nome">Nome do estabelecimento:</label>
+      <input type="text" id="nome" placeholder="Ex: Xis do Gaúcho" required>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+        <div>
+          <label for="latitude">Latitude:</label>
+          <input type="text" id="latitude" readonly>
+        </div>
+        <div>
+          <label for="longitude">Longitude:</label>
+          <input type="text" id="longitude" readonly>
+        </div>
+      </div>
+      
+      <label for="resenha">Sua resenha:</label>
+      <textarea id="resenha" rows="5" placeholder="Conte sua experiência..." required></textarea>
+      
+      <label for="imagem">Foto do local (opcional):</label>
       <input type="file" id="imagem" accept="image/*">
-      <button type="submit">Publicar</button>
+      
+      <button type="submit" style="margin-top: 1rem;">Publicar Resenha</button>
     </form>
-    <button id="logout">Sair</button>
   </div>
 
   <script src="admin.js"></script>
