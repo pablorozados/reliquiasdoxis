@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Xis POA</title>
+  <link rel="stylesheet" href="style.css">
+  <!-- Firebase (com Auth) -->
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js"></script>
+  <!-- Google Maps + Places -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=SUA_CHAVE&libraries=places&callback=initAutocomplete" async defer></script>
+</head>
+<body>
+  <div id="login-section">
+    <h2>Login do Dono</h2>
+    <form id="login-form">
+      <input type="email" id="email" placeholder="Seu e-mail" required>
+      <input type="password" id="password" placeholder="Sua senha" required>
+      <button type="submit">Entrar</button>
+    </form>
+    <p id="login-error" style="color: red;"></p>
+  </div>
+
+  <div id="admin-panel" style="display: none;">
+    <h2>Adicionar Novo Xis</h2>
+    <form id="add-location-form">
+      <input type="text" id="endereco" placeholder="Buscar endereço...">
+      <input type="text" id="nome" placeholder="Nome do lugar" required>
+      <input type="text" id="latitude" placeholder="Latitude" readonly>
+      <input type="text" id="longitude" placeholder="Longitude" readonly>
+      <textarea id="resenha" placeholder="Escreva sua resenha..." required></textarea>
+      <input type="file" id="imagem" accept="image/*">
+      <button type="submit">Publicar</button>
+    </form>
+    <button id="logout">Sair</button>
+  </div>
+
+  <script src="admin.js"></script> <!-- Código específico do admin -->
+</body>
+</html>
