@@ -2,32 +2,30 @@ name: Deploy GitHub Pages
 
 on:
   push:
-    branches:
-      - main  # O deploy será acionado com push no branch 'main'
+    branches: [ "main" ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      # 1. Fazer o checkout do código
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2. Substituir a chave de API no index.html
-      - name: Replace API key in index.html
+      - name: Replace API keys
         run: |
-          if [ -f index.html ]; then
-            sed -i "s/YOUR_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" index.html
-          else
-            echo "Erro: O arquivo index.html não foi encontrado!"
+          # Substitui a chave do Google Maps em todos os arquivos HTML
+          sed -i "s/GOOGLE_MAPS_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" index.html
+          sed -i "s/GOOGLE_MAPS_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" admin.html
+          
+          # Opcional: Valida se a substituição foi feita
+          if ! grep -q "${{ secrets.GOOGLE_MAPS_API_KEY }}" index.html; then
+            echo "Erro: Chave do Google Maps não substituída no index.html!"
             exit 1
           fi
 
-      # 3. Fazer o deploy no branch gh-pages
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./  # Diretório com os arquivos do site
-          force_orphan: true  # Cria um branch gh-pages limpo (sem histórico)
+          publish_dir: ./
+          force_orphan: true
