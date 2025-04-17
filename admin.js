@@ -19,50 +19,48 @@ try {
   const auth = firebase.auth();
   const db = firebase.firestore();
 
-  // Elementos UI com verificação
+  // Elementos UI
   const loginSection = document.getElementById("login-section");
   const adminPanel = document.getElementById("admin-panel");
   const loginForm = document.getElementById("login-form");
-  
-  if (!loginSection || !adminPanel || !loginForm) {
-    throw new Error("Elementos da página não encontrados");
-  }
+  const addLocationForm = document.getElementById("add-location-form");
 
-  // Controle de autenticação simplificado
-  auth.onAuthStateChanged((user) => {
-    try {
+  // Mostra elementos corretamente no carregamento
+  function initializeUI() {
+    loginSection.classList.remove('hidden');
+    adminPanel.classList.add('hidden');
+    
+    // Verifica autenticação
+    auth.onAuthStateChanged((user) => {
       if (user) {
         console.log("Usuário autenticado:", user.email);
-        loginSection.classList.add("hidden");
-        adminPanel.classList.remove("hidden");
-        
-        // Carrega conteúdo do admin
-        document.getElementById("loading-msg").textContent = "Bem-vindo!";
-        console.log("Painel admin carregado");
+        loginSection.classList.add('hidden');
+        adminPanel.classList.remove('hidden');
+        loadAdminContent();
       } else {
         console.log("Nenhum usuário logado");
-        loginSection.classList.remove("hidden");
-        adminPanel.classList.add("hidden");
+        loginSection.classList.remove('hidden');
+        adminPanel.classList.add('hidden');
       }
-    } catch (error) {
-      console.error("Erro no authStateChanged:", error);
-    }
-  });
+    });
+  }
 
-  // Sistema de login básico
-  loginForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    console.log("Tentativa de login...");
-    // Seu código de login existente
-  });
+  // Carrega o conteúdo do admin
+  function loadAdminContent() {
+    // Carrega o formulário e as resenhas
+    console.log("Carregando conteúdo admin...");
+    
+    // [Seu código para carregar o autocomplete e as resenhas]
+    initAutocomplete();
+    loadAllReviews();
+  }
+
+  // Inicializa a UI
+  initializeUI();
+
+  // [Mantenha todas as outras funções (login, logout, autocomplete, etc.)]
 
 } catch (error) {
-  console.error("Erro crítico no admin.js:", error);
-  document.body.innerHTML = `
-    <div style="color: red; padding: 20px; text-align: center;">
-      <h2>Erro na aplicação</h2>
-      <p>${error.message}</p>
-      <button onclick="location.reload()">Recarregar</button>
-    </div>
-  `;
+  console.error("Erro crítico:", error);
+  alert("Erro na aplicação: " + error.message);
 }
