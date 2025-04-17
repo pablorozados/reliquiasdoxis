@@ -14,7 +14,6 @@
   <style>
     :root {
       --primary-color: #ff6b6b;
-      --primary-hover: #e05555;
       --error-color: #f44336;
       --success-color: #4caf50;
     }
@@ -33,12 +32,6 @@
       background: white;
       border-radius: 8px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      animation: fadeIn 0.5s ease;
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
     }
     
     h2 {
@@ -50,74 +43,39 @@
       display: block;
       margin-bottom: 0.5rem;
       font-weight: 500;
-      color: #555;
     }
     
-    input, textarea {
+    input, textarea, button {
       width: 100%;
       padding: 12px;
       margin-bottom: 1rem;
       border: 1px solid #ddd;
       border-radius: 4px;
       font-size: 16px;
-      transition: border 0.3s;
-    }
-    
-    input:focus, textarea:focus {
-      border-color: var(--primary-color);
-      outline: none;
     }
     
     button {
       background: var(--primary-color);
       color: white;
       border: none;
-      padding: 12px;
-      font-size: 16px;
       cursor: pointer;
-      border-radius: 4px;
-      transition: all 0.3s;
+      transition: background 0.3s;
     }
     
     button:hover {
-      background: var(--primary-hover);
-      transform: translateY(-2px);
-    }
-    
-    button:disabled {
-      background: #cccccc;
-      cursor: not-allowed;
-      transform: none;
+      background: #e05555;
     }
     
     #login-error {
-      margin-top: 1rem;
-      padding: 10px;
+      color: var(--error-color);
       text-align: center;
-      border-radius: 4px;
-      display: none;
-    }
-    
-    .form-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
+      margin-top: 1rem;
     }
     
     .grid-columns {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1rem;
-    }
-    
-    #logout {
-      width: auto;
-      padding: 8px 16px;
-    }
-    
-    .success-btn {
-      background: var(--success-color);
     }
   </style>
 </head>
@@ -126,28 +84,24 @@
     <h2>Área do Dono</h2>
     <form id="login-form">
       <label for="email">E-mail:</label>
-      <input type="email" id="email" placeholder="seu@email.com" required>
+      <input type="email" id="email" required>
       
       <label for="password">Senha:</label>
-      <input type="password" id="password" placeholder="••••••••" required>
+      <input type="password" id="password" required>
       
-      <button type="submit" id="login-btn">Entrar</button>
-      <div id="login-error"></div>
+      <button type="submit">Entrar</button>
+      <p id="login-error"></p>
     </form>
   </div>
 
   <div id="admin-panel" style="display: none;">
-    <div class="form-header">
-      <h2 style="margin: 0;">Adicionar Novo Xis</h2>
-      <button id="logout">Sair</button>
-    </div>
-    
+    <h2>Adicionar Novo Xis</h2>
     <form id="add-location-form">
-      <label for="endereco">Buscar local no mapa:</label>
+      <label for="endereco">Buscar local:</label>
       <input type="text" id="endereco" placeholder="Digite o endereço">
       
-      <label for="nome">Nome do estabelecimento:</label>
-      <input type="text" id="nome" placeholder="Ex: Xis do Gaúcho" required>
+      <label for="nome">Nome do lugar:</label>
+      <input type="text" id="nome" required>
       
       <div class="grid-columns">
         <div>
@@ -160,41 +114,40 @@
         </div>
       </div>
       
-      <label for="resenha">Sua resenha:</label>
-      <textarea id="resenha" rows="5" placeholder="Conte sua experiência..." required></textarea>
+      <label for="resenha">Resenha:</label>
+      <textarea id="resenha" rows="5" required></textarea>
       
-      <label for="imagem">Foto do local (opcional):</label>
-      <input type="file" id="imagem" accept="image/*">
+      <label for="imagem">Imagem (opcional):</label>
+      <input type="file" id="imagem">
       
-      <button type="submit" id="submit-btn">Publicar Resenha</button>
+      <button type="submit">Publicar</button>
     </form>
+    <button id="logout">Sair</button>
   </div>
 
-  <!-- Scripts -->
+  <!-- Script otimizado para carregar a API -->
   <script>
-    // Carregamento otimizado do Google Maps
     function loadMapsAPI() {
       return new Promise((resolve) => {
+        if (window.google && window.google.maps) {
+          resolve();
+          return;
+        }
+
         const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places&callback=initAutocomplete`;
+        script.src = `https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&loading=async&libraries=places&callback=initAutocomplete`;
         script.async = true;
         script.defer = true;
         script.onload = resolve;
         document.head.appendChild(script);
       });
     }
-    
-    // Inicialização controlada
-    document.addEventListener('DOMContentLoaded', async () => {
-      try {
-        await loadMapsAPI();
-        console.log('Google Maps API carregada');
-      } catch (error) {
-        console.error('Erro ao carregar Maps API:', error);
-      }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadMapsAPI().catch(console.error);
     });
   </script>
-  
+
   <script src="admin.js"></script>
 </body>
 </html>
