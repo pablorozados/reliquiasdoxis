@@ -6,89 +6,84 @@
   <title>Admin - Xis POA</title>
   <link rel="stylesheet" href="style.css">
   
-  <!-- Firebase com fallback -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
 
   <style>
-    /* Estilos básicos de fallback */
+    :root {
+      --primary-color: #ff6b6b;
+      --error-color: #f44336;
+      --success-color: #4caf50;
+    }
+    
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Roboto', sans-serif;
+      background-color: #f5f5f5;
       margin: 0;
       padding: 20px;
-      background-color: #f5f5f5;
     }
+    
     #login-section, #admin-panel {
       max-width: 500px;
-      margin: 20px auto;
-      padding: 20px;
+      margin: 2rem auto;
+      padding: 2rem;
       background: white;
       border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
+    
     .hidden {
-      display: none !important;
+      display: none;
     }
+    
+    /* [Mantenha os outros estilos do seu CSS] */
   </style>
 </head>
 <body>
-  <!-- Fallback básico -->
-  <noscript>
-    <div style="color: red; padding: 20px; text-align: center;">
-      <h2>JavaScript é necessário para esta aplicação</h2>
-      <p>Por favor, habilite o JavaScript no seu navegador.</p>
-    </div>
-  </noscript>
-
-  <div id="login-section">
-    <h2>Área do Dono</h2>
-    <form id="login-form">
-      <label for="email">E-mail:</label>
-      <input type="email" id="email" required>
-      
-      <label for="password">Senha:</label>
-      <input type="password" id="password" required>
-      
-      <button type="submit">Entrar</button>
-      <p id="login-error" style="color: red;"></p>
-    </form>
+  <div id="login-section" class="hidden">
+    <!-- Seu formulário de login existente -->
   </div>
 
   <div id="admin-panel" class="hidden">
-    <!-- Conteúdo do admin panel -->
-    <h2>Painel de Administração</h2>
-    <p id="loading-msg">Carregando...</p>
-    <!-- O resto do seu conteúdo admin -->
+    <h2>Adicionar Novo Xis</h2>
+    <form id="add-location-form">
+      <!-- Seu formulário completo de adição de locais -->
+      <label for="endereco">Buscar local:</label>
+      <input type="text" id="endereco" placeholder="Digite o endereço">
+      
+      <!-- [Todos os outros campos do formulário] -->
+      
+      <button type="submit">Publicar</button>
+    </form>
+
+    <div id="resenhas-container">
+      <!-- Lista de resenhas será carregada aqui -->
+    </div>
+
+    <div class="action-buttons">
+      <button id="logout">Sair</button>
+    </div>
   </div>
 
-  <!-- Scripts com tratamento de erro -->
   <script>
     // Verificação inicial
     console.log("Iniciando aplicação...");
     
-    function showFatalError(message) {
-      document.body.innerHTML = `
-        <div style="color: red; padding: 20px; text-align: center;">
-          <h2>Erro crítico</h2>
-          <p>${message}</p>
-          <button onclick="location.reload()">Recarregar</button>
-        </div>
-      `;
-      console.error(message);
+    function showError(elementId, message) {
+      const element = document.getElementById(elementId);
+      if (element) {
+        element.textContent = message;
+        element.style.display = 'block';
+      }
     }
 
-    // Verifica se o Firebase carregou
-    if (typeof firebase === 'undefined') {
-      showFatalError("Erro ao carregar o Firebase. Verifique sua conexão.");
-    } else {
-      console.log("Firebase carregado com sucesso");
-      // Carrega o admin.js dinamicamente com tratamento de erro
-      const script = document.createElement('script');
-      script.src = 'admin.js';
-      script.onerror = () => showFatalError("Erro ao carregar admin.js");
-      document.head.appendChild(script);
-    }
+    // Carrega admin.js dinamicamente
+    const script = document.createElement('script');
+    script.src = 'admin.js';
+    script.onerror = () => showError('login-error', 'Erro ao carregar a aplicação');
+    document.head.appendChild(script);
   </script>
 </body>
 </html>
