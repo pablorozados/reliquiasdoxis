@@ -20,19 +20,19 @@ const loginForm = document.getElementById("login-form");
 const loginError = document.getElementById("login-error");
 const logoutBtn = document.getElementById("logout");
 
-// Controle de autenticação (SEM window.location.reload)
+// Controle de autenticação
 auth.onAuthStateChanged((user) => {
   if (user) {
     loginSection.style.display = "none";
     adminPanel.style.display = "block";
-    initAutocomplete();
+    loadMapsAPI(); // Carrega a API do Maps apenas quando logado
   } else {
     loginSection.style.display = "block";
     adminPanel.style.display = "none";
   }
 });
 
-// Sistema de login (corrigido)
+// Sistema de login
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   
@@ -46,7 +46,6 @@ loginForm.addEventListener("submit", async (e) => {
 
   try {
     await auth.signInWithEmailAndPassword(email, password);
-    // Não usa window.location aqui!
   } catch (error) {
     loginError.textContent = getErrorMessage(error.code);
   } finally {
@@ -55,12 +54,107 @@ loginForm.addEventListener("submit", async (e) => {
   }
 });
 
-// Logout (sem recarregar a página)
+// Logout
 logoutBtn.addEventListener("click", () => {
   auth.signOut();
 });
 
-// Função para deletar resenha (original)
+// Autocomplete dos lugares (Google Places)
+function initAutocomplete() {
+  const input = document.getElementById("endereco");
+  
+  if (!window.google?.maps?.places) {
+    console.error("API do Google Maps não carregou");
+    input.placeholder = "Recarregue a página para ativar a busca";
+    return;
+  }
+
+  const autocomplete = new google.maps.places.Autocomplete(input, {
+    types: ['establishment'],
+    fields: ['name', 'geometry', 'formatted_address'],
+    componentRestrictions: { country: "br" }
+  });
+
+  autocomplete.addListener("place_changed", () => {
+    const place = autocomplete.getPlace();
+    
+    if (!place.geometry) {
+      alert("Local não encontrado no mapa. Digite um endereço válido.");
+      return;
+    }
+
+    document.getElementById("nome").value = place.name;
+    document.getElementById("latitude").value = place.geometry.location.lat();
+    document.getElementById("longitude").value = place.geometry.location.lng();
+  });
+}
+
+// Upload de imagens para Cloudinary
+async function uploadImage(file) {
+  const cloudName = "dgdjaz541";
+  const uploadPreset = "preset_padrao";
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", uploadPreset);
+
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+    method: "POST",
+    body: formData
+  });
+
+  if (!response.ok) throw new Error("Falha no upload");
+  return await response.json();
+}
+
+// Envio do formulário
+document.getElementById("add-location-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const submitBtn = form.querySelector("button[type='submit']");
+  const originalText = submitBtn.textContent;
+
+  try {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Publicando...";
+
+    const nome = form.nome.value;
+    const lat = parseFloat(form.latitude.value);
+    const lng = parseFloat(form.longitude.value);
+    const resenha = form.resenha.value;
+    const imagemFile = form.imagem.files[0];
+
+    if (!nome || !resenha || isNaN(lat) || isNaN(lng)) {
+      throw new Error("Preencha todos os campos obrigatórios!");
+    }
+
+    let imagemUrl = "";
+    if (imagemFile) {
+      const result = await uploadImage(imagemFile);
+      imagemUrl = result.secure_url;
+    }
+
+    await db.collection("locais").add({
+      nome,
+      lat,
+      lng,
+      resenha,
+      imagem: imagemUrl,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    submitBtn.textContent = "✓ Publicado!";
+    form.reset();
+  } catch (error) {
+    console.error("Erro ao publicar:", error);
+    alert(error.message);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+  }
+});
+
+// Deletar última resenha
 document.getElementById('delete-btn').addEventListener('click', async () => {
   if (!confirm('ATENÇÃO: Isso apagará permanentemente a última resenha adicionada. Continuar?')) return;
   
@@ -90,9 +184,7 @@ document.getElementById('delete-btn').addEventListener('click', async () => {
   }
 });
 
-// [Restante do seu código original...]
-// ... (incluindo initAutocomplete, uploadImage, etc.)
-
+// Helper para mensagens de erro
 function getErrorMessage(code) {
   const errors = {
     "auth/invalid-email": "E-mail inválido",
@@ -103,4 +195,5 @@ function getErrorMessage(code) {
   return errors[code] || "Erro ao fazer login";
 }
 
+// Torna a função global para o callback da API
 window.initAutocomplete = initAutocomplete;
