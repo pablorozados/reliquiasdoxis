@@ -6,7 +6,7 @@
   <title>Admin - Xis POA</title>
   <link rel="stylesheet" href="style.css">
   
-  <!-- Firebase -->
+  <!-- Firebase (versão compatível) -->
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
@@ -156,12 +156,19 @@
   <!-- Script do Google Maps -->
   <script>
     function loadMapsAPI() {
-      if (window.google && window.google.maps) return;
-      
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places&callback=initAutocomplete`;
-      script.async = true;
-      document.head.appendChild(script);
+      return new Promise((resolve) => {
+        if (window.google && window.google.maps) {
+          resolve();
+          return;
+        }
+
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&loading=async&libraries=places&callback=initAutocomplete`;
+        script.async = true;
+        script.defer = true;
+        script.onload = resolve;
+        document.head.appendChild(script);
+      });
     }
   </script>
 
