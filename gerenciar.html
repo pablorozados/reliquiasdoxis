@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciar Resenhas - Xis POA</title>
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+    .resenha-card {
+      background: white;
+      padding: 20px;
+      margin-bottom: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .resenha-card img {
+      max-width: 200px;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+    .resenha-actions {
+      margin-top: 15px;
+    }
+    button {
+      background: #ff4444;
+      color: white;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #loading {
+      text-align: center;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Gerenciar Resenhas</h1>
+  <div id="resenhas-container">
+    <p id="loading">Carregando suas resenhas...</p>
+  </div>
+
+  <script>
+    // Configuração do Firebase (igual ao admin.js)
+    const firebaseConfig = {
+      apiKey: "AIzaSyA7_SFUPE6n9KG6LhL9Y6DRanSW5Zn0-2k",
+      authDomain: "reliquias-do-xis.firebaseapp.com",
+      projectId: "reliquias-do-xis",
+      storageBucket: "reliquias-do-xis.appspot.com",
+      messagingSenderId: "936551505510",
+      appId: "1:936551505510:web:22de1482a8f8d9720257a7"
+    };
+
+    // Inicialização segura
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // Carrega resenhas
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        alert("Faça login no admin.html primeiro");
+        return;
+      }
+
+      try {
+        const snapshot = await db.collection("locais")
+          .orderBy("timestamp", "desc")
+          .get();
+
+        const container = document.getElementById("resenhas-container");
+        container.innerHTML = '';
+
+        if (snapshot.empty) {
+          container.innerHTML = '<p>Nenhuma resenha encontrada.</p>';
+          return;
+        }
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const card = document.createElement('div');
+          card.className = 'resenha-card';
+          card.innerHTML = `
+            <h3>${data.nome}</h3>
+            <p><strong>Data:</strong> ${data.timestamp?.toDate().toLocaleString()}</p>
+            <p>${data.resenha}</p>
+            ${data.imagem ? `<img src="${data.imagem}" alt="${data.nome}">` : ''}
+            <div class="resenha-actions">
+              <button onclick="deleteResenha('${doc.id}')">Deletar Resenha</button>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (error) {
+        console.error("Erro ao carregar:", error);
+        document.getElementById("resenhas-container").innerHTML = `
+          <p style="color: red;">Erro ao carregar resenhas: ${error.message}</p>
+        `;
+      }
+    });
+
+    // Função para deletar (global para os botões)
+    window.deleteResenha = async (id) => {
+      if (!confirm('Tem certeza que deseja deletar esta resenha?')) return;
+      
+      try {
+        await db.collection("locais").doc(id).delete();
+        alert('Resenha deletada com sucesso!');
+        location.reload(); // Atualiza a lista
+      } catch (error) {
+        alert(`Erro ao deletar: ${error.message}`);
+      }
+    };
+  </script>
+</body>
+</html>
