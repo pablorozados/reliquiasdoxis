@@ -1,82 +1,68 @@
-// [Configuração do Firebase e inicialização mantida igual]
+// Verificação inicial
+console.log("Admin.js iniciado");
 
-// ========== NOVAS FUNÇÕES ========== //
+try {
+  // Configuração do Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyA7_SFUPE6n9KG6LhL9Y6DRanSW5Zn0-2k",
+    authDomain: "reliquias-do-xis.firebaseapp.com",
+    projectId: "reliquias-do-xis",
+    storageBucket: "reliquias-do-xis.appspot.com",
+    messagingSenderId: "936551505510",
+    appId: "1:936551505510:web:22de1482a8f8d9720257a7"
+  };
 
-// Carrega e exibe todas as resenhas
-async function loadAllReviews() {
-  const resenhasList = document.getElementById('resenhas-list');
-  resenhasList.innerHTML = '<p>Carregando suas resenhas...</p>';
+  // Inicialização segura
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-  try {
-    const snapshot = await db.collection("locais")
-      .where("userId", "==", auth.currentUser.uid)
-      .orderBy("timestamp", "desc")
-      .get();
+  // Elementos UI com verificação
+  const loginSection = document.getElementById("login-section");
+  const adminPanel = document.getElementById("admin-panel");
+  const loginForm = document.getElementById("login-form");
+  
+  if (!loginSection || !adminPanel || !loginForm) {
+    throw new Error("Elementos da página não encontrados");
+  }
 
-    if (snapshot.empty) {
-      resenhasList.innerHTML = '<p>Nenhuma resenha encontrada.</p>';
-      return;
+  // Controle de autenticação simplificado
+  auth.onAuthStateChanged((user) => {
+    try {
+      if (user) {
+        console.log("Usuário autenticado:", user.email);
+        loginSection.classList.add("hidden");
+        adminPanel.classList.remove("hidden");
+        
+        // Carrega conteúdo do admin
+        document.getElementById("loading-msg").textContent = "Bem-vindo!";
+        console.log("Painel admin carregado");
+      } else {
+        console.log("Nenhum usuário logado");
+        loginSection.classList.remove("hidden");
+        adminPanel.classList.add("hidden");
+      }
+    } catch (error) {
+      console.error("Erro no authStateChanged:", error);
     }
+  });
 
-    resenhasList.innerHTML = '';
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      const resenhaItem = document.createElement('div');
-      resenhaItem.className = 'resenha-item';
-      resenhaItem.innerHTML = `
-        <h3>${data.nome}</h3>
-        <p><strong>Data:</strong> ${data.timestamp?.toDate().toLocaleDateString()}</p>
-        <p><strong>Resenha:</strong> ${data.resenha}</p>
-        ${data.imagem ? `<img src="${data.imagem}" alt="${data.nome}" style="max-width: 200px;">` : ''}
-        <div class="resenha-actions">
-          <button class="delete-btn" data-id="${doc.id}">🗑️ Deletar</button>
-        </div>
-      `;
-      resenhasList.appendChild(resenhaItem);
-    });
+  // Sistema de login básico
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    console.log("Tentativa de login...");
+    // Seu código de login existente
+  });
 
-    // Adiciona eventos aos botões de deletar
-    document.querySelectorAll('.delete-btn').forEach(btn => {
-      btn.addEventListener('click', async (e) => {
-        const resenhaId = e.target.getAttribute('data-id');
-        deleteReview(resenhaId);
-      });
-    });
-  } catch (error) {
-    console.error("Erro ao carregar resenhas:", error);
-    resenhasList.innerHTML = `<p class="error">Erro ao carregar resenhas: ${error.message}</p>`;
-  }
+} catch (error) {
+  console.error("Erro crítico no admin.js:", error);
+  document.body.innerHTML = `
+    <div style="color: red; padding: 20px; text-align: center;">
+      <h2>Erro na aplicação</h2>
+      <p>${error.message}</p>
+      <button onclick="location.reload()">Recarregar</button>
+    </div>
+  `;
 }
-
-// Deleta uma resenha específica
-async function deleteReview(resenhaId) {
-  if (!confirm('ATENÇÃO: Isso apagará permanentemente esta resenha. Continuar?')) return;
-
-  try {
-    await db.collection("locais").doc(resenhaId).delete();
-    alert('Resenha apagada com sucesso!');
-    loadAllReviews(); // Recarrega a lista
-  } catch (error) {
-    console.error("Erro ao apagar:", error);
-    alert(`Erro: ${error.message}`);
-  }
-}
-
-// ========== ATUALIZAÇÕES NO CÓDIGO EXISTENTE ========== //
-
-// Modifique o listener de autenticação para carregar as resenhas
-auth.onAuthStateChanged((user) => {
-  if (user) {
-    console.log("Usuário autenticado:", user.email);
-    loginSection.style.display = "none";
-    adminPanel.style.display = "block";
-    loadMapsAPI().catch(console.error);
-    loadAllReviews(); // Carrega as resenhas ao logar
-  } else {
-    console.log("Usuário não autenticado");
-    loginSection.style.display = "block";
-    adminPanel.style.display = "none";
-  }
-});
-
-// [Restante do código mantido igual]
