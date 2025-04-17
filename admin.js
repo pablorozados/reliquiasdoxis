@@ -25,15 +25,19 @@ auth.onAuthStateChanged((user) => {
   if (user) {
     loginSection.style.display = "none";
     adminPanel.style.display = "block";
-    loadMapsAPI();
-    addGerenciarButton(); // Adiciona o botão de gerenciamento
+    addGerenciarButton();
+    
+    // Carrega a API apenas quando o painel admin estiver visível
+    if (adminPanel.style.display === "block") {
+      loadMapsAPI();
+    }
   } else {
     loginSection.style.display = "block";
     adminPanel.style.display = "none";
   }
 });
 
-// Adiciona botão de gerenciamento (NOVO)
+// Adiciona botão de gerenciamento
 function addGerenciarButton() {
   if (document.getElementById('gerenciar-btn')) return;
   
@@ -162,7 +166,7 @@ document.getElementById("add-location-form").addEventListener("submit", async (e
       lng,
       resenha,
       imagem: imagemUrl,
-      userId: auth.currentUser.uid, // Garante o dono da resenha
+      userId: auth.currentUser.uid,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
 
@@ -177,7 +181,7 @@ document.getElementById("add-location-form").addEventListener("submit", async (e
   }
 });
 
-// Deletar última resenha (atualizada)
+// Deletar última resenha
 document.getElementById('delete-btn').addEventListener('click', async () => {
   if (!auth.currentUser) {
     alert("Faça login antes de apagar");
@@ -229,10 +233,18 @@ window.initAutocomplete = initAutocomplete;
 
 // Carrega a API do Maps
 function loadMapsAPI() {
-  if (window.google && window.google.maps) return;
+  if (window.google && window.google.maps) {
+    initAutocomplete(); // Se já estiver carregado, inicializa imediatamente
+    return;
+  }
   
+  // Remove scripts anteriores para evitar duplicação
+  const existingScripts = document.querySelectorAll('script[src*="maps.googleapis.com"]');
+  existingScripts.forEach(script => script.remove());
+
   const script = document.createElement('script');
   script.src = `https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places&callback=initAutocomplete`;
   script.async = true;
+  script.defer = true;
   document.head.appendChild(script);
 }
