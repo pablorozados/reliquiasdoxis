@@ -1,70 +1,94 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <!-- [Cabeçalho mantido igual ao anterior] -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Xis POA</title>
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Firebase com fallback -->
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
+
   <style>
-    /* [Estilos anteriores mantidos] */
-    
-    /* Novos estilos */
-    #resenhas-list {
-      margin-top: 30px;
-      max-height: 400px;
-      overflow-y: auto;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      padding: 15px;
+    /* Estilos básicos de fallback */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
     }
-    
-    .resenha-item {
+    #login-section, #admin-panel {
+      max-width: 500px;
+      margin: 20px auto;
+      padding: 20px;
       background: white;
-      padding: 15px;
-      margin-bottom: 10px;
-      border-radius: 5px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-    
-    .resenha-item h3 {
-      margin-top: 0;
-      color: #ff6b6b;
-    }
-    
-    .resenha-item img {
-      max-width: 100%;
-      height: auto;
-      border-radius: 4px;
-      margin-top: 10px;
-    }
-    
-    .resenha-actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 10px;
-    }
-    
-    .resenha-actions button {
-      padding: 8px 12px;
-      font-size: 14px;
+    .hidden {
+      display: none !important;
     }
   </style>
 </head>
 <body>
-  <!-- [Seção de login mantida igual] -->
-
-  <div id="admin-panel" style="display: none;">
-    <h2>Adicionar Novo Xis</h2>
-    <!-- [Formulário de adição mantido igual] -->
-
-    <div class="action-buttons">
-      <button id="logout">Sair</button>
+  <!-- Fallback básico -->
+  <noscript>
+    <div style="color: red; padding: 20px; text-align: center;">
+      <h2>JavaScript é necessário para esta aplicação</h2>
+      <p>Por favor, habilite o JavaScript no seu navegador.</p>
     </div>
+  </noscript>
 
-    <h2>Gerenciar Resenhas Existentes</h2>
-    <div id="resenhas-list">
-      <!-- As resenhas serão carregadas aqui pelo JavaScript -->
-      <p>Carregando suas resenhas...</p>
-    </div>
+  <div id="login-section">
+    <h2>Área do Dono</h2>
+    <form id="login-form">
+      <label for="email">E-mail:</label>
+      <input type="email" id="email" required>
+      
+      <label for="password">Senha:</label>
+      <input type="password" id="password" required>
+      
+      <button type="submit">Entrar</button>
+      <p id="login-error" style="color: red;"></p>
+    </form>
   </div>
 
-  <!-- [Scripts mantidos iguais] -->
+  <div id="admin-panel" class="hidden">
+    <!-- Conteúdo do admin panel -->
+    <h2>Painel de Administração</h2>
+    <p id="loading-msg">Carregando...</p>
+    <!-- O resto do seu conteúdo admin -->
+  </div>
+
+  <!-- Scripts com tratamento de erro -->
+  <script>
+    // Verificação inicial
+    console.log("Iniciando aplicação...");
+    
+    function showFatalError(message) {
+      document.body.innerHTML = `
+        <div style="color: red; padding: 20px; text-align: center;">
+          <h2>Erro crítico</h2>
+          <p>${message}</p>
+          <button onclick="location.reload()">Recarregar</button>
+        </div>
+      `;
+      console.error(message);
+    }
+
+    // Verifica se o Firebase carregou
+    if (typeof firebase === 'undefined') {
+      showFatalError("Erro ao carregar o Firebase. Verifique sua conexão.");
+    } else {
+      console.log("Firebase carregado com sucesso");
+      // Carrega o admin.js dinamicamente com tratamento de erro
+      const script = document.createElement('script');
+      script.src = 'admin.js';
+      script.onerror = () => showFatalError("Erro ao carregar admin.js");
+      document.head.appendChild(script);
+    }
+  </script>
 </body>
 </html>
