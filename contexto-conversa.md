@@ -1,29 +1,37 @@
-# Contexto do Projeto "Xis Reviews POA"
+# CONTEXTO DO PROJETO - RELÍQUIAS DO XIS (ÚLTIMA ATUALIZAÇÃO: 10/06/2024)
 
-## Objetivo
-Site com mapa de Porto Alegre marcando os xis que visitei, usando:
-- GitHub Pages (hospedagem)
-- Google Maps API (mapa + marcadores)
-- Firebase Firestore (resenhas)
+## 🔐 CONFIGURAÇÕES CRÍTICAS
+- **Firebase Rules** ativas (leitura pública, escrita apenas logado)
+- **Google Maps API** configurada com restrição de domínio
+- **Cloudinary** com upload preset público
 
-## Códigos Implementados (resumo)
+## 📁 ARQUIVOS PRINCIPAIS
+1. `admin.html` - Área restrita (com botão de deletar resenhas)
+2. `admin.js` - Lógica do admin (incluindo deletar última resenha)
+3. `script.js` - Mapa + proteção XSS nos popups
+4. `firestore.rules` - Regras de segurança
+5. `.github/workflows/deploy.yml` - CI/CD com substituição de chaves
 
-### HTML
-- Estrutura básica com `div#map` e seção de resenhas.
-- Scripts do Firebase e Google Maps.
+## 🛠️ FUNCIONALIDADES IMPLEMENTADAS
+- [x] Autenticação por e-mail/senha
+- [x] Autocomplete de endereços (Google Places)
+- [x] Upload de imagens para Cloudinary
+- [x] Deletar última resenha (botão vermelho)
+- [x] Proteção contra XSS
 
-### CSS
-- Estilização do mapa e cards de resenhas.
+## 🔄 PRÓXIMOS PASSOS (O QUE ESTÁVAMOS FAZENDO)
+1. Testar o fluxo completo de deletar resenhas
+2. Verificar se as regras do Firestore estão aplicadas corretamente
+3. Opcional: Adicionar confirmação em 2 etapas para deletar
 
-### JavaScript
-- Configuração do Firebase.
-- Função `initMap()` com marcadores.
-- Carregamento de resenhas do Firestore (`loadReviews()`).
-
-### Firebase
-- Coleção `reviews` com campos: `place`, `rating`, `review`, `lat`, `lng`.
-
-## Próximos Passos
-1. Formulário para adicionar novas resenhas.
-2. Autenticação de usuários (opcional).
-3. Filtros por nota/local.
+## 🚨 EM CASO DE PROBLEMAS
+```javascript
+// Regras de emergência (permitem tudo)
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
