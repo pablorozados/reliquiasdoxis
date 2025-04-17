@@ -13,14 +13,15 @@ jobs:
 
       - name: Substituir chaves
         run: |
-          sed -i "s/GOOGLE_MAPS_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" *.html
-          sed -i "s/SUA_API_KEY/${{ secrets.FIREBASE_API_KEY }}/g" *.js
-          sed -i "s/SEU_PROJECT_ID/${{ secrets.FIREBASE_PROJECT_ID }}/g" *.js
+          # Substitui todas as variações de chaves
+          sed -i "s/GOOGLE_MAPS_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" *.html *.js
+          sed -i "s/FIREBASE_API_KEY/${{ secrets.FIREBASE_API_KEY }}/g" *.js
+          sed -i "s/FIREBASE_PROJECT_ID/${{ secrets.FIREBASE_PROJECT_ID }}/g" *.js
 
       - name: Validar substituições
         run: |
-          if grep -q "GOOGLE_MAPS_API_KEY" *.html; then
-            echo "❌ Chave do Maps não substituída!"; exit 1
+          if grep -q -E "GOOGLE_MAPS_API_KEY|FIREBASE_API_KEY|FIREBASE_PROJECT_ID" *.html *.js; then
+            echo "❌ Chaves não substituídas!"; exit 1
           fi
 
       - name: Deploy
