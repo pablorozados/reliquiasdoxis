@@ -20,16 +20,13 @@ const loginForm = document.getElementById("login-form");
 const loginError = document.getElementById("login-error");
 const logoutBtn = document.getElementById("logout");
 
-// Controle de autenticação com verificação reforçada
+// Controle de autenticação
 auth.onAuthStateChanged((user) => {
   if (user) {
     console.log("Usuário autenticado:", user.email);
     loginSection.style.display = "none";
     adminPanel.style.display = "block";
-    loadMapsAPI();
-    
-    // Verifica permissões em tempo real
-    testFirestorePermissions();
+    loadMapsAPI().catch(console.error);
   } else {
     console.log("Usuário não autenticado");
     loginSection.style.display = "block";
@@ -37,21 +34,7 @@ auth.onAuthStateChanged((user) => {
   }
 });
 
-// Função para testar permissões do Firestore
-async function testFirestorePermissions() {
-  try {
-    const testDocRef = db.collection("perm_test").doc("temp");
-    await testDocRef.set({test: new Date()});
-    console.log("Permissões de escrita validadas!");
-    await testDocRef.delete();
-  } catch (error) {
-    console.error("FALHA NAS PERMISSÕES:", error);
-    alert("Erro nas permissões. Faça logout e login novamente.");
-    auth.signOut();
-  }
-}
-
-// Sistema de login com validação reforçada
+// Sistema de login
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   
@@ -64,8 +47,7 @@ loginForm.addEventListener("submit", async (e) => {
   loginError.textContent = "";
 
   try {
-    const userCredential = await auth.signInWithEmailAndPassword(email, password);
-    console.log("Login bem-sucedido:", userCredential.user.email);
+    await auth.signInWithEmailAndPassword(email, password);
   } catch (error) {
     console.error("Erro no login:", error);
     loginError.textContent = getErrorMessage(error.code);
@@ -75,43 +57,44 @@ loginForm.addEventListener("submit", async (e) => {
   }
 });
 
-// Logout com limpeza de estado
+// Logout
 logoutBtn.addEventListener("click", () => {
-  auth.signOut()
-    .then(() => {
-      console.log("Logout realizado");
-      window.location.reload();
-    });
+  auth.signOut();
 });
 
-// Autocomplete dos lugares (Google Places)
+// Autocomplete moderno (recomendado pelo Google)
 function initAutocomplete() {
   const input = document.getElementById("endereco");
   
-  if (!window.google?.maps?.places) {
-    console.error("API do Google Maps não carregou");
+  if (!window.google?.maps?.places?.Autocomplete) {
+    console.error("API do Places não carregou corretamente");
     input.placeholder = "Recarregue a página para ativar a busca";
     return;
   }
 
-  const autocomplete = new google.maps.places.Autocomplete(input, {
-    types: ['establishment'],
-    fields: ['name', 'geometry', 'formatted_address'],
-    componentRestrictions: { country: "br" }
-  });
+  try {
+    const autocomplete = new google.maps.places.Autocomplete(input, {
+      fields: ["name", "geometry"],
+      types: ["establishment"],
+      componentRestrictions: { country: "br" }
+    });
 
-  autocomplete.addListener("place_changed", () => {
-    const place = autocomplete.getPlace();
-    
-    if (!place.geometry) {
-      alert("Local não encontrado no mapa. Digite um endereço válido.");
-      return;
-    }
+    autocomplete.addListener("place_changed", () => {
+      const place = autocomplete.getPlace();
+      
+      if (!place.geometry) {
+        alert("Local não encontrado. Por favor, selecione uma opção da lista.");
+        return;
+      }
 
-    document.getElementById("nome").value = place.name;
-    document.getElementById("latitude").value = place.geometry.location.lat();
-    document.getElementById("longitude").value = place.geometry.location.lng();
-  });
+      document.getElementById("nome").value = place.name;
+      document.getElementById("latitude").value = place.geometry.location.lat();
+      document.getElementById("longitude").value = place.geometry.location.lng();
+    });
+  } catch (error) {
+    console.error("Erro no Autocomplete:", error);
+    input.placeholder = "Erro na busca. Atualize a página.";
+  }
 }
 
 // Upload de imagens para Cloudinary
@@ -122,20 +105,24 @@ async function uploadImage(file) {
   formData.append("file", file);
   formData.append("upload_preset", uploadPreset);
 
-  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-    method: "POST",
-    body: formData
-  });
+  try {
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+      method: "POST",
+      body: formData
+    });
 
-  if (!response.ok) throw new Error("Falha no upload");
-  return await response.json();
+    if (!response.ok) throw new Error("Falha no upload");
+    return await response.json();
+  } catch (error) {
+    console.error("Erro no upload:", error);
+    throw error;
+  }
 }
 
-// Envio do formulário com verificação de autenticação
+// Envio do formulário
 document.getElementById("add-location-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   
-  // Verifica se está autenticado
   if (!auth.currentUser) {
     alert("Faça login antes de publicar");
     return;
@@ -165,14 +152,13 @@ document.getElementById("add-location-form").addEventListener("submit", async (e
       imagemUrl = result.secure_url;
     }
 
-    // Adiciona o ID do usuário que criou o registro
     await db.collection("locais").add({
       nome,
       lat,
       lng,
       resenha,
       imagem: imagemUrl,
-      userId: auth.currentUser.uid, // Novo campo para segurança
+      userId: auth.currentUser.uid,
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
 
@@ -187,7 +173,7 @@ document.getElementById("add-location-form").addEventListener("submit", async (e
   }
 });
 
-// Deletar última resenha com verificação de permissões
+// Deletar última resenha
 document.getElementById('delete-btn').addEventListener('click', async () => {
   if (!auth.currentUser) {
     alert("Faça login antes de apagar");
@@ -201,8 +187,9 @@ document.getElementById('delete-btn').addEventListener('click', async () => {
   deleteBtn.textContent = "Apagando...";
 
   try {
-    const snapshot = await db.collection('locais')
-      .orderBy('timestamp', 'desc')
+    const snapshot = await db.collection("locais")
+      .where("userId", "==", auth.currentUser.uid)
+      .orderBy("timestamp", "desc")
       .limit(1)
       .get();
 
@@ -211,14 +198,7 @@ document.getElementById('delete-btn').addEventListener('click', async () => {
       return;
     }
 
-    const docToDelete = snapshot.docs[0];
-    
-    // Verifica se o usuário é o criador (opcional)
-    if (docToDelete.data().userId !== auth.currentUser.uid) {
-      throw new Error("Você só pode apagar suas próprias resenhas");
-    }
-
-    await docToDelete.ref.delete();
+    await snapshot.docs[0].ref.delete();
     alert('Resenha apagada com sucesso!');
   } catch (error) {
     console.error("Erro ao apagar:", error);
@@ -236,20 +216,11 @@ function getErrorMessage(code) {
     "auth/user-not-found": "E-mail não cadastrado",
     "auth/wrong-password": "Senha incorreta",
     "auth/too-many-requests": "Muitas tentativas. Tente mais tarde.",
-    "permission-denied": "Sem permissões. Faça login novamente."
+    "permission-denied": "Sem permissões. Contate o administrador.",
+    "missing-permissions": "Você não tem permissão para esta ação"
   };
   return errors[code] || `Erro desconhecido (${code || 'sem código'})`;
 }
 
 // Torna a função global para o callback da API
 window.initAutocomplete = initAutocomplete;
-
-// Carrega a API do Maps
-function loadMapsAPI() {
-  if (window.google && window.google.maps) return;
-  
-  const script = document.createElement('script');
-  script.src = `https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places&callback=initAutocomplete`;
-  script.async = true;
-  document.head.appendChild(script);
-}
