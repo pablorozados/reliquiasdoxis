@@ -5,23 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin - Xis POA</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Firebase (com Auth) -->
+  
+  <!-- Firebase (versão compatível) -->
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
-  <!-- Google Maps + Places -->
-  <script>
-    function loadMapsAPI() {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places&callback=initAutocomplete`;
-      script.async = true;
-      script.defer = true;
-      document.head.appendChild(script);
-    }
-    window.addEventListener('DOMContentLoaded', loadMapsAPI);
-  </script>
+
   <style>
-    /* Estilos específicos para a página admin */
+    :root {
+      --primary-color: #ff6b6b;
+      --primary-hover: #e05555;
+      --error-color: #f44336;
+      --success-color: #4caf50;
+    }
+    
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+    
     #login-section, #admin-panel {
       max-width: 500px;
       margin: 2rem auto;
@@ -29,66 +33,123 @@
       background: white;
       border-radius: 8px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      animation: fadeIn 0.5s ease;
     }
     
-    #login-form input, 
-    #add-location-form input,
-    #add-location-form textarea {
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    h2 {
+      color: #333;
+      text-align: center;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: #555;
+    }
+    
+    input, textarea {
       width: 100%;
       padding: 12px;
       margin-bottom: 1rem;
       border: 1px solid #ddd;
       border-radius: 4px;
       font-size: 16px;
+      transition: border 0.3s;
     }
     
-    button[type="submit"], #logout {
-      background: #ff6b6b;
+    input:focus, textarea:focus {
+      border-color: var(--primary-color);
+      outline: none;
+    }
+    
+    button {
+      background: var(--primary-color);
       color: white;
       border: none;
       padding: 12px;
-      width: 100%;
       font-size: 16px;
       cursor: pointer;
       border-radius: 4px;
-      transition: background 0.3s;
+      transition: all 0.3s;
     }
     
-    button[type="submit"]:hover, #logout:hover {
-      background: #e05555;
+    button:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+    
+    button:disabled {
+      background: #cccccc;
+      cursor: not-allowed;
+      transform: none;
     }
     
     #login-error {
       margin-top: 1rem;
+      padding: 10px;
       text-align: center;
+      border-radius: 4px;
+      display: none;
+    }
+    
+    .form-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .grid-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    
+    #logout {
+      width: auto;
+      padding: 8px 16px;
+    }
+    
+    .success-btn {
+      background: var(--success-color);
     }
   </style>
 </head>
 <body>
   <div id="login-section">
-    <h2 style="text-align: center; margin-bottom: 1.5rem;">Área do Dono</h2>
+    <h2>Área do Dono</h2>
     <form id="login-form">
-      <input type="email" id="email" placeholder="Seu e-mail" required>
-      <input type="password" id="password" placeholder="Sua senha" required>
-      <button type="submit">Entrar</button>
+      <label for="email">E-mail:</label>
+      <input type="email" id="email" placeholder="seu@email.com" required>
+      
+      <label for="password">Senha:</label>
+      <input type="password" id="password" placeholder="••••••••" required>
+      
+      <button type="submit" id="login-btn">Entrar</button>
+      <div id="login-error"></div>
     </form>
-    <p id="login-error"></p>
   </div>
 
   <div id="admin-panel" style="display: none;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <div class="form-header">
       <h2 style="margin: 0;">Adicionar Novo Xis</h2>
       <button id="logout">Sair</button>
     </div>
     
     <form id="add-location-form">
-      <label for="endereco">Buscar local:</label>
-      <input type="text" id="endereco" placeholder="Digite o endereço ou nome do lugar">
+      <label for="endereco">Buscar local no mapa:</label>
+      <input type="text" id="endereco" placeholder="Digite o endereço">
       
       <label for="nome">Nome do estabelecimento:</label>
       <input type="text" id="nome" placeholder="Ex: Xis do Gaúcho" required>
       
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+      <div class="grid-columns">
         <div>
           <label for="latitude">Latitude:</label>
           <input type="text" id="latitude" readonly>
@@ -105,10 +166,35 @@
       <label for="imagem">Foto do local (opcional):</label>
       <input type="file" id="imagem" accept="image/*">
       
-      <button type="submit" style="margin-top: 1rem;">Publicar Resenha</button>
+      <button type="submit" id="submit-btn">Publicar Resenha</button>
     </form>
   </div>
 
+  <!-- Scripts -->
+  <script>
+    // Carregamento otimizado do Google Maps
+    function loadMapsAPI() {
+      return new Promise((resolve) => {
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places&callback=initAutocomplete`;
+        script.async = true;
+        script.defer = true;
+        script.onload = resolve;
+        document.head.appendChild(script);
+      });
+    }
+    
+    // Inicialização controlada
+    document.addEventListener('DOMContentLoaded', async () => {
+      try {
+        await loadMapsAPI();
+        console.log('Google Maps API carregada');
+      } catch (error) {
+        console.error('Erro ao carregar Maps API:', error);
+      }
+    });
+  </script>
+  
   <script src="admin.js"></script>
 </body>
 </html>
