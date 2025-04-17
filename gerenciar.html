@@ -45,6 +45,23 @@
       text-align: center;
       padding: 20px;
     }
+    #login-message {
+      max-width: 500px;
+      margin: 50px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    #login-message a {
+      color: #ff6b6b;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    #login-message a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -53,8 +70,14 @@
     <p id="loading">Carregando suas resenhas...</p>
   </div>
 
+  <div id="login-message" style="display: none;">
+    <h2>Acesso Restrito</h2>
+    <p>Você precisa estar logado para acessar esta página.</p>
+    <p>Por favor, faça login na <a href="admin.html">Área do Dono</a> primeiro.</p>
+  </div>
+
   <script>
-    // Configuração do Firebase (igual ao admin.js)
+    // Configuração do Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyA7_SFUPE6n9KG6LhL9Y6DRanSW5Zn0-2k",
       authDomain: "reliquias-do-xis.firebaseapp.com",
@@ -71,23 +94,30 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // Carrega resenhas
-    auth.onAuthStateChanged(async (user) => {
-      if (!user) {
-        alert("Faça login no admin.html primeiro");
-        return;
-      }
+    // Elementos da UI
+    const resenhasContainer = document.getElementById("resenhas-container");
+    const loginMessage = document.getElementById("login-message");
+    const loadingElement = document.getElementById("loading");
 
+    // Função para mostrar mensagem de não autenticado
+    function showLoginMessage() {
+      resenhasContainer.style.display = "none";
+      loginMessage.style.display = "block";
+      loadingElement.style.display = "none";
+    }
+
+    // Função para carregar resenhas
+    async function loadResenhas(user) {
       try {
         const snapshot = await db.collection("locais")
+          .where("userId", "==", user.uid) // Só carrega resenhas do usuário logado
           .orderBy("timestamp", "desc")
           .get();
 
-        const container = document.getElementById("resenhas-container");
-        container.innerHTML = '';
+        resenhasContainer.innerHTML = '';
 
         if (snapshot.empty) {
-          container.innerHTML = '<p>Nenhuma resenha encontrada.</p>';
+          resenhasContainer.innerHTML = '<p>Nenhuma resenha encontrada.</p>';
           return;
         }
 
@@ -104,24 +134,53 @@
               <button onclick="deleteResenha('${doc.id}')">Deletar Resenha</button>
             </div>
           `;
-          container.appendChild(card);
+          resenhasContainer.appendChild(card);
         });
       } catch (error) {
         console.error("Erro ao carregar:", error);
-        document.getElementById("resenhas-container").innerHTML = `
+        resenhasContainer.innerHTML = `
           <p style="color: red;">Erro ao carregar resenhas: ${error.message}</p>
         `;
+      }
+    }
+
+    // Verificação de autenticação
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        showLoginMessage();
+        return;
+      }
+
+      // Verifica se o token de autenticação é válido
+      try {
+        await user.getIdToken(true); // Força a atualização do token
+        loadResenhas(user);
+      } catch (error) {
+        console.error("Erro na autenticação:", error);
+        showLoginMessage();
       }
     });
 
     // Função para deletar (global para os botões)
     window.deleteResenha = async (id) => {
+      if (!auth.currentUser) {
+        alert("Sua sessão expirou. Por favor, faça login novamente.");
+        showLoginMessage();
+        return;
+      }
+
       if (!confirm('Tem certeza que deseja deletar esta resenha?')) return;
       
       try {
-        await db.collection("locais").doc(id).delete();
-        alert('Resenha deletada com sucesso!');
-        location.reload(); // Atualiza a lista
+        // Verifica novamente se o usuário é dono da resenha
+        const doc = await db.collection("locais").doc(id).get();
+        if (doc.exists && doc.data().userId === auth.currentUser.uid) {
+          await db.collection("locais").doc(id).delete();
+          alert('Resenha deletada com sucesso!');
+          loadResenhas(auth.currentUser); // Recarrega a lista
+        } else {
+          alert('Você não tem permissão para deletar esta resenha.');
+        }
       } catch (error) {
         alert(`Erro ao deletar: ${error.message}`);
       }
