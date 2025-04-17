@@ -1,170 +1,195 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin - Xis POA</title>
-  <link rel="stylesheet" href="style.css">
+// Configuração do Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyA7_SFUPE6n9KG6LhL9Y6DRanSW5Zn0-2k",
+  authDomain: "reliquias-do-xis.firebaseapp.com",
+  projectId: "reliquias-do-xis",
+  storageBucket: "reliquias-do-xis.appspot.com",
+  messagingSenderId: "936551505510",
+  appId: "1:936551505510:web:22de1482a8f8d9720257a7"
+};
+
+// Inicialização do Firebase
+const app = firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Elementos da UI
+const loginSection = document.getElementById("login-section");
+const adminPanel = document.getElementById("admin-panel");
+const loginForm = document.getElementById("login-form");
+const loginError = document.getElementById("login-error");
+const logoutBtn = document.getElementById("logout");
+
+// Controle de autenticação
+auth.onAuthStateChanged((user) => {
+  if (user) {
+    loginSection.style.display = "none";
+    adminPanel.style.display = "block";
+    loadMapsAPI();
+  } else {
+    loginSection.style.display = "block";
+    adminPanel.style.display = "none";
+  }
+});
+
+// Sistema de login
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
   
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const loginBtn = loginForm.querySelector("button[type='submit']");
 
-  <style>
-    :root {
-      --primary-color: #ff6b6b;
-      --error-color: #f44336;
-      --success-color: #4caf50;
-      --delete-color: #ff4444;
-    }
-    
-    body {
-      font-family: 'Roboto', sans-serif;
-      background-color: #f5f5f5;
-      margin: 0;
-      padding: 20px;
-    }
-    
-    #login-section, #admin-panel {
-      max-width: 500px;
-      margin: 2rem auto;
-      padding: 2rem;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    
-    h2 {
-      color: #333;
-      text-align: center;
-    }
-    
-    label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-    }
-    
-    input, textarea, button {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 1rem;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 16px;
-    }
-    
-    button {
-      background: var(--primary-color);
-      color: white;
-      border: none;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-    
-    button:hover {
-      background: #e05555;
+  loginBtn.disabled = true;
+  loginError.textContent = "";
+
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+  } catch (error) {
+    loginError.textContent = getErrorMessage(error.code);
+  } finally {
+    loginBtn.disabled = false;
+  }
+});
+
+// Logout
+logoutBtn.addEventListener("click", () => {
+  auth.signOut();
+});
+
+// Autocomplete do Google Maps
+function initAutocomplete() {
+  const input = document.getElementById("endereco");
+  
+  if (!window.google || !window.google.maps || !window.google.maps.places) {
+    console.error("API do Google Maps não carregou corretamente");
+    input.placeholder = "Recarregue a página para ativar a busca";
+    return;
+  }
+
+  const autocomplete = new google.maps.places.Autocomplete(input, {
+    types: ['establishment'],
+    fields: ['name', 'geometry']
+  });
+
+  autocomplete.addListener("place_changed", () => {
+    const place = autocomplete.getPlace();
+    if (!place.geometry) {
+      console.log("Local sem coordenadas:", place.name);
+      return;
     }
 
-    #delete-btn {
-      background: var(--delete-color) !important;
-      margin-top: 20px;
-    }
-    
-    #delete-btn:hover {
-      background: #cc0000 !important;
-    }
-    
-    #login-error {
-      color: var(--error-color);
-      text-align: center;
-      margin-top: 1rem;
-    }
-    
-    .grid-columns {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
+    document.getElementById("nome").value = place.name;
+    document.getElementById("latitude").value = place.geometry.location.lat();
+    document.getElementById("longitude").value = place.geometry.location.lng();
+  });
+}
+
+// Upload de imagens para Cloudinary
+async function uploadImage(file) {
+  const cloudName = "dgdjaz541";
+  const uploadPreset = "preset_padrao";
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", uploadPreset);
+
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+    method: "POST",
+    body: formData
+  });
+
+  if (!response.ok) throw new Error("Falha no upload");
+  return await response.json();
+}
+
+// Envio do formulário
+document.getElementById("add-location-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const submitBtn = form.querySelector("button[type='submit']");
+  const originalText = submitBtn.textContent;
+
+  try {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Publicando...";
+
+    const nome = form.nome.value;
+    const lat = parseFloat(form.latitude.value);
+    const lng = parseFloat(form.longitude.value);
+    const resenha = form.resenha.value;
+    const imagemFile = form.imagem.files[0];
+
+    if (!nome || !resenha || isNaN(lat) || isNaN(lng)) {
+      throw new Error("Preencha todos os campos obrigatórios!");
     }
 
-    .action-buttons {
-      display: flex;
-      gap: 10px;
-      margin-top: 20px;
+    let imagemUrl = "";
+    if (imagemFile) {
+      const result = await uploadImage(imagemFile);
+      imagemUrl = result.secure_url;
     }
 
-    .action-buttons button {
-      flex: 1;
+    await db.collection("locais").add({
+      nome,
+      lat,
+      lng,
+      resenha,
+      imagem: imagemUrl,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    submitBtn.textContent = "✓ Publicado!";
+    form.reset();
+  } catch (error) {
+    console.error("Erro ao publicar:", error);
+    alert(error.message);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+  }
+});
+
+// Deletar última resenha (FUNCIONANDO)
+document.getElementById('delete-btn').addEventListener('click', async () => {
+  if (!confirm('ATENÇÃO: Isso apagará permanentemente a última resenha adicionada. Continuar?')) return;
+  
+  const deleteBtn = document.getElementById('delete-btn');
+  deleteBtn.disabled = true;
+  deleteBtn.textContent = "Apagando...";
+
+  try {
+    const snapshot = await db.collection("locais")
+      .orderBy("timestamp", "desc")
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      alert('Nenhuma resenha encontrada para apagar!');
+      return;
     }
 
-    .pac-container {
-      z-index: 10000 !important;
-    }
-  </style>
-</head>
-<body>
-  <div id="login-section">
-    <h2>Área do Dono</h2>
-    <form id="login-form">
-      <label for="email">E-mail:</label>
-      <input type="email" id="email" required>
-      
-      <label for="password">Senha:</label>
-      <input type="password" id="password" required>
-      
-      <button type="submit">Entrar</button>
-      <p id="login-error"></p>
-    </form>
-  </div>
+    await snapshot.docs[0].ref.delete();
+    alert('Resenha apagada com sucesso!');
+  } catch (error) {
+    console.error("Erro ao apagar:", error);
+    alert('Erro: ' + error.message);
+  } finally {
+    deleteBtn.disabled = false;
+    deleteBtn.textContent = "🗑️ Apagar Última Resenha";
+  }
+});
 
-  <div id="admin-panel" style="display: none;">
-    <h2>Adicionar Novo Xis</h2>
-    <form id="add-location-form">
-      <label for="endereco">Buscar local:</label>
-      <input type="text" id="endereco" placeholder="Digite o endereço">
-      
-      <label for="nome">Nome do lugar:</label>
-      <input type="text" id="nome" required>
-      
-      <div class="grid-columns">
-        <div>
-          <label for="latitude">Latitude:</label>
-          <input type="text" id="latitude" readonly>
-        </div>
-        <div>
-          <label for="longitude">Longitude:</label>
-          <input type="text" id="longitude" readonly>
-        </div>
-      </div>
-      
-      <label for="resenha">Resenha:</label>
-      <textarea id="resenha" rows="5" required></textarea>
-      
-      <label for="imagem">Imagem (opcional):</label>
-      <input type="file" id="imagem">
-      
-      <button type="submit">Publicar</button>
-    </form>
+// Helper para mensagens de erro
+function getErrorMessage(code) {
+  const errors = {
+    "auth/invalid-email": "E-mail inválido",
+    "auth/user-not-found": "E-mail não cadastrado",
+    "auth/wrong-password": "Senha incorreta",
+    "auth/too-many-requests": "Muitas tentativas. Tente mais tarde."
+  };
+  return errors[code] || "Erro ao fazer login";
+}
 
-    <div class="action-buttons">
-      <button id="delete-btn">🗑️ Apagar Última Resenha</button>
-      <button id="logout">Sair</button>
-    </div>
-  </div>
-
-  <!-- Script do Google Maps -->
-  <script>
-    function loadMapsAPI() {
-      if (window.google && window.google.maps) return;
-      
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places&callback=initAutocomplete`;
-      script.async = true;
-      document.head.appendChild(script);
-    }
-  </script>
-
-  <script src="admin.js"></script>
-</body>
-</html>
+// Torna a função global para o callback da API
+window.initAutocomplete = initAutocomplete;
