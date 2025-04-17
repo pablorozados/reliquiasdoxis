@@ -1,6 +1,6 @@
-// Configuração do Firebase (USE SUAS CREDENCIAIS REAIS AQUI)
+// Configuração do Firebase (SUBSTITUA pelas suas credenciais)
 const firebaseConfig = {
-  apiKey: "AIzaSyA7_SFUPE6n9KG6LhL9Y6DRanSW5Zn0-2k", // ← Substitua pela sua chave válida
+  apiKey: "AIzaSyA7_SFUPE6n9KG6LhL9Y6DRanSW5Zn0-2k",
   authDomain: "reliquias-do-xis.firebaseapp.com",
   projectId: "reliquias-do-xis",
   storageBucket: "reliquias-do-xis.appspot.com",
@@ -13,10 +13,9 @@ try {
   const app = firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.firestore();
-  console.log("Firebase inicializado com sucesso!");
+  console.log("Firebase inicializado!");
 } catch (error) {
   console.error("Erro ao inicializar Firebase:", error);
-  alert("Erro crítico: Configuração do Firebase inválida. Verifique o console.");
 }
 
 // Elementos da UI
@@ -26,20 +25,19 @@ const loginForm = document.getElementById("login-form");
 const loginError = document.getElementById("login-error");
 const logoutBtn = document.getElementById("logout");
 
-// Verificação de autenticação
+// Controle de autenticação
 firebase.auth().onAuthStateChanged((user) => {
   if (user) {
-    console.log("Usuário logado:", user.email);
     loginSection.style.display = "none";
     adminPanel.style.display = "block";
+    initAutocomplete(); // Inicializa o autocomplete após login
   } else {
-    console.log("Nenhum usuário logado");
     loginSection.style.display = "block";
     adminPanel.style.display = "none";
   }
 });
 
-// Sistema de Login
+// Sistema de login
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   
@@ -48,70 +46,125 @@ loginForm.addEventListener("submit", async (e) => {
   const loginBtn = loginForm.querySelector("button[type='submit']");
 
   loginBtn.disabled = true;
-  loginBtn.textContent = "Autenticando...";
   loginError.textContent = "";
 
   try {
     await firebase.auth().signInWithEmailAndPassword(email, password);
-    loginBtn.textContent = "✓ Login realizado!";
   } catch (error) {
-    console.error("Erro de login:", error);
-    loginError.textContent = getAuthErrorMessage(error);
-    loginBtn.textContent = "Entrar";
+    loginError.textContent = getErrorMessage(error.code);
   } finally {
     loginBtn.disabled = false;
   }
 });
 
-// Mensagens de erro detalhadas
-function getAuthErrorMessage(error) {
-  const errors = {
-    "auth/invalid-email": "E-mail inválido",
-    "auth/user-disabled": "Conta desativada",
-    "auth/user-not-found": "E-mail não cadastrado",
-    "auth/wrong-password": "Senha incorreta",
-    "auth/api-key-not-valid": "CHAVE DE API INVÁLIDA - Configure corretamente no Firebase"
-  };
-  return errors[error.code] || "Erro ao fazer login";
-}
-
 // Logout
 logoutBtn.addEventListener("click", () => {
-  firebase.auth().signOut()
-    .then(() => window.location.href = "index.html");
+  firebase.auth().signOut();
 });
 
-// Inicialização do Places API (AGORA FUNCIONAL)
+// Autocomplete dos lugares
 function initAutocomplete() {
   const input = document.getElementById("endereco");
+  
+  if (!window.google || !window.google.maps || !window.google.maps.places) {
+    console.error("API do Google Maps não carregou corretamente");
+    input.placeholder = "Recarregue a página para ativar a busca";
+    return;
+  }
+
   const autocomplete = new google.maps.places.Autocomplete(input, {
-    types: ["establishment"],
-    fields: ["name", "geometry"]
+    types: ['establishment'],
+    fields: ['name', 'geometry']
   });
 
   autocomplete.addListener("place_changed", () => {
     const place = autocomplete.getPlace();
-    if (!place.geometry) return;
-    
+    if (!place.geometry) {
+      console.log("Local sem coordenadas:", place.name);
+      return;
+    }
+
     document.getElementById("nome").value = place.name;
     document.getElementById("latitude").value = place.geometry.location.lat();
     document.getElementById("longitude").value = place.geometry.location.lng();
   });
 }
 
-// Garante que a função seja global
-window.initAutocomplete = initAutocomplete;
+// Upload de imagens para Cloudinary
+async function uploadImage(file) {
+  const cloudName = "dgdjaz541";
+  const uploadPreset = "preset_padrao";
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", uploadPreset);
 
-// Carrega o Maps API de forma assíncrona
-function loadMapsAPI() {
-  const script = document.createElement('script');
-  script.src = `https://maps.googleapis.com/maps/api/js?key=SUA_CHAVE_GOOGLE_MAPS&libraries=places&callback=initAutocomplete`;
-  script.async = true;
-  script.defer = true;
-  document.head.appendChild(script);
+  const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+    method: "POST",
+    body: formData
+  });
+
+  if (!response.ok) throw new Error("Falha no upload");
+  return await response.json();
 }
 
-// Inicializa tudo quando a página carregar
-window.addEventListener('DOMContentLoaded', () => {
-  loadMapsAPI();
+// Envio do formulário
+document.getElementById("add-location-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  
+  const form = e.target;
+  const submitBtn = form.querySelector("button[type='submit']");
+  const originalText = submitBtn.textContent;
+
+  try {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Publicando...";
+
+    const nome = form.nome.value;
+    const lat = parseFloat(form.latitude.value);
+    const lng = parseFloat(form.longitude.value);
+    const resenha = form.resenha.value;
+    const imagemFile = form.imagem.files[0];
+
+    if (!nome || !resenha || isNaN(lat) || isNaN(lng)) {
+      throw new Error("Preencha todos os campos obrigatórios!");
+    }
+
+    let imagemUrl = "";
+    if (imagemFile) {
+      const result = await uploadImage(imagemFile);
+      imagemUrl = result.secure_url;
+    }
+
+    await firebase.firestore().collection("locais").add({
+      nome,
+      lat,
+      lng,
+      resenha,
+      imagem: imagemUrl,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    submitBtn.textContent = "✓ Publicado!";
+    form.reset();
+  } catch (error) {
+    console.error("Erro ao publicar:", error);
+    alert(error.message);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+  }
 });
+
+// Helper para mensagens de erro
+function getErrorMessage(code) {
+  const errors = {
+    "auth/invalid-email": "E-mail inválido",
+    "auth/user-not-found": "E-mail não cadastrado",
+    "auth/wrong-password": "Senha incorreta",
+    "auth/too-many-requests": "Muitas tentativas. Tente mais tarde."
+  };
+  return errors[code] || "Erro ao fazer login";
+}
+
+// Torna a função global para o callback da API
+window.initAutocomplete = initAutocomplete;
