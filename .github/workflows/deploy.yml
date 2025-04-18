@@ -11,19 +11,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Substituir chaves no admin.js
+      - name: Substituir chaves nos arquivos
         run: |
-          sed -i "s/GOOGLE_MAPS_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" admin.js
-          sed -i "s/FIREBASE_API_KEY/${{ secrets.FIREBASE_API_KEY }}/g" admin.js
-          sed -i "s/FIREBASE_PROJECT_ID/${{ secrets.FIREBASE_PROJECT_ID }}/g" admin.js
-
-      - name: Substituir chaves no admin.html
-        run: |
-          sed -i "s/GOOGLE_MAPS_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" admin.html
-
-      - name: Substituir chaves no index.html
-        run: |
-          sed -i "s/GOOGLE_MAPS_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" index.html
+          sed -i "s/GOOGLE_MAPS_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" admin.js admin.html index.html
+          sed -i "s/FIREBASE_API_KEY/${{ secrets.FIREBASE_API_KEY }}/g" admin.js admin.html index.html
+          sed -i "s/FIREBASE_PROJECT_ID/${{ secrets.FIREBASE_PROJECT_ID }}/g" admin.js admin.html index.html
 
       - name: Validar substituições
         run: |
