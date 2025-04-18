@@ -11,7 +11,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Substituir chaves
+      - name: Substituir chaves no admin.js
         run: |
           sed -i "s/GOOGLE_MAPS_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" admin.js
           sed -i "s/FIREBASE_API_KEY/${{ secrets.FIREBASE_API_KEY }}/g" admin.js
@@ -21,9 +21,13 @@ jobs:
         run: |
           sed -i "s/GOOGLE_MAPS_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" admin.html
 
+      - name: Substituir chaves no index.html
+        run: |
+          sed -i "s/GOOGLE_MAPS_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" index.html
+
       - name: Validar substituições
         run: |
-          if grep -q -E "GOOGLE_MAPS_API_KEY|FIREBASE_API_KEY|FIREBASE_PROJECT_ID" admin.js; then
+          if grep -q -E "GOOGLE_MAPS_API_KEY|FIREBASE_API_KEY|FIREBASE_PROJECT_ID" admin.js admin.html index.html; then
             echo "❌ Chaves não substituídas!"; exit 1
           else
             echo "✅ Todas as chaves foram substituídas com sucesso."
@@ -40,4 +44,3 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./
           force_orphan: true
-        
