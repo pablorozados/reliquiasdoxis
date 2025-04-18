@@ -170,7 +170,7 @@
       script.async = true;
       script.defer = true;
       script.onerror = () => {
-        console.error("Erro ao carregar a API do Google Maps");
+        console.error("Erro ao carregar a API do Google Maps. Verifique a chave da API.");
         document.getElementById("endereco").placeholder = "Digite o endereço manualmente (API indisponível)";
       };
       document.head.appendChild(script);
@@ -206,12 +206,10 @@
     document.addEventListener('DOMContentLoaded', function () {
       if (firebase.auth().currentUser) {
         loadMapsAPI();
+      } else {
+        console.log("Usuário não autenticado. API do Google Maps não será carregada.");
       }
     });
-
-    if (grep -q -E "GOOGLE_MAPS_API_KEY|FIREBASE_API_KEY|FIREBASE_PROJECT_ID" admin.js admin.html index.html) {
-      console.log("Chaves de API encontradas nos arquivos.");
-    }
   </script>
 </body>
 </html>
