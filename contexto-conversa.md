@@ -1,37 +1,43 @@
-# CONTEXTO DO PROJETO - RELÍQUIAS DO XIS (ÚLTIMA ATUALIZAÇÃO: 10/06/2024)
+# RELATÓRIO DO PROJETO - RELÍQUIAS DO XIS  
+**Última atualização**: {{DATA_ATUAL}}  
 
-## 🔐 CONFIGURAÇÕES CRÍTICAS
-- **Firebase Rules** ativas (leitura pública, escrita apenas logado)
-- **Google Maps API** configurada com restrição de domínio
-- **Cloudinary** com upload preset público
+---
 
-## 📁 ARQUIVOS PRINCIPAIS
-1. `admin.html` - Área restrita (com botão de deletar resenhas)
-2. `admin.js` - Lógica do admin (incluindo deletar última resenha)
-3. `script.js` - Mapa + proteção XSS nos popups
-4. `firestore.rules` - Regras de segurança
-5. `.github/workflows/deploy.yml` - CI/CD com substituição de chaves
+## ✅ **FUNCIONALIDADES OPERACIONAIS**  
+1. **Autenticação**  
+   - Login com e-mail/senha  
+   - Transição login → painel admin  
 
-## 🛠️ FUNCIONALIDADES IMPLEMENTADAS
-- [x] Autenticação por e-mail/senha
-- [x] Autocomplete de endereços (Google Places)
-- [x] Upload de imagens para Cloudinary
-- [x] Deletar última resenha (botão vermelho)
-- [x] Proteção contra XSS
+2. **Firebase**  
+   - Conexão estabelecida  
+   - Leitura/escrita no Firestore  
 
-## 🔄 PRÓXIMOS PASSOS (O QUE ESTÁVAMOS FAZENDO)
-1. Testar o fluxo completo de deletar resenhas
-2. Verificar se as regras do Firestore estão aplicadas corretamente
-3. Opcional: Adicionar confirmação em 2 etapas para deletar
+3. **Estrutura Básica**  
+   - HTML/CSS principal carregando  
 
-## 🚨 EM CASO DE PROBLEMAS
-```javascript
-// Regras de emergência (permitem tudo)
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if true;
-    }
-  }
-}
+---
+
+## 🔴 **PROBLEMAS CONHECIDOS**  
+
+| Problema               | Arquivo Afetado | Status       |
+|------------------------|-----------------|--------------|
+| Google Maps não carrega | admin.js        | Não resolvido|
+| Campos do form ocultos  | admin.html      | Parcial      |
+| Deploy inconsistentes   | deploy.yml      | Em análise   |
+
+---
+
+## 📁 **ESTADO DOS ARQUIVOS**  
+
+### `admin.html` (PRECISA DE ATUALIZAÇÃO)  
+```html
+<!-- Adicionar dentro de #admin-panel -->
+<div class="form-group">
+  <label for="nome">Nome do lugar:</label>
+  <input type="text" id="nome" required>
+  
+  <label for="resenha">Resenha:</label>
+  <textarea id="resenha" required></textarea>
+  
+  <!-- Adicionar outros campos necessários -->
+</div>
