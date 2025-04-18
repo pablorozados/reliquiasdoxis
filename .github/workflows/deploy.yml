@@ -8,22 +8,34 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      # 1. Fazer checkout do repositório
       - name: Checkout
         uses: actions/checkout@v3
 
+      # 2. Substituir chaves sensíveis
       - name: Substituir chaves
         run: |
-          # Substitui todas as variações de chaves
-          sed -i "s/GOOGLE_MAPS_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" *.html *.js
-          sed -i "s/FIREBASE_API_KEY/${{ secrets.FIREBASE_API_KEY }}/g" *.js
-          sed -i "s/FIREBASE_PROJECT_ID/${{ secrets.FIREBASE_PROJECT_ID }}/g" *.js
+          # Substitui as variáveis nos arquivos específicos
+          sed -i "s/GOOGLE_MAPS_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" admin.js
+          sed -i "s/FIREBASE_API_KEY/${{ secrets.FIREBASE_API_KEY }}/g" admin.js
+          sed -i "s/FIREBASE_PROJECT_ID/${{ secrets.FIREBASE_PROJECT_ID }}/g" admin.js
 
+      # 3. Validar substituições
       - name: Validar substituições
         run: |
-          if grep -q -E "GOOGLE_MAPS_API_KEY|FIREBASE_API_KEY|FIREBASE_PROJECT_ID" *.html *.js; then
+          if grep -q -E "GOOGLE_MAPS_API_KEY|FIREBASE_API_KEY|FIREBASE_PROJECT_ID" admin.js; then
             echo "❌ Chaves não substituídas!"; exit 1
+          else
+            echo "✅ Todas as chaves foram substituídas com sucesso."
           fi
 
+      # 4. Verificar arquivos modificados
+      - name: Verificar arquivos modificados
+        run: |
+          echo "Arquivos modificados após substituições:"
+          git diff --name-only
+
+      # 5. Deploy para GitHub Pages
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
         with:
