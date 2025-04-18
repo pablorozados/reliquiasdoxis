@@ -139,32 +139,32 @@ if (addLocationForm) {
     e.preventDefault();
     const submitBtn = addLocationForm.querySelector("button[type='submit']");
     submitBtn.disabled = true;
-    
+
     try {
-      // Implementar lógica para salvar no Firebase
-      // (você provavelmente já tem isso implementado em outro lugar)
-      
-      // Exemplo básico:
-      /*
-      await db.collection("locais").add({
-        nome: document.getElementById("nome").value,
-        lat: parseFloat(document.getElementById("latitude").value),
-        lng: parseFloat(document.getElementById("longitude").value),
-        resenha: document.getElementById("resenha").value,
-        userId: auth.currentUser.uid,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+      const nome = document.getElementById("nome").value;
+      const latitude = parseFloat(document.getElementById("latitude").value);
+      const longitude = parseFloat(document.getElementById("longitude").value);
+      const resenha = document.getElementById("resenha").value;
+
+      if (!nome || isNaN(latitude) || isNaN(longitude) || !resenha) {
+        alert("Por favor, preencha todos os campos corretamente.");
+        return;
+      }
+
+      await db.collection("resenhas").add({
+        nome,
+        latitude,
+        longitude,
+        resenha,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
       });
-      */
-      
-      submitBtn.textContent = "Publicado!";
-      setTimeout(() => {
-        submitBtn.textContent = "Publicar";
-        addLocationForm.reset();
-      }, 2000);
-      
+
+      console.log("Resenha publicada com sucesso!");
+      alert("Resenha publicada com sucesso!");
+      addLocationForm.reset();
     } catch (error) {
-      console.error("Erro ao salvar:", error);
-      alert("Erro ao salvar: " + error.message);
+      console.error("Erro ao salvar resenha:", error);
+      alert("Erro ao salvar resenha: " + error.message);
     } finally {
       submitBtn.disabled = false;
     }
