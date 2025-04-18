@@ -162,9 +162,9 @@
     function loadMapsAPI() {
       if (window.mapsLoaded) return;
       window.mapsLoaded = true;
-      
+
       console.log("Carregando API do Google Maps...");
-      
+
       const script = document.createElement('script');
       script.src = `https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places&callback=initAutocomplete`;
       script.async = true;
@@ -175,9 +175,35 @@
       };
       document.head.appendChild(script);
     }
-    
+
+    // Função de inicialização do autocomplete
+    function initAutocomplete() {
+      console.log("Inicializando autocomplete...");
+      const input = document.getElementById('endereco');
+      if (!input) {
+        console.error("Campo 'endereco' não encontrado.");
+        return;
+      }
+
+      const autocomplete = new google.maps.places.Autocomplete(input, {
+        types: ['geocode'], // Sugere endereços
+        componentRestrictions: { country: 'BR' } // Restringe ao Brasil
+      });
+
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (place.geometry) {
+          document.getElementById('latitude').value = place.geometry.location.lat();
+          document.getElementById('longitude').value = place.geometry.location.lng();
+          console.log("Local selecionado:", place.name);
+        } else {
+          console.error("Nenhuma geometria encontrada para o local selecionado.");
+        }
+      });
+    }
+
     // Verificar autenticação e carregar Maps se já estiver logado
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       if (firebase.auth().currentUser) {
         loadMapsAPI();
       }

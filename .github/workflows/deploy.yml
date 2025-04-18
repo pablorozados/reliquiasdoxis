@@ -20,6 +20,10 @@ jobs:
           sed -i "s/FIREBASE_API_KEY/${{ secrets.FIREBASE_API_KEY }}/g" admin.js
           sed -i "s/FIREBASE_PROJECT_ID/${{ secrets.FIREBASE_PROJECT_ID }}/g" admin.js
 
+      - name: Substituir chaves no admin.html
+        run: |
+          sed -i "s/GOOGLE_MAPS_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" admin.html
+
       # 3. Validar substituições
       - name: Validar substituições
         run: |
