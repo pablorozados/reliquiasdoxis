@@ -1,0 +1,191 @@
+// Configuração do Firebase (será substituída no deploy)
+const firebaseConfig = {
+  apiKey: "AIzaSyA7_SFUPE6n9KG6LhL9Y6DRanSW5Zn0-2k",
+  projectId: "reliquias-do-xis",
+};
+
+// Inicialização do Firebase
+const app = firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+// Debug para verificar se o Firebase está inicializado
+console.log("Firebase inicializado:", app.options.projectId);
+
+// Elementos da UI
+const loginSection = document.getElementById("login-section");
+const adminPanel = document.getElementById("admin-panel");
+const loginForm = document.getElementById("login-form");
+const loginError = document.getElementById("login-error");
+const logoutBtn = document.getElementById("logout");
+
+// Variável para controlar se o Maps já foi carregado
+window.mapsLoaded = false;
+
+// 1. SISTEMA DE LOGIN (SIMPLIFICADO)
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const loginBtn = loginForm.querySelector("button[type='submit']");
+
+  loginBtn.disabled = true;
+  loginError.textContent = "";
+
+  try {
+    await auth.signInWithEmailAndPassword(email, password);
+    loginSection.style.display = "none";
+    adminPanel.style.display = "block";
+    if (typeof loadMapsAPI === 'function') {
+      loadMapsAPI(); // Só carrega o Maps após login
+    }
+  } catch (error) {
+    loginError.textContent = "E-mail ou senha incorretos";
+    console.error("Erro ao fazer login:", error);
+  } finally {
+    loginBtn.disabled = false;
+  }
+});
+
+// 2. FUNÇÃO DE AUTOCOMPLETAR (CALLBACK DO GOOGLE MAPS)
+// IMPORTANTE: Deve ser exposta globalmente para a API do Google Maps chamá-la
+window.initAutocomplete = function() {
+  console.log("initAutocomplete chamado!");
+  const input = document.getElementById("endereco");
+  if (!input) return;
+
+  try {
+    // Tenta a API nova (PlaceAutocompleteElement)
+    if (window.google.maps.places?.PlaceAutocompleteElement) {
+      console.log("Usando PlaceAutocompleteElement");
+      const autocomplete = new google.maps.places.PlaceAutocompleteElement({
+        inputElement: input,
+        componentRestrictions: { country: "br" }
+      });
+      
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        if (place?.geometry) {
+          document.getElementById("nome").value = place.name || "";
+          document.getElementById("latitude").value = place.geometry.location.lat();
+          document.getElementById("longitude").value = place.geometry.location.lng();
+          console.log("Local selecionado:", place.name);
+        }
+      });
+    } 
+    // Fallback para API legada
+    else if (window.google.maps.places?.Autocomplete) {
+      console.log("Usando Autocomplete (API legada)");
+      const autocomplete = new google.maps.places.Autocomplete(input, {
+        types: ["establishment"],
+        fields: ["name", "geometry", "formatted_address"],
+        componentRestrictions: { country: "br" }
+      });
+      
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        console.log("Place data:", place);
+        
+        if (place.geometry) {
+          document.getElementById("nome").value = place.name || "";
+          document.getElementById("latitude").value = place.geometry.location.lat();
+          document.getElementById("longitude").value = place.geometry.location.lng();
+          console.log("Local selecionado:", place.name);
+        } else {
+          console.warn("Local sem coordenadas");
+        }
+      });
+    } else {
+      console.error("APIs do Google Places não encontradas");
+      input.placeholder = "Digite manualmente (API indisponível)";
+    }
+  } catch (error) {
+    console.error("Erro ao inicializar autocomplete:", error);
+    input.placeholder = "Digite o endereço manualmente";
+  }
+};
+
+// 3. VERIFICAR AUTENTICAÇÃO AO CARREGAR
+auth.onAuthStateChanged(user => {
+  if (user) {
+    loginSection.style.display = "none";
+    adminPanel.style.display = "block";
+    if (typeof loadMapsAPI === 'function') {
+      loadMapsAPI();
+    }
+  } else {
+    loginSection.style.display = "block";
+    adminPanel.style.display = "none";
+  }
+});
+
+// 4. LOGOUT
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", () => {
+    auth.signOut().then(() => {
+      console.log("Usuário deslogado");
+      window.location.reload(); // Recarrega a página após logout
+    }).catch(error => {
+      console.error("Erro ao fazer logout:", error);
+    });
+  });
+}
+
+// 5. FORMULÁRIO PARA ADICIONAR LOCAL
+const addLocationForm = document.getElementById("add-location-form");
+if (addLocationForm) {
+  addLocationForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const submitBtn = addLocationForm.querySelector("button[type='submit']");
+    submitBtn.disabled = true;
+
+    try {
+      const nome = document.getElementById("nome").value;
+      const latitude = parseFloat(document.getElementById("latitude").value);
+      const longitude = parseFloat(document.getElementById("longitude").value);
+      const resenha = document.getElementById("resenha").value;
+
+      if (!nome || isNaN(latitude) || isNaN(longitude) || !resenha) {
+        alert("Por favor, preencha todos os campos corretamente.");
+        return;
+      }
+
+      await db.collection("resenhas").add({
+        nome,
+        latitude,
+        longitude,
+        resenha,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      });
+
+      console.log("Resenha publicada com sucesso!");
+      alert("Resenha publicada com sucesso!");
+      addLocationForm.reset();
+    } catch (error) {
+      console.error("Erro ao salvar resenha:", error);
+      alert("Erro ao salvar resenha: " + error.message);
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+}
+
+// 6. DELETAR ÚLTIMA RESENHA
+const deleteBtn = document.getElementById("delete-btn");
+if (deleteBtn) {
+  deleteBtn.addEventListener("click", async () => {
+    if (!confirm("Tem certeza que deseja apagar a última resenha?")) return;
+    
+    try {
+      // Implementar lógica para deletar a última resenha
+      // (você provavelmente já tem isso implementado em outro lugar)
+    } catch (error) {
+      console.error("Erro ao deletar:", error);
+      alert("Erro ao deletar: " + error.message);
+    }
+  });
+}
+
+// Debug para verificar se o script carregou completamente
+console.log("admin.js carregado completamente");
