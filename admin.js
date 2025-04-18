@@ -13,13 +13,17 @@ const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+// Debug - verifique no console
+console.log("Firebase inicializado:", app.options.projectId);
+
 // Elementos da UI
 const loginSection = document.getElementById("login-section");
 const adminPanel = document.getElementById("admin-panel");
 const loginForm = document.getElementById("login-form");
 const loginError = document.getElementById("login-error");
+const logoutBtn = document.getElementById("logout");
 
-// 1. SISTEMA DE LOGIN (SIMPLIFICADO)
+// 1. SISTEMA DE LOGIN
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   
@@ -34,40 +38,46 @@ loginForm.addEventListener("submit", async (e) => {
     await auth.signInWithEmailAndPassword(email, password);
     loginSection.style.display = "none";
     adminPanel.style.display = "block";
-    loadGoogleMapsAPI(); // Só carrega o Maps após login
+    loadGoogleMapsAPI(); // Carrega o Maps após login
   } catch (error) {
     loginError.textContent = "E-mail ou senha incorretos";
+    console.error("Erro login:", error);
   } finally {
     loginBtn.disabled = false;
   }
 });
 
-// 2. GOOGLE MAPS (VERSÃO À PROVA DE FALHAS)
+// 2. GOOGLE MAPS (VERSÃO ROBUSTA)
 let mapsLoaded = false;
 
 function loadGoogleMapsAPI() {
   if (mapsLoaded) return;
   
-  // Fallback caso a API não carregue
+  // Fallback para quando a API não carrega
   const fallback = () => {
     const input = document.getElementById("endereco");
-    if (input) input.placeholder = "Busca manual (serviço indisponível)";
+    if (input) {
+      input.placeholder = "Digite manualmente (serviço indisponível)";
+      console.error("Falha ao carregar Google Maps API");
+    }
   };
 
-  // Verifica se já está carregado
+  // Se já estiver carregado, só inicializa
   if (window.google && window.google.maps) {
     initAutocomplete();
     return;
   }
 
+  // Carrega a API do Maps
   const script = document.createElement("script");
-  script.src = `https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places&callback=initAutocomplete`;
+  script.src = `https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places&callback=initAutocomplete&loading=async`;
   script.async = true;
   script.defer = true;
   script.onerror = fallback;
   
   document.head.appendChild(script);
   mapsLoaded = true;
+  console.log("Google Maps API carregando...");
 }
 
 // 3. AUTCOMPLETE (COM FALLBACK)
@@ -76,20 +86,19 @@ function initAutocomplete() {
   if (!input) return;
 
   try {
-    // Tenta a API nova (PlaceAutocompleteElement)
+    // Tenta usar a API nova (recomendada)
     if (window.google.maps.places?.PlaceAutocompleteElement) {
       const autocomplete = new google.maps.places.PlaceAutocompleteElement({
         inputElement: input,
         componentRestrictions: { country: "br" }
       });
+      
       autocomplete.addListener("place_changed", () => {
         const place = autocomplete.getPlace();
-        if (place?.geometry) {
-          document.getElementById("nome").value = place.name || "";
-          document.getElementById("latitude").value = place.geometry.location.lat();
-          document.getElementById("longitude").value = place.geometry.location.lng();
-        }
+        updateFormWithPlace(place);
       });
+      
+      console.log("Usando PlaceAutocompleteElement (nova API)");
     } 
     // Fallback para API legada
     else if (window.google.maps.places?.Autocomplete) {
@@ -98,26 +107,49 @@ function initAutocomplete() {
         fields: ["name", "geometry"],
         componentRestrictions: { country: "br" }
       });
+      
       autocomplete.addListener("place_changed", () => {
         const place = autocomplete.getPlace();
-        if (place.geometry) {
-          document.getElementById("nome").value = place.name;
-          document.getElementById("latitude").value = place.geometry.location.lat();
-          document.getElementById("longitude").value = place.geometry.location.lng();
-        }
+        updateFormWithPlace(place);
       });
+      
+      console.log("Usando Autocomplete (API legada)");
     }
   } catch (error) {
     console.error("Erro no autocomplete:", error);
-    input.placeholder = "Digite o endereço manualmente";
+    if (input) input.placeholder = "Erro na busca - Digite manualmente";
   }
 }
 
-// 4. VERIFICA AUTENTICAÇÃO AO CARREGAR
-auth.onAuthStateChanged(user => {
+// 4. ATUALIZA FORMULÁRIO COM OS DADOS DO LOCAL
+function updateFormWithPlace(place) {
+  if (!place?.geometry) {
+    console.log("Local sem coordenadas:", place?.name);
+    return;
+  }
+
+  document.getElementById("nome").value = place.name || "";
+  document.getElementById("latitude").value = place.geometry.location.lat();
+  document.getElementById("longitude").value = place.geometry.location.lng();
+  console.log("Local selecionado:", place.name);
+}
+
+// 5. CONTROLE DE AUTENTICAÇÃO
+auth.onAuthStateChanged((user) => {
   if (user) {
     loginSection.style.display = "none";
     adminPanel.style.display = "block";
     loadGoogleMapsAPI();
+  } else {
+    loginSection.style.display = "block";
+    adminPanel.style.display = "none";
   }
 });
+
+// 6. LOGOUT
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", () => {
+    auth.signOut();
+    console.log("Usuário deslogado");
+  });
+}
