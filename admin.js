@@ -121,6 +121,9 @@ function initAutocomplete() {
   }
 }
 
+// Tornando a função initAutocomplete global para que o callback do Google Maps funcione
+window.initAutocomplete = initAutocomplete;
+
 // 4. ATUALIZA FORMULÁRIO COM OS DADOS DO LOCAL
 function updateFormWithPlace(place) {
   if (!place?.geometry) {
@@ -139,7 +142,7 @@ auth.onAuthStateChanged((user) => {
   if (user) {
     loginSection.style.display = "none";
     adminPanel.style.display = "block";
-    loadGoogleMapsAPI();
+    loadGoogleMapsAPI(); // Carrega a API do Maps quando o usuário faz login
   } else {
     loginSection.style.display = "block";
     adminPanel.style.display = "none";
@@ -153,3 +156,11 @@ if (logoutBtn) {
     console.log("Usuário deslogado");
   });
 }
+
+// 7. INICIALIZAR GOOGLE MAPS NA CARGA DA PÁGINA
+// Se o usuário já estiver autenticado quando a página carregar
+document.addEventListener('DOMContentLoaded', () => {
+  if (auth.currentUser) {
+    loadGoogleMapsAPI();
+  }
+});
