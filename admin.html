@@ -9,23 +9,12 @@
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
   
-  <!-- Adição 1: Script do Maps -->
-  <script>
-    function loadMapsAPI() {
-      const input = document.getElementById("endereco");
-      if (!input || window.google) return;
-
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=SUA_CHAVE_AQUI&libraries=places`;
-      script.async = true;
-      document.head.appendChild(script);
-    }
-  </script>
+  <!-- Script do Maps removido daqui -->
 </head>
 <body>
   <div id="login-section">
     <h2>Área do Dono</h2>
-    <form id="login-form" onsubmit="return false;"> <!-- Adição 2: Previne reload -->
+    <form id="login-form" onsubmit="return false;"> <!-- Previne reload -->
       <label for="email">E-mail:</label>
       <input type="email" id="email" required>
       <label for="password">Senha:</label>
@@ -38,14 +27,13 @@
   <div id="admin-panel" style="display:none;">
     <h2>Adicionar Novo Xis</h2>
     <form id="add-location-form">
-      <!-- Adição 3: Campos faltantes -->
       <label for="endereco">Buscar local:</label>
-      <input type="text" id="endereco" placeholder="Digite o endereço" onfocus="loadMapsAPI()"> <!-- Adição 4 -->
+      <input type="text" id="endereco" placeholder="Digite o endereço"> <!-- Removido o onfocus -->
       
       <label for="nome">Nome do lugar:</label>
       <input type="text" id="nome" required>
       
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0;"> <!-- Adição 5 -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0;"> 
         <div>
           <label for="latitude">Latitude:</label>
           <input type="text" id="latitude" readonly>
@@ -65,49 +53,13 @@
       <button type="submit">Publicar</button>
     </form>
 
-    <div style="margin-top:20px; display: flex; gap: 10px;"> <!-- Adição 6 -->
+    <div style="margin-top:20px; display: flex; gap: 10px;">
       <button id="delete-btn">🗑️ Apagar Última Resenha</button>
       <button id="logout">Sair</button>
     </div>
   </div>
 
-  <script>
-    // Configuração mínima do Firebase
-    const firebaseConfig = {
-      apiKey: "AIzaSyA7_SFUPE6n9KG6LhL9Y6DRanSW5Zn0-2k",
-      authDomain: "reliquias-do-xis.firebaseapp.com",
-      projectId: "reliquias-do-xis",
-      storageBucket: "reliquias-do-xis.appspot.com",
-      messagingSenderId: "936551505510",
-      appId: "1:936551505510:web:22de1482a8f8d9720257a7"
-    };
-    
-    firebase.initializeApp(firebaseConfig);
-    
-    // Adição 7: Login simplificado
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = e.target.querySelector('button');
-      btn.disabled = true;
-      
-      try {
-        await firebase.auth().signInWithEmailAndPassword(
-          document.getElementById('email').value,
-          document.getElementById('password').value
-        );
-        document.getElementById('login-section').style.display = 'none';
-        document.getElementById('admin-panel').style.display = 'block';
-      } catch (error) {
-        document.getElementById('login-error').textContent = 'E-mail ou senha incorretos';
-      } finally {
-        btn.disabled = false;
-      }
-    });
-    
-    // Adição 8: Logout básico
-    document.getElementById('logout')?.addEventListener('click', () => {
-      firebase.auth().signOut();
-    });
-  </script>
+  <!-- Carregamento do script admin.js -->
+  <script src="admin.js"></script>
 </body>
 </html>
