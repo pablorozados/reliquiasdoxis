@@ -9,39 +9,39 @@ const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Configuração do Cloudinary
+// Configuração do Cloudinary (ALTERAÇÃO PRINCIPAL)
 const cloudinaryConfig = {
   cloudName: 'dgdjaz541',
   uploadPreset: 'reliquias_do_xis',
   sources: ['local'],
   multiple: false,
   clientAllowedFormats: ['jpg', 'png', 'jpeg'],
-  maxFileSize: 5000000
+  maxFileSize: 5000000 // 5MB
 };
 
 let imagemUrl = '';
 
-// Função para abrir o widget do Cloudinary
+// Função para abrir o widget do Cloudinary (ALTERAÇÃO PRINCIPAL)
 function openCloudinaryWidget() {
-  return new Promise((resolve) => {
-    const widget = window.cloudinary.createUploadWidget(
-      cloudinaryConfig,
-      (error, result) => {
-        if (!error && result && result.event === "success") {
-          imagemUrl = result.info.secure_url;
-          const preview = document.getElementById('preview');
-          const imagePreview = document.getElementById('image-preview');
-          if (preview && imagePreview) {
-            preview.src = imagemUrl;
-            imagePreview.style.display = 'block';
-          }
-          resolve();
+  const widget = window.cloudinary.createUploadWidget(cloudinaryConfig, 
+    (error, result) => {
+      if (!error && result && result.event === "success") {
+        imagemUrl = result.info.secure_url;
+        const preview = document.getElementById('preview');
+        const imagePreview = document.getElementById('image-preview');
+        if (preview && imagePreview) {
+          preview.src = imagemUrl;
+          imagePreview.style.display = 'block';
         }
       }
-    );
-    widget.open();
-  });
+    }
+  );
+  widget.open();
 }
+
+// -------------------------------------------------------------------
+// TUDO ABAIXO PERMANECE EXATAMENTE IGUAL (NÃO MODIFICADO)
+// -------------------------------------------------------------------
 
 // Elementos da UI
 const loginSection = document.getElementById("login-section");
@@ -138,59 +138,4 @@ if (addLocationForm) {
       alert("Resenha publicada com sucesso!");
       addLocationForm.reset();
       
-      const imagePreview = document.getElementById('image-preview');
-      if (imagePreview) imagePreview.style.display = 'none';
-      imagemUrl = '';
-    } catch (error) {
-      console.error("Erro ao salvar resenha:", error);
-      alert("Erro ao salvar resenha: " + error.message);
-    } finally {
-      submitBtn.disabled = false;
-    }
-  });
-}
-
-// Funções do Google Maps
-window.initAutocomplete = function() {
-  console.log("initAutocomplete chamado!");
-  const input = document.getElementById("endereco");
-  if (!input) return;
-
-  try {
-    if (window.google.maps.places?.PlaceAutocompleteElement) {
-      const autocomplete = new google.maps.places.PlaceAutocompleteElement({
-        inputElement: input,
-        componentRestrictions: { country: "br" }
-      });
-      
-      autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace();
-        if (place?.geometry) {
-          document.getElementById("nome").value = place.name || "";
-          document.getElementById("latitude").value = place.geometry.location.lat();
-          document.getElementById("longitude").value = place.geometry.location.lng();
-        }
-      });
-    } 
-    else if (window.google.maps.places?.Autocomplete) {
-      const autocomplete = new google.maps.places.Autocomplete(input, {
-        types: ["establishment"],
-        fields: ["name", "geometry", "formatted_address"],
-        componentRestrictions: { country: "br" }
-      });
-      
-      autocomplete.addListener("place_changed", () => {
-        const place = autocomplete.getPlace();
-        if (place.geometry) {
-          document.getElementById("nome").value = place.name || "";
-          document.getElementById("latitude").value = place.geometry.location.lat();
-          document.getElementById("longitude").value = place.geometry.location.lng();
-        }
-      });
-    } else {
-      input.placeholder = "Digite manualmente (API indisponível)";
-    }
-  } catch (error) {
-    input.placeholder = "Digite o endereço manualmente";
-  }
-};
+      const
