@@ -10,6 +10,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
+  
+  <!-- Cloudinary -->
+  <script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
 
   <style>
     :root {
@@ -17,6 +20,7 @@
       --error-color: #f44336;
       --success-color: #4caf50;
       --delete-color: #ff4444;
+      --upload-color: #4CAF50;
     }
     
     body {
@@ -75,6 +79,14 @@
     #delete-btn:hover {
       background: #cc0000 !important;
     }
+
+    #upload-btn {
+      background: var(--upload-color) !important;
+    }
+    
+    #upload-btn:hover {
+      background: #3e8e41 !important;
+    }
     
     #login-error {
       color: var(--error-color);
@@ -98,12 +110,23 @@
       flex: 1;
     }
 
+    #image-preview {
+      margin: 10px 0;
+      display: none;
+      text-align: center;
+    }
+
+    #preview {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+
     .pac-container {
       z-index: 10000 !important;
     }
   </style>
-  <!-- Adicione isto ANTES do </head> -->
-<script src="https://upload-widget.cloudinary.com/global/all.js" type="text/javascript"></script>
 </head>
 <body>
   <div id="login-section">
@@ -143,8 +166,11 @@
       <label for="resenha">Resenha:</label>
       <textarea id="resenha" rows="5" required></textarea>
       
-      <label for="imagem">Imagem (opcional):</label>
-      <input type="file" id="imagem">
+      <label>Imagem (opcional):</label>
+      <button type="button" id="upload-btn">🖼️ Adicionar Foto</button>
+      <div id="image-preview">
+        <img id="preview" src="#" alt="Preview da imagem">
+      </div>
       
       <button type="submit">Publicar</button>
     </form>
@@ -188,8 +214,8 @@
       }
 
       const autocomplete = new google.maps.places.Autocomplete(input, {
-        types: ['establishment'], // Permite buscar estabelecimentos comerciais
-        componentRestrictions: { country: 'BR' } // Restringe ao Brasil
+        types: ['establishment'],
+        componentRestrictions: { country: 'BR' }
       });
 
       autocomplete.addListener('place_changed', () => {
@@ -198,8 +224,6 @@
           document.getElementById('latitude').value = place.geometry.location.lat();
           document.getElementById('longitude').value = place.geometry.location.lng();
           console.log("Local selecionado:", place.name);
-        } else {
-          console.error("Nenhuma geometria encontrada para o local selecionado.");
         }
       });
     }
@@ -208,8 +232,6 @@
     document.addEventListener('DOMContentLoaded', function () {
       if (firebase.auth().currentUser) {
         loadMapsAPI();
-      } else {
-        console.log("Usuário não autenticado. API do Google Maps não será carregada.");
       }
     });
   </script>
