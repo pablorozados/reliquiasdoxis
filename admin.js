@@ -1,4 +1,4 @@
-// Configuração do Firebase (será substituída no deploy)
+// Configuração do Firebase
 const firebaseConfig = {
   apiKey: "FIREBASE_API_KEY",
   projectId: "FIREBASE_PROJECT_ID",
@@ -12,14 +12,14 @@ const db = firebase.firestore();
 // Configuração do Cloudinary
 const cloudinaryConfig = {
   cloudName: 'dgdjaz541',
-  uploadPreset: 'reliquias_do_xis', // Você precisa criar este preset no Cloudinary!
+  uploadPreset: 'reliquias_do_xis',
   sources: ['local'],
   multiple: false,
   clientAllowedFormats: ['jpg', 'png', 'jpeg'],
-  maxFileSize: 5000000 // 5MB
+  maxFileSize: 5000000
 };
 
-let imagemUrl = ''; // Armazena a URL da imagem
+let imagemUrl = '';
 
 // Função para abrir o widget do Cloudinary
 function openCloudinaryWidget() {
@@ -29,8 +29,12 @@ function openCloudinaryWidget() {
       (error, result) => {
         if (!error && result && result.event === "success") {
           imagemUrl = result.info.secure_url;
-          document.getElementById('image-preview').style.display = 'block';
-          document.getElementById('preview').src = imagemUrl;
+          const preview = document.getElementById('preview');
+          const imagePreview = document.getElementById('image-preview');
+          if (preview && imagePreview) {
+            preview.src = imagemUrl;
+            imagePreview.style.display = 'block';
+          }
           resolve();
         }
       }
@@ -46,42 +50,44 @@ const loginForm = document.getElementById("login-form");
 const loginError = document.getElementById("login-error");
 const logoutBtn = document.getElementById("logout");
 
-// 1. SISTEMA DE LOGIN (mantido igual)
-loginForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const loginBtn = loginForm.querySelector("button[type='submit']");
+// Sistema de Login
+if (loginForm) {
+  loginForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
+    const loginBtn = loginForm.querySelector("button[type='submit']");
 
-  loginBtn.disabled = true;
-  loginError.textContent = "";
+    loginBtn.disabled = true;
+    loginError.textContent = "";
 
-  try {
-    await auth.signInWithEmailAndPassword(email, password);
-    loginSection.style.display = "none";
-    adminPanel.style.display = "block";
-    if (typeof loadMapsAPI === 'function') loadMapsAPI();
-  } catch (error) {
-    loginError.textContent = "E-mail ou senha incorretos";
-    console.error("Erro ao fazer login:", error);
-  } finally {
-    loginBtn.disabled = false;
-  }
-});
+    try {
+      await auth.signInWithEmailAndPassword(email, password);
+      loginSection.style.display = "none";
+      adminPanel.style.display = "block";
+      if (typeof loadMapsAPI === 'function') loadMapsAPI();
+    } catch (error) {
+      loginError.textContent = "E-mail ou senha incorretos";
+      console.error("Erro ao fazer login:", error);
+    } finally {
+      loginBtn.disabled = false;
+    }
+  });
+}
 
-// 2. VERIFICAR AUTENTICAÇÃO (mantido igual)
+// Verificar Autenticação
 auth.onAuthStateChanged(user => {
   if (user) {
-    loginSection.style.display = "none";
-    adminPanel.style.display = "block";
+    if (loginSection) loginSection.style.display = "none";
+    if (adminPanel) adminPanel.style.display = "block";
     if (typeof loadMapsAPI === 'function') loadMapsAPI();
   } else {
-    loginSection.style.display = "block";
-    adminPanel.style.display = "none";
+    if (loginSection) loginSection.style.display = "block";
+    if (adminPanel) adminPanel.style.display = "none";
   }
 });
 
-// 3. LOGOUT (mantido igual)
+// Logout
 if (logoutBtn) {
   logoutBtn.addEventListener("click", () => {
     auth.signOut().then(() => {
@@ -93,9 +99,15 @@ if (logoutBtn) {
   });
 }
 
-// 4. FORMULÁRIO PARA ADICIONAR LOCAL (atualizado para Cloudinary)
+// Formulário para Adicionar Local
 const addLocationForm = document.getElementById("add-location-form");
 if (addLocationForm) {
+  // Botão de upload
+  const uploadBtn = document.getElementById('upload-btn');
+  if (uploadBtn) {
+    uploadBtn.addEventListener('click', openCloudinaryWidget);
+  }
+
   addLocationForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     const submitBtn = addLocationForm.querySelector("button[type='submit']");
@@ -125,7 +137,9 @@ if (addLocationForm) {
       await db.collection("locais").add(localData);
       alert("Resenha publicada com sucesso!");
       addLocationForm.reset();
-      document.getElementById('image-preview').style.display = 'none';
+      
+      const imagePreview = document.getElementById('image-preview');
+      if (imagePreview) imagePreview.style.display = 'none';
       imagemUrl = '';
     } catch (error) {
       console.error("Erro ao salvar resenha:", error);
@@ -134,12 +148,49 @@ if (addLocationForm) {
       submitBtn.disabled = false;
     }
   });
-
-  // Botão de upload de imagem
-  document.getElementById('upload-btn')?.addEventListener('click', openCloudinaryWidget);
 }
 
-// 5. Funções do Google Maps (mantidas iguais)
+// Funções do Google Maps
 window.initAutocomplete = function() {
-  // ... (código existente, não alterado)
+  console.log("initAutocomplete chamado!");
+  const input = document.getElementById("endereco");
+  if (!input) return;
+
+  try {
+    if (window.google.maps.places?.PlaceAutocompleteElement) {
+      const autocomplete = new google.maps.places.PlaceAutocompleteElement({
+        inputElement: input,
+        componentRestrictions: { country: "br" }
+      });
+      
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        if (place?.geometry) {
+          document.getElementById("nome").value = place.name || "";
+          document.getElementById("latitude").value = place.geometry.location.lat();
+          document.getElementById("longitude").value = place.geometry.location.lng();
+        }
+      });
+    } 
+    else if (window.google.maps.places?.Autocomplete) {
+      const autocomplete = new google.maps.places.Autocomplete(input, {
+        types: ["establishment"],
+        fields: ["name", "geometry", "formatted_address"],
+        componentRestrictions: { country: "br" }
+      });
+      
+      autocomplete.addListener("place_changed", () => {
+        const place = autocomplete.getPlace();
+        if (place.geometry) {
+          document.getElementById("nome").value = place.name || "";
+          document.getElementById("latitude").value = place.geometry.location.lat();
+          document.getElementById("longitude").value = place.geometry.location.lng();
+        }
+      });
+    } else {
+      input.placeholder = "Digite manualmente (API indisponível)";
+    }
+  } catch (error) {
+    input.placeholder = "Digite o endereço manualmente";
+  }
 };
