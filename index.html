@@ -32,7 +32,7 @@
       });
 
       // Carregar resenhas do Firestore
-      db.collection("resenhas").get().then((querySnapshot) => {
+      db.collection("locais").get().then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
           const data = doc.data();
           console.log("Dados carregados:", data);
