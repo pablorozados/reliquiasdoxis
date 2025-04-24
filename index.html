@@ -21,7 +21,11 @@
       apiKey: "FIREBASE_API_KEY",
       projectId: "FIREBASE_PROJECT_ID",
     };
-    firebase.initializeApp(firebaseConfig);
+    
+    // Inicialização segura do Firebase
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
     const db = firebase.firestore();
 
     // Inicializar o mapa
@@ -32,10 +36,13 @@
       });
 
       // Carregar resenhas do Firestore
-      db.collection("locais").get().then((querySnapshot) => {
+      db.collection("locais").orderBy("timestamp", "desc").get().then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
           const data = doc.data();
           console.log("Dados carregados:", data);
+
+          // Verifica se tem coordenadas válidas
+          if (!data.latitude || !data.longitude) return;
 
           // Adicionar marcador no mapa
           const marker = new google.maps.Marker({
@@ -46,7 +53,11 @@
 
           // Adicionar janela de informações
           const infoWindow = new google.maps.InfoWindow({
-            content: `<h3>${data.nome}</h3><p>${data.resenha}</p>`,
+            content: `
+              <h3>${data.nome}</h3>
+              <p>${data.resenha}</p>
+              ${data.imagem ? `<img src="${data.imagem}" alt="${data.nome}" style="max-width:200px;">` : ''}
+            `,
           });
 
           marker.addListener("click", () => {
@@ -55,6 +66,11 @@
         });
       }).catch((error) => {
         console.error("Erro ao carregar resenhas:", error);
+        document.getElementById("map").innerHTML = `
+          <p style="color:red;text-align:center;">
+            Erro ao carregar as resenhas. Recarregue a página.
+          </p>
+        `;
       });
     }
 
