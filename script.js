@@ -1,15 +1,13 @@
 // Configuração do Firebase
 const firebaseConfig = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "SEU_AUTH_DOMAIN",
-  projectId: "SEU_PROJECT_ID",
-  storageBucket: "SEU_STORAGE_BUCKET",
-  messagingSenderId: "SEU_MESSAGING_SENDER_ID",
-  appId: "SEU_APP_ID"
+  apiKey: "FIREBASE_API_KEY",
+  projectId: "FIREBASE_PROJECT_ID"
 };
 
 // Inicializa Firebase
-const app = firebase.initializeApp(firebaseConfig);
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
+}
 const db = firebase.firestore();
 let map;
 
@@ -25,8 +23,12 @@ function initMap() {
     db.collection("locais").orderBy("timestamp", "desc").get().then((snapshot) => {
       snapshot.forEach(doc => {
         const local = doc.data();
+        
+        // Verifica se tem coordenadas válidas
+        if (!local.latitude || !local.longitude) return;
+        
         const marker = new google.maps.Marker({
-          position: { lat: local.lat, lng: local.lng },
+          position: { lat: local.latitude, lng: local.longitude },
           map: map,
           title: local.nome
         });
@@ -41,6 +43,8 @@ function initMap() {
 
         marker.addListener("click", () => infoWindow.open(map, marker));
       });
+    }).catch(error => {
+      console.error("Erro ao carregar locais:", error);
     });
 
   } catch (error) {
