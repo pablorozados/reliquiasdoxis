@@ -1,38 +1,28 @@
-// Configuração do Firebase
+// Configuração do Firebase (VERSÃO FUNCIONANDO)
 const firebaseConfig = {
   apiKey: "FIREBASE_API_KEY",
-  projectId: "FIREBASE_PROJECT_ID",
+  projectId: "FIREBASE_PROJECT_ID"
 };
 
-// Inicialização do Firebase
+// Inicialização do Firebase (NÃO MODIFICAR)
 const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Configuração do Cloudinary (ALTERAÇÃO PRINCIPAL)
+// ----------------------------
+// PARTE DO CLOUDINARY (MÍNIMA E FUNCIONAL)
+// ----------------------------
 const cloudinaryConfig = {
   cloudName: 'dgdjaz541',
-  uploadPreset: 'reliquias_do_xis',
-  sources: ['local'],
-  multiple: false,
-  clientAllowedFormats: ['jpg', 'png', 'jpeg'],
-  maxFileSize: 5000000 // 5MB
+  uploadPreset: 'reliquias_do_xis'
 };
 
-let imagemUrl = '';
-
-// Função para abrir o widget do Cloudinary (ALTERAÇÃO PRINCIPAL)
 function openCloudinaryWidget() {
   const widget = window.cloudinary.createUploadWidget(cloudinaryConfig, 
     (error, result) => {
-      if (!error && result && result.event === "success") {
-        imagemUrl = result.info.secure_url;
-        const preview = document.getElementById('preview');
-        const imagePreview = document.getElementById('image-preview');
-        if (preview && imagePreview) {
-          preview.src = imagemUrl;
-          imagePreview.style.display = 'block';
-        }
+      if (result?.event === "success") {
+        document.getElementById('preview').src = result.info.secure_url;
+        document.getElementById('image-preview').style.display = 'block';
       }
     }
   );
