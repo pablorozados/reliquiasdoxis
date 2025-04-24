@@ -29,6 +29,12 @@ function openCloudinaryWidget() {
   widget.open();
 }
 
+// ----------------------------
+// CÓDIGO ORIGINAL DO FIREBASE (FUNCIONANDO)
+// ----------------------------
+// [Restante do código EXATAMENTE como estava antes]
+// (Login, logout, formulário e Google Maps inalterados)
+
 // -------------------------------------------------------------------
 // TUDO ABAIXO PERMANECE EXATAMENTE IGUAL (NÃO MODIFICADO)
 // -------------------------------------------------------------------
