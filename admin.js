@@ -1,16 +1,23 @@
-// Configuração do Firebase (VERSÃO FUNCIONANDO)
+// Configuração completa do Firebase
 const firebaseConfig = {
   apiKey: "FIREBASE_API_KEY",
-  projectId: "FIREBASE_PROJECT_ID"
+  authDomain: "FIREBASE_PROJECT_ID.firebaseapp.com",
+  projectId: "FIREBASE_PROJECT_ID",
+  storageBucket: "FIREBASE_PROJECT_ID.appspot.com",
+  messagingSenderId: "SEU_MESSAGING_SENDER_ID",
+  appId: "SEU_APP_ID"
 };
 
-// Inicialização do Firebase (NÃO MODIFICAR)
+// Inicialização do Firebase
 const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
+// Variável para armazenar a URL da imagem
+let imagemUrl = '';
+
 // ----------------------------
-// PARTE DO CLOUDINARY (MÍNIMA E FUNCIONAL)
+// PARTE DO CLOUDINARY
 // ----------------------------
 const cloudinaryConfig = {
   cloudName: 'dgdjaz541',
@@ -21,23 +28,14 @@ function openCloudinaryWidget() {
   const widget = window.cloudinary.createUploadWidget(cloudinaryConfig, 
     (error, result) => {
       if (result?.event === "success") {
-        document.getElementById('preview').src = result.info.secure_url;
+        imagemUrl = result.info.secure_url;
+        document.getElementById('preview').src = imagemUrl;
         document.getElementById('image-preview').style.display = 'block';
       }
     }
   );
   widget.open();
 }
-
-// ----------------------------
-// CÓDIGO ORIGINAL DO FIREBASE (FUNCIONANDO)
-// ----------------------------
-// [Restante do código EXATAMENTE como estava antes]
-// (Login, logout, formulário e Google Maps inalterados)
-
-// -------------------------------------------------------------------
-// TUDO ABAIXO PERMANECE EXATAMENTE IGUAL (NÃO MODIFICADO)
-// -------------------------------------------------------------------
 
 // Elementos da UI
 const loginSection = document.getElementById("login-section");
@@ -125,6 +123,7 @@ if (addLocationForm) {
         latitude,
         longitude,
         resenha,
+        userId: auth.currentUser.uid,
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
       };
 
@@ -133,5 +132,46 @@ if (addLocationForm) {
       await db.collection("locais").add(localData);
       alert("Resenha publicada com sucesso!");
       addLocationForm.reset();
-      
-      const
+      document.getElementById('image-preview').style.display = 'none';
+      imagemUrl = '';
+    } catch (error) {
+      console.error("Erro ao publicar:", error);
+      alert("Erro ao publicar resenha. Por favor, tente novamente.");
+    } finally {
+      submitBtn.disabled = false;
+    }
+  });
+}
+
+// Botão para apagar última resenha (implementação básica)
+const deleteBtn = document.getElementById('delete-btn');
+if (deleteBtn) {
+  deleteBtn.addEventListener('click', async () => {
+    if (!auth.currentUser) {
+      alert("Por favor, faça login novamente.");
+      return;
+    }
+
+    if (!confirm('Tem certeza que deseja apagar sua última resenha?')) return;
+
+    try {
+      const query = await db.collection("locais")
+        .where("userId", "==", auth.currentUser.uid)
+        .orderBy("timestamp", "desc")
+        .limit(1)
+        .get();
+
+      if (query.empty) {
+        alert("Nenhuma resenha encontrada para apagar.");
+        return;
+      }
+
+      const doc = query.docs[0];
+      await db.collection("locais").doc(doc.id).delete();
+      alert("Resenha apagada com sucesso!");
+    } catch (error) {
+      console.error("Erro ao apagar:", error);
+      alert("Erro ao apagar resenha. Por favor, tente novamente.");
+    }
+  });
+}
