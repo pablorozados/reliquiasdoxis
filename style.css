@@ -1,151 +1,304 @@
-/* Reset e Variáveis */
-:root {
-  --primary: #FF6B6B;
-  --secondary: #FFA3A3;
-  --dark: #2E2E2E;
-  --light: #F8F9FA;
-  --accent: #FFD166;
-  --success: #06D6A0;
-  --danger: #EF476F;
-  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Poppins', sans-serif;
-  background-color: var(--light);
-  color: var(--dark);
-  line-height: 1.6;
-}
-
-/* Header Estilizado */
-header {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
-  color: white;
-  padding: 2rem 0;
-  text-align: center;
-  box-shadow: var(--shadow);
-  position: relative;
-  overflow: hidden;
-}
-
-header h1 {
-  font-size: 2.5rem;
-  font-weight: 700;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
-  position: relative;
-  z-index: 1;
-}
-
-header::after {
-  content: "";
-  background: url('https://i.imgur.com/JqYeZ5L.png') center/cover no-repeat;
-  opacity: 0.1;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 0;
-}
-
-/* Mapa Aprimorado */
-#map {
-  height: 60vh;
-  width: 90%;
-  margin: 2rem auto;
-  border-radius: 12px;
-  box-shadow: var(--shadow);
-  border: 8px solid white;
-  position: relative;
-}
-
-/* Card de Resenhas (Para futura implementação) */
-.resenha-card {
-  background: white;
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin: 1rem auto;
-  max-width: 800px;
-  box-shadow: var(--shadow);
-  transition: transform 0.3s;
-}
-
-.resenha-card:hover {
-  transform: translateY(-5px);
-}
-
-/* Botões Modernizados */
-.btn {
-  display: inline-block;
-  background: var(--primary);
-  color: white;
-  padding: 0.8rem 1.5rem;
-  border: none;
-  border-radius: 50px;
-  cursor: pointer;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  transition: all 0.3s;
-}
-
-.btn:hover {
-  background: var(--secondary);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* Admin Panel Atualizado */
-#admin-panel {
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  max-width: 800px;
-  margin: 2rem auto;
-  box-shadow: var(--shadow);
-}
-
-#add-location-form input,
-#add-location-form textarea {
-  background: var(--light);
-  border: 2px solid #e9ecef;
-  border-radius: 8px;
-  padding: 1rem;
-  font-size: 1rem;
-  transition: border 0.3s;
-}
-
-#add-location-form input:focus,
-#add-location-form textarea:focus {
-  border-color: var(--primary);
-  outline: none;
-}
-
-/* Responsividade */
-@media (max-width: 768px) {
-  header h1 {
-    font-size: 1.8rem;
-  }
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relíquias do Xis POA | As melhores (e piores) experiências</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
   
-  #map {
-    width: 95%;
-    height: 50vh;
-  }
-}
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script> 
 
-/* Animação de Loading (Opcional) */
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
+  <style>
+    /* Estilos para o popup do mapa */
+    .info-window-content {
+      max-width: 300px;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    .info-window-title {
+      color: #FF6B6B;
+      margin-bottom: 10px;
+      font-size: 1.2rem;
+      font-weight: 700;
+      border-bottom: 2px solid #FFA3A3;
+      padding-bottom: 5px;
+    }
+    
+    .info-window-pedido {
+      font-style: italic;
+      margin: 10px 0;
+      padding: 10px;
+      background-color: #FFF5F5;
+      border-left: 3px solid #FF6B6B;
+      font-size: 0.9rem;
+    }
+    
+    .info-window-image {
+      max-width: 100%;
+      max-height: 150px;
+      margin: 10px 0;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .rating-display {
+      margin: 8px 0;
+      display: flex;
+      align-items: center;
+    }
+    
+    .rating-label {
+      width: 120px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      color: #555;
+    }
+    
+    .rating-stars {
+      color: #FFD700;
+      letter-spacing: 2px;
+    }
+    
+    .rating-sujeira {
+      color: #8B4513; /* Cor marrom para os hambúrgueres */
+    }
+    
+    .rating-cagada {
+      color: #A0522D; /* Cor marrom mais escura para cocô */
+    }
+    
+    /* Estilo do marcador personalizado */
+    .map-marker {
+      background-color: #FF6B6B;
+      width: 30px;
+      height: 30px;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      position: relative;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
+    
+    .map-marker::after {
+      content: "🍔";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(45deg);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-content">
+      <h1>Relíquias do Xis POA</h1>
+      <p class="subtitle">As melhores (e piores) experiências gastronômicas de Porto Alegre</p>
+      <div class="header-burger">
+        <div class="burger-layer"></div>
+        <div class="burger-layer"></div>
+        <div class="burger-layer"></div>
+      </div>
+    </div>
+  </header>
+  
+  <main>
+    <div class="map-container">
+      <div id="map"></div>
+      <div class="map-overlay">
+        <button id="filter-btn" class="map-btn">
+          <i class="fas fa-filter"></i> Filtrar
+        </button>
+        <button id="add-review-btn" class="map-btn primary">
+          <i class="fas fa-plus"></i> Adicionar Resenha
+        </button>
+      </div>
+    </div>
+    
+    <div class="floating-info">
+      <span id="total-reviews">0</span> resenhas de xis cadastradas
+    </div>
+  </main>
 
-.loading {
-  animation: pulse 1.5s infinite;
-}
+  <script>
+    // Configuração do Firebase
+    const firebaseConfig = {
+      apiKey: "FIREBASE_API_KEY",
+      projectId: "FIREBASE_PROJECT_ID",
+    };
+    
+    // Inicialização segura do Firebase
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // Função para gerar emojis de avaliação
+    function getRatingEmojis(rating, emojiType) {
+      const emojis = {
+        'nota': '⭐',
+        'sujeira': '🍔',
+        'cagada': '💩'
+      };
+      
+      let result = '';
+      for (let i = 0; i < rating; i++) {
+        result += emojis[emojiType];
+      }
+      return result;
+    }
+
+    // Criar ícone personalizado para os marcadores
+    function createCustomMarkerIcon() {
+      return {
+        path: 'M 0,0 C -2,-20 -10,-22 -10,-30 A 10,10 0 1,1 10,-30 C 10,-22 2,-20 0,0 z',
+        fillColor: '#FF6B6B',
+        fillOpacity: 1,
+        strokeColor: '#FFF',
+        strokeWeight: 2,
+        scale: 1,
+        anchor: new google.maps.Point(0, -30)
+      };
+    }
+
+    // Inicializar o mapa
+    function initMap() {
+      const map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: -30.0346, lng: -51.2177 }, // Centro de Porto Alegre
+        zoom: 13,
+        styles: [
+          {
+            "featureType": "poi",
+            "stylers": [
+              { "visibility": "off" }
+            ]
+          },
+          {
+            "featureType": "transit",
+            "stylers": [
+              { "visibility": "off" }
+            ]
+          }
+        ]
+      });
+
+      let reviewCount = 0;
+
+      // Carregar resenhas do Firestore
+      db.collection("locais").orderBy("timestamp", "desc").get().then((querySnapshot) => {
+        reviewCount = querySnapshot.size;
+        document.getElementById('total-reviews').textContent = reviewCount;
+        
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          
+          // Verifica se tem coordenadas válidas
+          if (!data.latitude || !data.longitude) return;
+
+          // Criar conteúdo da janela de informações
+          const contentString = `
+            <div class="info-window-content">
+              <h3 class="info-window-title">${data.nome}</h3>
+              
+              <div class="info-window-pedido">
+                <strong>Pedido:</strong> ${data.meu_pedido || 'Não informado'}
+              </div>
+              
+              <p>${data.resenha}</p>
+              
+              <div class="rating-display">
+                <span class="rating-label">Nota:</span>
+                <span class="rating-stars">${getRatingEmojis(data.nota, 'nota')}</span>
+              </div>
+              
+              <div class="rating-display">
+                <span class="rating-label">Sujeira comendo:</span>
+                <span class="rating-sujeira">${getRatingEmojis(data.sujeira_comendo, 'sujeira')}</span>
+              </div>
+              
+              <div class="rating-display">
+                <span class="rating-label">Cagada depois:</span>
+                <span class="rating-cagada">${getRatingEmojis(data.cagada_depois, 'cagada')}</span>
+              </div>
+              
+              ${data.imagem ? `<img src="${data.imagem}" class="info-window-image" alt="${data.nome}">` : ''}
+            </div>
+          `;
+
+          // Adicionar marcador no mapa
+          const marker = new google.maps.Marker({
+            position: { lat: data.latitude, lng: data.longitude },
+            map: map,
+            title: data.nome,
+            icon: createCustomMarkerIcon(),
+            animation: google.maps.Animation.DROP
+          });
+
+          // Adicionar janela de informações
+          const infoWindow = new google.maps.InfoWindow({
+            content: contentString,
+            maxWidth: 300
+          });
+
+          marker.addListener("click", () => {
+            infoWindow.open(map, marker);
+            marker.setAnimation(google.maps.Animation.BOUNCE);
+            setTimeout(() => {
+              marker.setAnimation(null);
+            }, 1500);
+          });
+        });
+      }).catch((error) => {
+        console.error("Erro ao carregar resenhas:", error);
+        document.getElementById("map").innerHTML = `
+          <div class="error-message">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p>Erro ao carregar as resenhas. Recarregue a página.</p>
+          </div>
+        `;
+      });
+    }
+
+    // Carregar a API do Google Maps
+    function loadMapsAPI() {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&callback=initMap`;
+      script.async = true;
+      script.defer = true;
+      script.onerror = () => {
+        console.error("Erro ao carregar a API do Google Maps.");
+        document.getElementById("map").innerHTML = `
+          <div class="error-message">
+            <i class="fas fa-map-marked-alt"></i>
+            <p>Não foi possível carregar o mapa. Verifique sua conexão.</p>
+          </div>
+        `;
+      };
+      document.head.appendChild(script);
+    }
+
+    // Botão para adicionar resenha
+    document.getElementById('add-review-btn').addEventListener('click', () => {
+      window.location.href = "admin.html";
+    });
+
+    // Carregar o mapa ao carregar a página
+    window.addEventListener('DOMContentLoaded', () => {
+      loadMapsAPI();
+      
+      // Verifica se está logado para mostrar botão de admin
+      if (localStorage.getItem('isLoggedIn') {
+        const adminLink = document.createElement('a');
+        adminLink.href = 'admin.html';
+        adminLink.className = 'admin-link';
+        adminLink.innerHTML = '<i class="fas fa-user-shield"></i> Admin';
+        document.querySelector('header').appendChild(adminLink);
+      }
+    });
+  </script>
+</body>
+</html>
