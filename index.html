@@ -7,16 +7,63 @@
   <link rel="stylesheet" href="style.css">
   
   <!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script> 
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script> 
 
-<!-- Script do Cloudinary (DEPOIS do Firebase) -->
-<script src="https://upload-widget.cloudinary.com/global/all.js"></script>
-  
-  <!-- Google Maps -->
+  <style>
+    /* Estilos para as avaliações no popup */
+    .rating-display {
+      margin: 8px 0;
+      display: flex;
+      align-items: center;
+    }
+    
+    .rating-label {
+      width: 150px;
+      font-weight: bold;
+    }
+    
+    .rating-stars {
+      color: gold;
+      text-shadow: 0 0 2px rgba(0,0,0,0.5);
+    }
+    
+    .info-window-content {
+      max-width: 300px;
+    }
+    
+    .info-window-image {
+      max-width: 100%;
+      max-height: 150px;
+      margin-top: 10px;
+      border-radius: 4px;
+    }
+    
+    .info-window-title {
+      color: #d9534f;
+      margin-bottom: 5px;
+    }
+    
+    .info-window-pedido {
+      font-style: italic;
+      margin: 8px 0;
+      padding: 8px;
+      background-color: #f8f9fa;
+      border-left: 3px solid #ff6b6b;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Xis de POA - Resenhas</h1>
+  </header>
+  <main>
+    <div id="map" style="width: 100%; height: 500px;"></div>
+  </main>
+
   <script>
-    // Configuração do Firebase (substituída no deploy)
+    // Configuração do Firebase
     const firebaseConfig = {
       apiKey: "FIREBASE_API_KEY",
       projectId: "FIREBASE_PROJECT_ID",
@@ -27,6 +74,21 @@
       firebase.initializeApp(firebaseConfig);
     }
     const db = firebase.firestore();
+
+    // Função para gerar emojis de avaliação
+    function getRatingEmojis(rating, emojiType) {
+      const emojis = {
+        'nota': '⭐',
+        'sujeira': '🍔',
+        'cagada': '💩'
+      };
+      
+      let result = '';
+      for (let i = 0; i < rating; i++) {
+        result += emojis[emojiType];
+      }
+      return result;
+    }
 
     // Inicializar o mapa
     function initMap() {
@@ -39,10 +101,39 @@
       db.collection("locais").orderBy("timestamp", "desc").get().then((querySnapshot) => {
         querySnapshot.forEach((doc) => {
           const data = doc.data();
-          console.log("Dados carregados:", data);
-
+          
           // Verifica se tem coordenadas válidas
           if (!data.latitude || !data.longitude) return;
+
+          // Criar conteúdo da janela de informações
+          const contentString = `
+            <div class="info-window-content">
+              <h3 class="info-window-title">${data.nome}</h3>
+              
+              <div class="info-window-pedido">
+                <strong>Pedido:</strong> ${data.meu_pedido || 'Não informado'}
+              </div>
+              
+              <p>${data.resenha}</p>
+              
+              <div class="rating-display">
+                <span class="rating-label">Nota:</span>
+                <span class="rating-stars">${getRatingEmojis(data.nota, 'nota')}</span>
+              </div>
+              
+              <div class="rating-display">
+                <span class="rating-label">Sujeira comendo:</span>
+                <span>${getRatingEmojis(data.sujeira_comendo, 'sujeira')}</span>
+              </div>
+              
+              <div class="rating-display">
+                <span class="rating-label">Cagada depois:</span>
+                <span>${getRatingEmojis(data.cagada_depois, 'cagada')}</span>
+              </div>
+              
+              ${data.imagem ? `<img src="${data.imagem}" class="info-window-image" alt="${data.nome}">` : ''}
+            </div>
+          `;
 
           // Adicionar marcador no mapa
           const marker = new google.maps.Marker({
@@ -53,11 +144,7 @@
 
           // Adicionar janela de informações
           const infoWindow = new google.maps.InfoWindow({
-            content: `
-              <h3>${data.nome}</h3>
-              <p>${data.resenha}</p>
-              ${data.imagem ? `<img src="${data.imagem}" alt="${data.nome}" style="max-width:200px;">` : ''}
-            `,
+            content: contentString,
           });
 
           marker.addListener("click", () => {
@@ -67,7 +154,7 @@
       }).catch((error) => {
         console.error("Erro ao carregar resenhas:", error);
         document.getElementById("map").innerHTML = `
-          <p style="color:red;text-align:center;">
+          <p style="color: red; text-align: center; padding: 20px;">
             Erro ao carregar as resenhas. Recarregue a página.
           </p>
         `;
@@ -90,13 +177,5 @@
     // Carregar o mapa ao carregar a página
     window.addEventListener('DOMContentLoaded', loadMapsAPI);
   </script>
-</head>
-<body>
-  <header>
-    <h1>Xis de POA - Resenhas</h1>
-  </header>
-  <main>
-    <div id="map" style="width: 100%; height: 500px;"></div>
-  </main>
 </body>
 </html>
