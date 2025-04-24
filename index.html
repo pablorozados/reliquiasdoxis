@@ -78,9 +78,47 @@
       max-width: 100%;
       border-radius: 4px;
       margin-top: 0.5rem;
+      cursor: pointer;
+      transition: transform 0.2s;
     }
     
-     </style>
+    .info-window-image:hover {
+      transform: scale(1.03);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
+    
+    .tooltip-icon {
+      margin-left: 5px;
+      color: #666;
+      cursor: help;
+      position: relative;
+      display: inline-block;
+    }
+    
+    .tooltip-text {
+      visibility: hidden;
+      width: 200px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 8px;
+      position: absolute;
+      z-index: 1;
+      bottom: 125%;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 0;
+      transition: opacity 0.3s;
+      font-size: 12px;
+      font-weight: normal;
+    }
+    
+    .tooltip-icon:hover .tooltip-text {
+      visibility: visible;
+      opacity: 1;
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -156,21 +194,39 @@
               <p>${data.resenha}</p>
               
               <div class="rating-display">
-                <span class="rating-label">Nota:</span>
+                <span class="rating-label">
+                  Nota:
+                  <span class="tooltip-icon">
+                    <i class="fas fa-question-circle"></i>
+                    <span class="tooltip-text">Avaliação geral do xis</span>
+                  </span>
+                </span>
                 <span class="rating-value">${getRatingEmojis(data.nota, 'nota')}</span>
               </div>
               
               <div class="rating-display">
-                <span class="rating-label">Sujeira comendo:</span>
+                <span class="rating-label">
+                  Sujeira comendo:
+                  <span class="tooltip-icon">
+                    <i class="fas fa-question-circle"></i>
+                    <span class="tooltip-text">O quanto eu me sujei comendo esse xis</span>
+                  </span>
+                </span>
                 <span class="rating-value">${getRatingEmojis(data.sujeira_comendo, 'sujeira')}</span>
               </div>
               
               <div class="rating-display">
-                <span class="rating-label">Cagada depois:</span>
+                <span class="rating-label">
+                  Cagada depois:
+                  <span class="tooltip-icon">
+                    <i class="fas fa-question-circle"></i>
+                    <span class="tooltip-text">Acho que é bem autoexplicativo, não? 😣</span>
+                  </span>
+                </span>
                 <span class="rating-value">${getRatingEmojis(data.cagada_depois, 'cagada')}</span>
               </div>
               
-              ${data.imagem ? `<img src="${data.imagem}" class="info-window-image" alt="${data.nome}">` : ''}
+              ${data.imagem ? `<a href="${data.imagem}" target="_blank" rel="noopener noreferrer"><img src="${data.imagem}" class="info-window-image" alt="${data.nome}"></a>` : ''}
             </div>
           `;
 
