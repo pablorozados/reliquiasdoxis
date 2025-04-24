@@ -1,64 +1,151 @@
-body {
-  font-family: 'Roboto', sans-serif;
+/* Reset e Variáveis */
+:root {
+  --primary: #FF6B6B;
+  --secondary: #FFA3A3;
+  --dark: #2E2E2E;
+  --light: #F8F9FA;
+  --accent: #FFD166;
+  --success: #06D6A0;
+  --danger: #EF476F;
+  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+* {
   margin: 0;
   padding: 0;
-  background-color: #f5f5f5;
+  box-sizing: border-box;
 }
 
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: var(--light);
+  color: var(--dark);
+  line-height: 1.6;
+}
+
+/* Header Estilizado */
 header {
-  background-color: #ff6b6b;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
   color: white;
+  padding: 2rem 0;
   text-align: center;
-  padding: 1rem;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
 }
 
+header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 1;
+}
+
+header::after {
+  content: "";
+  background: url('https://i.imgur.com/JqYeZ5L.png') center/cover no-repeat;
+  opacity: 0.1;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+}
+
+/* Mapa Aprimorado */
 #map {
-  height: 500px;
+  height: 60vh;
   width: 90%;
-  margin: 20px auto;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  margin: 2rem auto;
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  border: 8px solid white;
+  position: relative;
 }
 
-#reviews-container {
-  width: 90%;
-  margin: 0 auto;
-  padding: 20px;
+/* Card de Resenhas (Para futura implementação) */
+.resenha-card {
   background: white;
-  border-radius: 8px;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1rem auto;
+  max-width: 800px;
+  box-shadow: var(--shadow);
+  transition: transform 0.3s;
 }
 
-/* Estilos do Admin */
-#login-section, #admin-panel {
-  max-width: 500px;
-  margin: 20px auto;
-  padding: 20px;
+.resenha-card:hover {
+  transform: translateY(-5px);
+}
+
+/* Botões Modernizados */
+.btn {
+  display: inline-block;
+  background: var(--primary);
+  color: white;
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 50px;
+  cursor: pointer;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: all 0.3s;
+}
+
+.btn:hover {
+  background: var(--secondary);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Admin Panel Atualizado */
+#admin-panel {
   background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 800px;
+  margin: 2rem auto;
+  box-shadow: var(--shadow);
 }
 
 #add-location-form input,
 #add-location-form textarea {
-  width: 100%;
-  padding: 10px;
-  margin: 8px 0;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  background: var(--light);
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  padding: 1rem;
+  font-size: 1rem;
+  transition: border 0.3s;
 }
 
-#add-location-form button {
-  background: #ff6b6b;
-  color: white;
-  border: none;
-  padding: 12px;
-  width: 100%;
-  cursor: pointer;
-  border-radius: 4px;
+#add-location-form input:focus,
+#add-location-form textarea:focus {
+  border-color: var(--primary);
+  outline: none;
 }
 
-#admin-link {
-  color: white;
-  text-decoration: none;
-  font-weight: bold;
+/* Responsividade */
+@media (max-width: 768px) {
+  header h1 {
+    font-size: 1.8rem;
+  }
+  
+  #map {
+    width: 95%;
+    height: 50vh;
+  }
+}
+
+/* Animação de Loading (Opcional) */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.loading {
+  animation: pulse 1.5s infinite;
 }
