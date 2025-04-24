@@ -1,7 +1,6 @@
-// Configuração do Firebase (versão simplificada para seus 3 secrets)
+// Configuração do Firebase
 const firebaseConfig = {
   apiKey: "FIREBASE_API_KEY",
-  authDomain: "FIREBASE_PROJECT_ID.firebaseapp.com",
   projectId: "FIREBASE_PROJECT_ID"
 };
 
@@ -10,12 +9,13 @@ const app = firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Variável para armazenar a URL da imagem
+// Variáveis globais
 let imagemUrl = '';
+let selectedNota = 0;
+let selectedSujeira = 0;
+let selectedCagada = 0;
 
-// ----------------------------
-// PARTE DO CLOUDINARY
-// ----------------------------
+// Configuração do Cloudinary
 const cloudinaryConfig = {
   cloudName: 'dgdjaz541',
   uploadPreset: 'reliquias_do_xis'
@@ -90,9 +90,56 @@ if (logoutBtn) {
   });
 }
 
+// Contador de caracteres para "Meu Pedido"
+function setupCharCounter() {
+  const pedidoField = document.getElementById('meu-pedido');
+  const counter = document.getElementById('pedido-counter');
+  
+  pedidoField.addEventListener('input', () => {
+    counter.textContent = pedidoField.value.length;
+  });
+}
+
+// Inicialização dos ratings
+function setupRatings() {
+  // Nota (estrelas)
+  const notaOptions = document.querySelectorAll('#nota-rating .rating-option');
+  notaOptions.forEach(option => {
+    option.addEventListener('click', () => {
+      notaOptions.forEach(opt => opt.classList.remove('selected'));
+      option.classList.add('selected');
+      selectedNota = parseInt(option.dataset.value);
+    });
+  });
+
+  // Sujeira comendo (hambúrgueres)
+  const sujeiraOptions = document.querySelectorAll('#sujeira-rating .rating-option');
+  sujeiraOptions.forEach(option => {
+    option.addEventListener('click', () => {
+      sujeiraOptions.forEach(opt => opt.classList.remove('selected'));
+      option.classList.add('selected');
+      selectedSujeira = parseInt(option.dataset.value);
+    });
+  });
+
+  // Cagada depois (cocôs)
+  const cagadaOptions = document.querySelectorAll('#cagada-rating .rating-option');
+  cagadaOptions.forEach(option => {
+    option.addEventListener('click', () => {
+      cagadaOptions.forEach(opt => opt.classList.remove('selected'));
+      option.classList.add('selected');
+      selectedCagada = parseInt(option.dataset.value);
+    });
+  });
+}
+
 // Formulário para Adicionar Local
 const addLocationForm = document.getElementById("add-location-form");
 if (addLocationForm) {
+  // Inicializa os ratings e contador
+  setupRatings();
+  setupCharCounter();
+
   // Botão de upload
   const uploadBtn = document.getElementById('upload-btn');
   if (uploadBtn) {
@@ -105,6 +152,14 @@ if (addLocationForm) {
     submitBtn.disabled = true;
 
     try {
+      // Validação dos campos obrigatórios
+      const meuPedido = document.getElementById('meu-pedido').value.trim();
+      
+      if (selectedNota === 0 || selectedSujeira === 0 || selectedCagada === 0 || !meuPedido) {
+        alert("Por favor, preencha todos os campos obrigatórios");
+        return;
+      }
+
       const nome = document.getElementById('nome').value;
       const latitude = parseFloat(document.getElementById('latitude').value);
       const longitude = parseFloat(document.getElementById('longitude').value);
@@ -115,22 +170,39 @@ if (addLocationForm) {
         return;
       }
 
+      // Dados para salvar no Firestore
       const localData = {
         nome,
         latitude,
         longitude,
         resenha,
+        meu_pedido: meuPedido,
+        nota: selectedNota,
+        sujeira_comendo: selectedSujeira,
+        cagada_depois: selectedCagada,
         userId: auth.currentUser.uid,
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
       };
 
       if (imagemUrl) localData.imagem = imagemUrl;
 
+      // Salva no Firestore
       await db.collection("locais").add(localData);
       alert("Resenha publicada com sucesso!");
+      
+      // Reseta o formulário
       addLocationForm.reset();
       document.getElementById('image-preview').style.display = 'none';
+      document.getElementById('pedido-counter').textContent = '0';
       imagemUrl = '';
+      
+      // Reseta as avaliações
+      selectedNota = 0;
+      selectedSujeira = 0;
+      selectedCagada = 0;
+      document.querySelectorAll('.rating-option').forEach(opt => {
+        opt.classList.remove('selected');
+      });
     } catch (error) {
       console.error("Erro ao publicar:", error);
       alert("Erro ao publicar resenha. Por favor, tente novamente.");
@@ -140,7 +212,7 @@ if (addLocationForm) {
   });
 }
 
-// Botão para apagar última resenha (implementação básica)
+// Botão para apagar última resenha
 const deleteBtn = document.getElementById('delete-btn');
 if (deleteBtn) {
   deleteBtn.addEventListener('click', async () => {
