@@ -1,87 +1,158 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <!-- ... (cabeçalho permanece igual) ... -->
-  <style>
-    /* ... (outros estilos permanecem iguais) ... */
-    
-    .rating-stars {
-      display: flex;
-      gap: 2px;
-    }
-    
-    .star {
-      color: #FFD700;
-      font-size: 1.1rem;
-    }
-    
-    .star.empty {
-      opacity: 0.3;
-    }
-    
-    .rating-hamburgers, .rating-poos {
-      display: flex;
-      gap: 2px;
-    }
-    
-    .hamburger, .poo {
-      font-size: 1.1rem;
-    }
-    
-    .hamburger.empty, .poo.empty {
-      opacity: 0.3;
-    }
-    
-    .thumbnail {
-      max-width: 100%;
-      max-height: 150px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: transform 0.2s;
-    }
-    
-    .thumbnail:hover {
-      transform: scale(1.03);
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relíquias do Xis POA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- ... (corpo permanece igual até o script) ... -->
+  <header>
+    <h1>Relíquias do Xis POA</h1>
+    <p>As melhores (e piores) experiências gastronômicas</p>
+  </header>
+  
+  <main>
+    <div id="map">
+      <div class="loading-message">
+        <i class="fas fa-hamburger fa-spin"></i>
+        <p>Carregando mapa...</p>
+      </div>
+    </div>
+  </main>
 
+  <!-- Scripts no final do body para melhor performance -->
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
+  
   <script>
-    // ... (configurações do Firebase permanecem iguais) ...
+    // Configuração mínima do Firebase
+    const firebaseConfig = {
+      apiKey: "FIREBASE_API_KEY",
+      projectId: "FIREBASE_PROJECT_ID"
+    };
 
-    function getRatingEmojis(rating, type) {
-      const maxRating = 5;
-      let emoji = '';
-      let emptyEmoji = '';
+    // Inicialização segura
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // Função simplificada para mostrar avaliações
+    function renderRating(value, type) {
+      const icons = {
+        nota: { emoji: '⭐', class: 'star' },
+        sujeira: { emoji: '🍔', class: 'hamburger' },
+        cagada: { emoji: '💩', class: 'poo' }
+      };
       
-      switch(type) {
-        case 'nota':
-          emoji = '⭐';
-          break;
-        case 'sujeira':
-          emoji = '🍔';
-          break;
-        case 'cagada':
-          emoji = '💩';
-          break;
+      let html = '';
+      for (let i = 0; i < 5; i++) {
+        const active = i < value;
+        html += `<span class="${icons[type].class} ${active ? '' : 'empty'}">${icons[type].emoji}</span>`;
       }
-      
-      let result = '';
-      // Emojis preenchidos
-      for (let i = 0; i < rating; i++) {
-        result += `<span class="${type}">${emoji}</span>`;
-      }
-      // Emojis vazios (transparentes)
-      for (let i = rating; i < maxRating; i++) {
-        result += `<span class="${type} empty">${emoji}</span>`;
-      }
-      
-      return `<div class="rating-${type}s">${result}</div>`;
+      return html;
     }
 
-    // ... (restante do código permanece igual) ...
+    // Carrega API do Maps apenas quando necessário
+    function initApp() {
+      const loadingMsg = document.querySelector('.loading-message');
+      
+      if (!window.google || !window.google.maps) {
+        loadingMsg.innerHTML = '<p>Carregando Google Maps...</p>';
+        loadGoogleMaps();
+      } else {
+        initMap();
+      }
+    }
+
+    function loadGoogleMaps() {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&callback=initMap`;
+      script.async = true;
+      script.onerror = () => {
+        showError("Falha ao carregar o Google Maps");
+      };
+      document.head.appendChild(script);
+    }
+
+    function initMap() {
+      try {
+        const map = new google.maps.Map(document.getElementById("map"), {
+          center: { lat: -30.0346, lng: -51.2177 },
+          zoom: 13
+        });
+
+        loadReviews(map);
+      } catch (error) {
+        showError("Erro ao iniciar o mapa");
+      }
+    }
+
+    function loadReviews(map) {
+      db.collection("locais").orderBy("timestamp", "desc").get()
+        .then(querySnapshot => {
+          if (querySnapshot.empty) {
+            showMessage("Nenhuma resenha encontrada");
+            return;
+          }
+
+          querySnapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.latitude && data.longitude) {
+              createMarker(map, data);
+            }
+          });
+        })
+        .catch(error => {
+          showError("Erro ao carregar resenhas");
+        });
+    }
+
+    function createMarker(map, data) {
+      const marker = new google.maps.Marker({
+        position: { lat: data.latitude, lng: data.longitude },
+        map: map,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          fillColor: '#ff6b6b',
+          fillOpacity: 1,
+          strokeColor: '#fff',
+          strokeWeight: 2,
+          scale: 8
+        }
+      });
+
+      const content = `
+        <div class="info-window">
+          <h3>${data.nome}</h3>
+          <p class="pedido">${data.meu_pedido || 'Sem detalhes'}</p>
+          <p>${data.resenha}</p>
+          <div class="ratings">
+            <div>Nota: ${renderRating(data.nota || 0, 'nota')}</div>
+            <div>Sujeira: ${renderRating(data.sujeira_comendo || 0, 'sujeira')}</div>
+            <div>Cagada: ${renderRating(data.cagada_depois || 0, 'cagada')}</div>
+          </div>
+          ${data.imagem ? `<img src="${data.imagem}" class="thumb" onclick="window.open('${data.imagem}', '_blank')">` : ''}
+        </div>
+      `;
+
+      const infoWindow = new google.maps.InfoWindow({ content });
+      marker.addListener('click', () => infoWindow.open(map, marker));
+    }
+
+    function showError(msg) {
+      document.getElementById('map').innerHTML = `<div class="error">${msg}</div>`;
+    }
+
+    function showMessage(msg) {
+      document.getElementById('map').innerHTML += `<div class="info">${msg}</div>`;
+    }
+
+    // Inicia quando o DOM estiver pronto
+    document.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
 </html>
