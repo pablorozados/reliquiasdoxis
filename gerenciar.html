@@ -15,115 +15,134 @@
     <p>Por favor, faça login na <a href="admin.html">Área do Dono</a> primeiro.</p>
   </div>
 
-  <script>
-    // Configuração do Firebase (atualize com suas credenciais)
-    const firebaseConfig = {
-      apiKey: "AIzaSyA7_SFUPE6n9KG6LhL9Y6DRanSW5Zn0-2k",
-      authDomain: "reliquias-do-xis.firebaseapp.com",
-      projectId: "reliquias-do-xis",
-      storageBucket: "reliquias-do-xis.appspot.com",
-      messagingSenderId: "936551505510",
-      appId: "1:936551505510:web:22de1482a8f8d9720257a7"
-    };
+ <!-- Substitua todo o conteúdo do script no gerenciar.html por este: -->
+<script>
+  // Configuração do Firebase (já está correta no seu arquivo)
+  const firebaseConfig = {
+    apiKey: "AIzaSyA7_SFUPE6n9KG6LhL9Y6DRanSW5Zn0-2k",
+    authDomain: "reliquias-do-xis.firebaseapp.com",
+    projectId: "reliquias-do-xis",
+    storageBucket: "reliquias-do-xis.appspot.com",
+    messagingSenderId: "936551505510",
+    appId: "1:936551505510:web:22de1482a8f8d9720257a7"
+  };
 
-    // Inicialização
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+  // Inicialização
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  const auth = firebase.auth();
+  const db = firebase.firestore();
 
-    // Elementos da UI
-    const resenhasContainer = document.getElementById("resenhas-container");
-    const loginMessage = document.getElementById("login-message");
-    const loadingElement = document.getElementById("loading");
+  // Elementos da UI
+  const resenhasContainer = document.getElementById("resenhas-container");
+  const loginMessage = document.getElementById("login-message");
+  const loadingElement = document.getElementById("loading");
 
-    // Função para mostrar mensagem de não autenticado
-    function showLoginMessage() {
-      resenhasContainer.style.display = "none";
-      loginMessage.style.display = "block";
-      loadingElement.style.display = "none";
-    }
+  // Função para mostrar mensagem de não autenticado
+  function showLoginMessage() {
+    resenhasContainer.style.display = "none";
+    loginMessage.style.display = "block";
+    loadingElement.style.display = "none";
+  }
 
-    // Função para carregar resenhas (ATUALIZADA)
-    async function loadResenhas(user) {
-      try {
-        // Remove o filtro por userId para ver todas as resenhas
-        const snapshot = await db.collection("locais")
-          .orderBy("timestamp", "desc")
-          .get();
+  // Função para carregar TODAS as resenhas (sem filtro)
+  async function loadResenhas() {
+    try {
+      loadingElement.textContent = "Carregando todas as resenhas...";
+      
+      const snapshot = await db.collection("locais")
+        .orderBy("timestamp", "desc")
+        .get();
 
-        resenhasContainer.innerHTML = '';
+      resenhasContainer.innerHTML = '';
 
-        if (snapshot.empty) {
-          resenhasContainer.innerHTML = '<p>Nenhuma resenha encontrada.</p>';
-          return;
+      if (snapshot.empty) {
+        resenhasContainer.innerHTML = '<p>Nenhuma resenha encontrada na coleção "locais".</p>';
+        return;
+      }
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const card = document.createElement('div');
+        card.className = 'resenha-card';
+        
+        // Formata data corretamente
+        const dataFormatada = data.timestamp?.toDate()?.toLocaleString('pt-BR') || 'Data não disponível';
+        
+        // Trata imagens (single ou array)
+        let imagensHTML = '';
+        if (data.imagem) {
+          if (Array.isArray(data.imagem)) {
+            imagensHTML = data.imagem.map(img => 
+              `<img src="${img}" class="thumbnail" style="max-width: 200px; margin: 5px;">`
+            ).join('');
+          } else {
+            imagensHTML = `<img src="${data.imagem}" class="thumbnail" style="max-width: 200px;">`;
+          }
         }
 
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          const card = document.createElement('div');
-          card.className = 'resenha-card';
-          card.innerHTML = `
-            <h3>${data.nome}</h3>
-            <p><strong>Data:</strong> ${data.timestamp?.toDate().toLocaleString()}</p>
-            <p>${data.resenha}</p>
-            ${data.imagem ? `
-              <div class="thumbnail-container">
-                ${Array.isArray(data.imagem) ? 
-                  data.imagem.map(img => `<img src="${img}" class="thumbnail">`).join('') : 
-                  `<img src="${data.imagem}" class="thumbnail">`
-                }
-              </div>
-            ` : ''}
-            <div class="resenha-actions">
-              <button onclick="deleteResenha('${doc.id}')">Deletar Resenha</button>
-            </div>
-          `;
-          resenhasContainer.appendChild(card);
-        });
-      } catch (error) {
-        console.error("Erro ao carregar:", error);
-        resenhasContainer.innerHTML = `
-          <p style="color: red;">Erro ao carregar resenhas: ${error.message}</p>
+        card.innerHTML = `
+          <h3>${data.nome || 'Sem nome'}</h3>
+          <p><strong>Data:</strong> ${dataFormatada}</p>
+          <p><strong>Pedido:</strong> ${data.meu_pedido || 'Não informado'}</p>
+          <p>${data.resenha || 'Sem resenha'}</p>
+          ${imagensHTML}
+          <div class="resenha-actions">
+            <button onclick="deleteResenha('${doc.id}')">🗑️ Deletar</button>
+          </div>
+          <hr style="margin: 15px 0; border: 1px solid #eee;">
         `;
-      }
+        resenhasContainer.appendChild(card);
+      });
+
+    } catch (error) {
+      console.error("Erro ao carregar:", error);
+      resenhasContainer.innerHTML = `
+        <div style="color: red; padding: 20px; background: #ffeeee; border-radius: 8px;">
+          <p><strong>Erro ao carregar resenhas:</strong></p>
+          <p>${error.message}</p>
+          <p>Verifique o console para detalhes.</p>
+        </div>
+      `;
+    }
+  }
+
+  // Verificação de autenticação
+  auth.onAuthStateChanged(async (user) => {
+    if (!user) {
+      showLoginMessage();
+      return;
     }
 
-    // Verificação de autenticação
-    auth.onAuthStateChanged(async (user) => {
-      if (!user) {
-        showLoginMessage();
-        return;
-      }
+    try {
+      await user.getIdToken(true);
+      loadResenhas(); // Chama sem parâmetro agora
+    } catch (error) {
+      console.error("Erro na autenticação:", error);
+      showLoginMessage();
+    }
+  });
 
-      try {
-        await user.getIdToken(true);
-        loadResenhas(user);
-      } catch (error) {
-        console.error("Erro na autenticação:", error);
-        showLoginMessage();
-      }
-    });
+  // Função para deletar (agora mais robusta)
+  window.deleteResenha = async (id) => {
+    if (!auth.currentUser) {
+      alert("⚠️ Sua sessão expirou. Por favor, faça login novamente.");
+      showLoginMessage();
+      return;
+    }
 
-    // Função para deletar (ATUALIZADA para verificar permissão)
-    window.deleteResenha = async (id) => {
-      if (!auth.currentUser) {
-        alert("Sua sessão expirou. Por favor, faça login novamente.");
-        showLoginMessage();
-        return;
-      }
-
-      if (!confirm('Tem certeza que deseja deletar esta resenha?')) return;
-      
-      try {
-        await db.collection("locais").doc(id).delete();
-        alert('Resenha deletada com sucesso!');
-        loadResenhas(auth.currentUser);
-      } catch (error) {
-        alert(`Erro ao deletar: ${error.message}`);
-      }
-    };
-  </script>
+    if (!confirm('Tem certeza ABSOLUTA que deseja deletar esta resenha?\n\nEssa ação não pode ser desfeita!')) return;
+    
+    try {
+      await db.collection("locais").doc(id).delete();
+      alert('✅ Resenha deletada com sucesso!');
+      loadResenhas(); // Recarrega a lista
+    } catch (error) {
+      alert(`❌ Erro ao deletar: ${error.message}`);
+      console.error("Erro detalhado:", error);
+    }
+  };
+</script>
 </body>
 </html>
