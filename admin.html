@@ -14,6 +14,7 @@
     :root {
       --primary: #ff6b6b;
       --error: #f44336;
+      --success: #4caf50;
     }
     
     body {
@@ -24,7 +25,7 @@
     }
     
     #login-section, #admin-panel {
-      max-width: 500px;
+      max-width: 600px;
       margin: 2rem auto;
       padding: 2rem;
       background: white;
@@ -35,6 +36,13 @@
     h2 {
       color: #333;
       text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
     }
     
     input, textarea, button {
@@ -51,6 +59,12 @@
       color: white;
       border: none;
       cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+    
+    button:hover {
+      background: #e05555;
     }
     
     #login-error {
@@ -61,6 +75,65 @@
     
     .hidden {
       display: none;
+    }
+    
+    .grid-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    
+    #image-preview {
+      margin: 1rem 0;
+      text-align: center;
+    }
+    
+    #preview {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 4px;
+    }
+    
+    .rating-container {
+      margin: 1rem 0;
+    }
+    
+    .rating-options {
+      display: flex;
+      gap: 10px;
+      margin-top: 0.5rem;
+    }
+    
+    .rating-option {
+      padding: 5px 10px;
+      background: #f0f0f0;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .rating-option.selected {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .tooltip-icon {
+      margin-left: 5px;
+      color: #666;
+      cursor: help;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 1.5rem;
+    }
+    
+    #delete-btn {
+      background: var(--error) !important;
+    }
+    
+    #upload-btn {
+      background: var(--success) !important;
     }
   </style>
 </head>
@@ -82,25 +155,105 @@
   <div id="admin-panel" class="hidden">
     <h2>Adicionar Novo Xis</h2>
     <form id="add-location-form">
-      <!-- Seu formulário aqui -->
-      <button type="submit">Publicar</button>
+      <label for="endereco">Buscar local:</label>
+      <input type="text" id="endereco" placeholder="Digite o endereço">
+      
+      <label for="nome">Nome do lugar:</label>
+      <input type="text" id="nome" required>
+      
+      <div class="grid-columns">
+        <div>
+          <label for="latitude">Latitude:</label>
+          <input type="text" id="latitude" readonly>
+        </div>
+        <div>
+          <label for="longitude">Longitude:</label>
+          <input type="text" id="longitude" readonly>
+        </div>
+      </div>
+      
+      <label for="resenha">Resenha:</label>
+      <textarea id="resenha" rows="5" required></textarea>
+
+      <label for="meu-pedido">Meu Pedido:</label>
+      <textarea id="meu-pedido" rows="2" required placeholder="Ex: Xis Bacon Especial com batata palha extra"></textarea>
+      
+      <div class="rating-container">
+        <div class="rating-title">
+          Nota (0-5 estrelas):
+        </div>
+        <div class="rating-options" id="nota-rating">
+          <div class="rating-option" data-value="0">Nenhuma</div>
+          <div class="rating-option" data-value="1">⭐</div>
+          <div class="rating-option" data-value="2">⭐⭐</div>
+          <div class="rating-option" data-value="3">⭐⭐⭐</div>
+          <div class="rating-option" data-value="4">⭐⭐⭐⭐</div>
+          <div class="rating-option" data-value="5">⭐⭐⭐⭐⭐</div>
+        </div>
+      </div>
+      
+      <div class="rating-container">
+        <div class="rating-title">
+          Me caguei comendo?
+          <span class="tooltip-icon">
+            <i class="fas fa-question-circle"></i>
+          </span>
+        </div>
+        <div class="rating-options" id="sujeira-rating">
+          <div class="rating-option" data-value="0">Nenhuma</div>
+          <div class="rating-option" data-value="1">🍔</div>
+          <div class="rating-option" data-value="2">🍔🍔</div>
+          <div class="rating-option" data-value="3">🍔🍔🍔</div>
+          <div class="rating-option" data-value="4">🍔🍔🍔🍔</div>
+          <div class="rating-option" data-value="5">🍔🍔🍔🍔🍔</div>
+        </div>
+      </div>
+      
+      <div class="rating-container">
+        <div class="rating-title">
+          Me caguei depois de comer?
+          <span class="tooltip-icon">
+            <i class="fas fa-question-circle"></i>
+          </span>
+        </div>
+        <div class="rating-options" id="cagada-rating">
+          <div class="rating-option" data-value="0">Nenhuma</div>
+          <div class="rating-option" data-value="1">💩</div>
+          <div class="rating-option" data-value="2">💩💩</div>
+          <div class="rating-option" data-value="3">💩💩💩</div>
+          <div class="rating-option" data-value="4">💩💩💩💩</div>
+          <div class="rating-option" data-value="5">💩💩💩💩💩</div>
+        </div>
+      </div>
+      
+      <label>Imagem (opcional):</label>
+      <button type="button" id="upload-btn">🖼️ Adicionar Foto</button>
+      <div id="image-preview" class="hidden">
+        <img id="preview" src="#" alt="Preview da imagem">
+      </div>
+      
+      <div class="action-buttons">
+        <button type="submit">Publicar</button>
+        <button type="button" id="delete-btn">🗑️ Apagar Última</button>
+        <button type="button" id="logout">Sair</button>
+      </div>
     </form>
-    <button id="logout">Sair</button>
   </div>
 
   <!-- Scripts no FINAL na ORDEM CORRETA -->
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places"></script>
 
   <script>
-    // CONFIGURAÇÃO SIMPLIFICADA (apenas com o que você tem)
+    // CONFIGURAÇÃO DO FIREBASE
     const firebaseConfig = {
       apiKey: "FIREBASE_API_KEY",
       projectId: "FIREBASE_PROJECT_ID"
     };
 
-    // INICIALIZAÇÃO À PROVA DE FALHAS
+    // INICIALIZAÇÃO
     let auth, db;
     try {
       if (!firebase.apps.length) {
@@ -114,17 +267,25 @@
       document.getElementById('login-error').textContent = "Erro de conexão";
     }
 
+    // VARIÁVEIS GLOBAIS
+    let imagemUrl = '';
+    let selectedNota = 0;
+    let selectedSujeira = 0;
+    let selectedCagada = 0;
+
     // CONTROLE DE LOGIN
     if (auth) {
-      // Verifica se já está logado
       auth.onAuthStateChanged(user => {
         if (user) {
           document.getElementById('login-section').classList.add('hidden');
           document.getElementById('admin-panel').classList.remove('hidden');
+          initForm();
+        } else {
+          document.getElementById('login-section').classList.remove('hidden');
+          document.getElementById('admin-panel').classList.add('hidden');
         }
       });
 
-      // Formulário de login
       document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('email').value;
@@ -137,27 +298,124 @@
         }
       });
 
-      // Logout
       document.getElementById('logout').addEventListener('click', () => {
         auth.signOut();
       });
     }
 
-    // Restante do seu código (Cloudinary, etc)
-    const cloudinaryConfig = {
-      cloudName: 'dgdjaz541',
-      uploadPreset: 'reliquias_do_xis'
-    };
+    // INICIALIZAÇÃO DO FORMULÁRIO
+    function initForm() {
+      // Configuração do Cloudinary
+      const cloudinaryConfig = {
+        cloudName: 'dgdjaz541',
+        uploadPreset: 'reliquias_do_xis'
+      };
 
-    document.getElementById('upload-btn').addEventListener('click', () => {
-      window.cloudinary.createUploadWidget(cloudinaryConfig, 
-        (error, result) => {
-          if (result?.event === "success") {
-            console.log("Imagem enviada:", result.info.secure_url);
+      // Upload de imagem
+      document.getElementById('upload-btn').addEventListener('click', () => {
+        window.cloudinary.createUploadWidget(cloudinaryConfig, 
+          (error, result) => {
+            if (result?.event === "success") {
+              imagemUrl = result.info.secure_url;
+              document.getElementById('preview').src = imagemUrl;
+              document.getElementById('image-preview').classList.remove('hidden');
+            }
           }
+        ).open();
+      });
+
+      // Configuração dos ratings
+      setupRating('nota-rating', value => selectedNota = value);
+      setupRating('sujeira-rating', value => selectedSujeira = value);
+      setupRating('cagada-rating', value => selectedCagada = value);
+
+      // Autocomplete do Google Maps
+      const autocomplete = new google.maps.places.Autocomplete(
+        document.getElementById('endereco'),
+        { types: ['establishment'], componentRestrictions: { country: 'BR' } }
+      );
+
+      autocomplete.addListener('place_changed', () => {
+        const place = autocomplete.getPlace();
+        if (place.geometry) {
+          document.getElementById('latitude').value = place.geometry.location.lat();
+          document.getElementById('longitude').value = place.geometry.location.lng();
+          document.getElementById('nome').value = place.name || '';
         }
-      ).open();
-    });
+      });
+
+      // Envio do formulário
+      document.getElementById('add-location-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const nome = document.getElementById('nome').value;
+        const latitude = parseFloat(document.getElementById('latitude').value);
+        const longitude = parseFloat(document.getElementById('longitude').value);
+        const resenha = document.getElementById('resenha').value;
+        const meu_pedido = document.getElementById('meu-pedido').value;
+
+        if (!nome || isNaN(latitude) || isNaN(longitude) || !resenha || !meu_pedido) {
+          alert("Preencha todos os campos obrigatórios!");
+          return;
+        }
+
+        try {
+          await db.collection("locais").add({
+            nome,
+            latitude,
+            longitude,
+            resenha,
+            meu_pedido,
+            nota: selectedNota,
+            sujeira_comendo: selectedSujeira,
+            cagada_depois: selectedCagada,
+            imagem: imagemUrl || null,
+            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+          });
+          
+          alert("Resenha publicada com sucesso!");
+          document.getElementById('add-location-form').reset();
+          document.getElementById('image-preview').classList.add('hidden');
+          imagemUrl = '';
+        } catch (error) {
+          console.error("Erro ao publicar:", error);
+          alert("Erro ao publicar resenha");
+        }
+      });
+
+      // Botão de deletar
+      document.getElementById('delete-btn').addEventListener('click', async () => {
+        if (!confirm('Tem certeza que deseja apagar sua última resenha?')) return;
+        
+        try {
+          const query = await db.collection("locais")
+            .where("userId", "==", auth.currentUser.uid)
+            .orderBy("timestamp", "desc")
+            .limit(1)
+            .get();
+
+          if (!query.empty) {
+            await db.collection("locais").doc(query.docs[0].id).delete();
+            alert("Resenha apagada com sucesso!");
+          }
+        } catch (error) {
+          console.error("Erro ao apagar:", error);
+          alert("Erro ao apagar resenha");
+        }
+      });
+    }
+
+    // Função auxiliar para ratings
+    function setupRating(elementId, callback) {
+      const options = document.querySelectorAll(`#${elementId} .rating-option`);
+      options.forEach(option => {
+        option.addEventListener('click', () => {
+          options.forEach(opt => opt.classList.remove('selected'));
+          option.classList.add('selected');
+          callback(parseInt(option.dataset.value));
+        });
+      });
+    }
   </script>
 </body>
 </html>
