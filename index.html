@@ -105,23 +105,45 @@
               setTimeout(() => dropMarker(marker, map), Math.random() * 1000);
 
               // Janela de informações
-              const content = `
-                <div class="info-window">
-                  <h3>${data.nome}</h3>
-                  <p class="pedido">${data.meu_pedido || 'Sem detalhes'}</p>
-                  <p>${data.resenha}</p>
-                  <div class="ratings">
-                    <div>Nota: ${renderRating(data.nota || 0, 'nota')}</div>
-                    <div>Sujeira: ${renderRating(data.sujeira_comendo || 0, 'sujeira')}</div>
-                    <div>Cagada: ${renderRating(data.cagada_depois || 0, 'cagada')}</div>
-                  </div>
-                  ${data.imagem ? `
-                    <div class="thumb" onclick="window.open('${data.imagem}', '_blank')">
-                      <img src="${data.imagem}" alt="Foto">
-                    </div>
-                  ` : ''}
-                </div>
-              `;
+const content = `
+  <div class="info-window-content">
+    <h3 class="info-window-title">${data.nome}</h3>
+    
+    <div class="pedido-destaque">
+      <strong>O que pedi:</strong> ${data.meu_pedido || 'Não informado'}
+    </div>
+    
+    <div class="resenha-texto">
+      ${data.resenha}
+    </div>
+    
+    <div class="rating-display">
+      <span class="rating-label">Nota:</span>
+      ${renderRating(data.nota || 0, 'nota')}
+    </div>
+    
+    <div class="rating-display">
+      <span class="rating-label">Me caguei comendo?</span>
+      <span class="tooltip-icon">?</span>
+      ${renderRating(data.sujeira_comendo || 0, 'sujeira')}
+    </div>
+    
+    <div class="rating-display">
+      <span class="rating-label">Me caguei depois de comer?</span>
+      <span class="tooltip-icon">?</span>
+      ${renderRating(data.cagada_depois || 0, 'cagada')}
+    </div>
+    
+    ${data.imagem ? `
+      <div class="thumbnail-container">
+        <img src="${data.imagem}" 
+             class="thumbnail" 
+             alt="Foto do ${data.nome}"
+             onclick="openLightbox('${data.imagem}')">
+      </div>
+    ` : ''}
+  </div>
+`;
 
               const infoWindow = new google.maps.InfoWindow({ content });
               marker.addListener('click', () => {
