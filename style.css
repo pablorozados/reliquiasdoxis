@@ -116,3 +116,68 @@ header {
   line-height: 18px;
   margin-left: 5px;
 }
+
+/* Tooltips funcionais */
+.tooltip-icon {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background-color: #ff6b6b;
+  color: white;
+  border-radius: 50%;
+  text-align: center;
+  font-size: 12px;
+  line-height: 18px;
+  margin-left: 5px;
+  position: relative;
+  cursor: help;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  width: 200px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px;
+  position: absolute;
+  z-index: 1000;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 0.8rem;
+}
+
+.tooltip-icon:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Janela maior */
+.info-window-content {
+  width: 350px !important; /* Aumentei de 300 para 350 */
+  max-height: 600px !important; /* Aumentei a altura máxima */
+  padding: 20px !important;
+}
+
+/* Layout para múltiplas imagens */
+.thumbnail-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.thumbnail {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: zoom-in;
+  transition: transform 0.3s;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
