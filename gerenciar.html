@@ -1,9 +1,17 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <!-- ... (cabeçalho permanece igual) ... -->
+  <!-- ... outras meta tags ... -->
+  <!-- Carregue Firebase ANTES do seu script -->
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
+  <!-- Adicione esta div para debug -->
+  <div id="firebase-status" style="padding: 10px; background: #f0f0f0; display: none;">
+    Firebase loading status...
+  </div>
   <h1>Gerenciar Resenhas</h1>
   <div id="resenhas-container">
     <p id="loading">Carregando suas resenhas...</p>
@@ -17,7 +25,11 @@
 
  <!-- Substitua todo o conteúdo do script no gerenciar.html por este: -->
 <script>
-  // Configuração do Firebase (já está correta no seu arquivo)
+  // Debug inicial
+  document.getElementById('firebase-status').style.display = 'block';
+  document.getElementById('firebase-status').textContent = 'Iniciando carregamento...';
+
+  // Configuração do Firebase
   const firebaseConfig = {
     apiKey: "AIzaSyA7_SFUPE6n9KG6LhL9Y6DRanSW5Zn0-2k",
     authDomain: "reliquias-do-xis.firebaseapp.com",
@@ -27,122 +39,38 @@
     appId: "1:936551505510:web:22de1482a8f8d9720257a7"
   };
 
-  // Inicialização
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-
-  // Elementos da UI
-  const resenhasContainer = document.getElementById("resenhas-container");
-  const loginMessage = document.getElementById("login-message");
-  const loadingElement = document.getElementById("loading");
-
-  // Função para mostrar mensagem de não autenticado
-  function showLoginMessage() {
-    resenhasContainer.style.display = "none";
-    loginMessage.style.display = "block";
-    loadingElement.style.display = "none";
+  // Verificação de carregamento do Firebase
+  if (typeof firebase === 'undefined') {
+    document.getElementById('firebase-status').innerHTML = `
+      <strong style="color:red">ERRO:</strong> Firebase não carregado. Verifique:
+      <ul>
+        <li>Conexão com a internet</li>
+        <li>Bloqueio de scripts por extensões</li>
+        <li>URLs corretas nos scripts do Firebase</li>
+      </ul>
+    `;
+    throw new Error("Firebase não carregado");
   }
 
-  // Função para carregar TODAS as resenhas (sem filtro)
-  async function loadResenhas() {
-    try {
-      loadingElement.textContent = "Carregando todas as resenhas...";
-      
-      const snapshot = await db.collection("locais")
-        .orderBy("timestamp", "desc")
-        .get();
-
-      resenhasContainer.innerHTML = '';
-
-      if (snapshot.empty) {
-        resenhasContainer.innerHTML = '<p>Nenhuma resenha encontrada na coleção "locais".</p>';
-        return;
-      }
-
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const card = document.createElement('div');
-        card.className = 'resenha-card';
-        
-        // Formata data corretamente
-        const dataFormatada = data.timestamp?.toDate()?.toLocaleString('pt-BR') || 'Data não disponível';
-        
-        // Trata imagens (single ou array)
-        let imagensHTML = '';
-        if (data.imagem) {
-          if (Array.isArray(data.imagem)) {
-            imagensHTML = data.imagem.map(img => 
-              `<img src="${img}" class="thumbnail" style="max-width: 200px; margin: 5px;">`
-            ).join('');
-          } else {
-            imagensHTML = `<img src="${data.imagem}" class="thumbnail" style="max-width: 200px;">`;
-          }
-        }
-
-        card.innerHTML = `
-          <h3>${data.nome || 'Sem nome'}</h3>
-          <p><strong>Data:</strong> ${dataFormatada}</p>
-          <p><strong>Pedido:</strong> ${data.meu_pedido || 'Não informado'}</p>
-          <p>${data.resenha || 'Sem resenha'}</p>
-          ${imagensHTML}
-          <div class="resenha-actions">
-            <button onclick="deleteResenha('${doc.id}')">🗑️ Deletar</button>
-          </div>
-          <hr style="margin: 15px 0; border: 1px solid #eee;">
-        `;
-        resenhasContainer.appendChild(card);
-      });
-
-    } catch (error) {
-      console.error("Erro ao carregar:", error);
-      resenhasContainer.innerHTML = `
-        <div style="color: red; padding: 20px; background: #ffeeee; border-radius: 8px;">
-          <p><strong>Erro ao carregar resenhas:</strong></p>
-          <p>${error.message}</p>
-          <p>Verifique o console para detalhes.</p>
-        </div>
-      `;
+  try {
+    // Inicialização segura
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
     }
-  }
-
-  // Verificação de autenticação
-  auth.onAuthStateChanged(async (user) => {
-    if (!user) {
-      showLoginMessage();
-      return;
-    }
-
-    try {
-      await user.getIdToken(true);
-      loadResenhas(); // Chama sem parâmetro agora
-    } catch (error) {
-      console.error("Erro na autenticação:", error);
-      showLoginMessage();
-    }
-  });
-
-  // Função para deletar (agora mais robusta)
-  window.deleteResenha = async (id) => {
-    if (!auth.currentUser) {
-      alert("⚠️ Sua sessão expirou. Por favor, faça login novamente.");
-      showLoginMessage();
-      return;
-    }
-
-    if (!confirm('Tem certeza ABSOLUTA que deseja deletar esta resenha?\n\nEssa ação não pode ser desfeita!')) return;
+    document.getElementById('firebase-status').textContent = 'Firebase inicializado!';
     
-    try {
-      await db.collection("locais").doc(id).delete();
-      alert('✅ Resenha deletada com sucesso!');
-      loadResenhas(); // Recarrega a lista
-    } catch (error) {
-      alert(`❌ Erro ao deletar: ${error.message}`);
-      console.error("Erro detalhado:", error);
-    }
-  };
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    // ... (o resto do seu código original) ...
+
+  } catch (error) {
+    document.getElementById('firebase-status').innerHTML = `
+      <strong style="color:red">ERRO CRÍTICO:</strong> ${error.message}
+      <br><br>Detalhes completos no console (F12)
+    `;
+    console.error("Erro na inicialização:", error);
+  }
 </script>
 </body>
 </html>
