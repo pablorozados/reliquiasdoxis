@@ -23,136 +23,144 @@
     </div>
   </main>
 
-  <!-- Scripts no final do body para melhor performance -->
+  <!-- Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
   
   <script>
-    // Configuração mínima do Firebase
+    // Configuração do Firebase
     const firebaseConfig = {
       apiKey: "FIREBASE_API_KEY",
       projectId: "FIREBASE_PROJECT_ID"
     };
 
-    // Inicialização segura
+    // Inicialização
     if (!firebase.apps.length) {
       firebase.initializeApp(firebaseConfig);
     }
     const db = firebase.firestore();
 
-    // Função simplificada para mostrar avaliações
+    // Estilo do mapa limpo
+    const mapStyle = [{
+      "featureType": "poi",
+      "stylers": [{"visibility": "off"}]
+    }, {
+      "featureType": "transit",
+      "stylers": [{"visibility": "off"}]
+    }];
+
+    // Animação dos marcadores
+    function dropMarker(marker, map) {
+      marker.setAnimation(google.maps.Animation.DROP);
+      setTimeout(() => {
+        marker.setAnimation(null);
+      }, 1500);
+    }
+
+    // Função para mostrar avaliações
     function renderRating(value, type) {
       const icons = {
-        nota: { emoji: '⭐', class: 'star' },
-        sujeira: { emoji: '🍔', class: 'hamburger' },
-        cagada: { emoji: '💩', class: 'poo' }
+        nota: '⭐', 
+        sujeira: '🍔', 
+        cagada: '💩'
       };
       
       let html = '';
       for (let i = 0; i < 5; i++) {
-        const active = i < value;
-        html += `<span class="${icons[type].class} ${active ? '' : 'empty'}">${icons[type].emoji}</span>`;
+        html += `<span class="${i < value ? '' : 'empty'}">${icons[type]}</span>`;
       }
       return html;
     }
 
-    // Carrega API do Maps apenas quando necessário
-    function initApp() {
-      const loadingMsg = document.querySelector('.loading-message');
-      
-      if (!window.google || !window.google.maps) {
-        loadingMsg.innerHTML = '<p>Carregando Google Maps...</p>';
-        loadGoogleMaps();
-      } else {
-        initMap();
-      }
+    // Inicializa o mapa
+    function initMap() {
+      const map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: -30.0346, lng: -51.2177 },
+        zoom: 13,
+        styles: mapStyle,
+        disableDefaultUI: true,
+        zoomControl: true
+      });
+
+      // Carrega as resenhas
+      db.collection("locais").orderBy("timestamp", "desc").get()
+        .then(querySnapshot => {
+          querySnapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.latitude && data.longitude) {
+              const marker = new google.maps.Marker({
+                position: { lat: data.latitude, lng: data.longitude },
+                map: map,
+                icon: {
+                  path: google.maps.SymbolPath.CIRCLE,
+                  fillColor: '#ff6b6b',
+                  fillOpacity: 1,
+                  strokeColor: '#fff',
+                  strokeWeight: 2,
+                  scale: 8
+                }
+              });
+
+              // Animação ao carregar
+              setTimeout(() => dropMarker(marker, map), Math.random() * 1000);
+
+              // Janela de informações
+              const content = `
+                <div class="info-window">
+                  <h3>${data.nome}</h3>
+                  <p class="pedido">${data.meu_pedido || 'Sem detalhes'}</p>
+                  <p>${data.resenha}</p>
+                  <div class="ratings">
+                    <div>Nota: ${renderRating(data.nota || 0, 'nota')}</div>
+                    <div>Sujeira: ${renderRating(data.sujeira_comendo || 0, 'sujeira')}</div>
+                    <div>Cagada: ${renderRating(data.cagada_depois || 0, 'cagada')}</div>
+                  </div>
+                  ${data.imagem ? `
+                    <div class="thumb" onclick="window.open('${data.imagem}', '_blank')">
+                      <img src="${data.imagem}" alt="Foto">
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+
+              const infoWindow = new google.maps.InfoWindow({ content });
+              marker.addListener('click', () => {
+                infoWindow.open(map, marker);
+                marker.setAnimation(google.maps.Animation.BOUNCE);
+                setTimeout(() => marker.setAnimation(null), 1000);
+              });
+            }
+          });
+        })
+        .catch(error => {
+          console.error("Erro ao carregar resenhas:", error);
+          document.getElementById('map').innerHTML = `
+            <div class="error">
+              <i class="fas fa-exclamation-triangle"></i>
+              <p>Erro ao carregar o mapa</p>
+            </div>
+          `;
+        });
     }
 
+    // Carrega a API do Google Maps
     function loadGoogleMaps() {
       const script = document.createElement('script');
       script.src = `https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&callback=initMap`;
       script.async = true;
       script.onerror = () => {
-        showError("Falha ao carregar o Google Maps");
+        document.getElementById('map').innerHTML = `
+          <div class="error">
+            <i class="fas fa-map-marked-alt"></i>
+            <p>Falha ao carregar o mapa</p>
+          </div>
+        `;
       };
       document.head.appendChild(script);
     }
 
-    function initMap() {
-      try {
-        const map = new google.maps.Map(document.getElementById("map"), {
-          center: { lat: -30.0346, lng: -51.2177 },
-          zoom: 13
-        });
-
-        loadReviews(map);
-      } catch (error) {
-        showError("Erro ao iniciar o mapa");
-      }
-    }
-
-    function loadReviews(map) {
-      db.collection("locais").orderBy("timestamp", "desc").get()
-        .then(querySnapshot => {
-          if (querySnapshot.empty) {
-            showMessage("Nenhuma resenha encontrada");
-            return;
-          }
-
-          querySnapshot.forEach(doc => {
-            const data = doc.data();
-            if (data.latitude && data.longitude) {
-              createMarker(map, data);
-            }
-          });
-        })
-        .catch(error => {
-          showError("Erro ao carregar resenhas");
-        });
-    }
-
-    function createMarker(map, data) {
-      const marker = new google.maps.Marker({
-        position: { lat: data.latitude, lng: data.longitude },
-        map: map,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          fillColor: '#ff6b6b',
-          fillOpacity: 1,
-          strokeColor: '#fff',
-          strokeWeight: 2,
-          scale: 8
-        }
-      });
-
-      const content = `
-        <div class="info-window">
-          <h3>${data.nome}</h3>
-          <p class="pedido">${data.meu_pedido || 'Sem detalhes'}</p>
-          <p>${data.resenha}</p>
-          <div class="ratings">
-            <div>Nota: ${renderRating(data.nota || 0, 'nota')}</div>
-            <div>Sujeira: ${renderRating(data.sujeira_comendo || 0, 'sujeira')}</div>
-            <div>Cagada: ${renderRating(data.cagada_depois || 0, 'cagada')}</div>
-          </div>
-          ${data.imagem ? `<img src="${data.imagem}" class="thumb" onclick="window.open('${data.imagem}', '_blank')">` : ''}
-        </div>
-      `;
-
-      const infoWindow = new google.maps.InfoWindow({ content });
-      marker.addListener('click', () => infoWindow.open(map, marker));
-    }
-
-    function showError(msg) {
-      document.getElementById('map').innerHTML = `<div class="error">${msg}</div>`;
-    }
-
-    function showMessage(msg) {
-      document.getElementById('map').innerHTML += `<div class="info">${msg}</div>`;
-    }
-
-    // Inicia quando o DOM estiver pronto
-    document.addEventListener('DOMContentLoaded', initApp);
+    // Inicia quando a página carregar
+    window.addEventListener('DOMContentLoaded', loadGoogleMaps);
   </script>
 </body>
 </html>
