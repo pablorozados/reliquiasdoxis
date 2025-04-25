@@ -1,76 +1,150 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <!-- ... outras meta tags ... -->
-  <!-- Carregue Firebase ANTES do seu script -->
-  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciar Resenhas - Xis POA</title>
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Firebase 9 (modular) - ESSA É A VERSÃO CORRETA -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, doc, deleteDoc, orderBy } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA7_SFUPE6n9KG6LhL9Y6DRanSW5Zn0-2k",
+      authDomain: "reliquias-do-xis.firebaseapp.com",
+      projectId: "reliquias-do-xis",
+      storageBucket: "reliquias-do-xis.appspot.com",
+      messagingSenderId: "936551505510",
+      appId: "1:936551505510:web:22de1482a8f8d9720257a7"
+    };
+
+    // Inicialização
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Elementos da UI
+    const resenhasContainer = document.getElementById("resenhas-container");
+    const loginMessage = document.getElementById("login-message");
+    const loadingElement = document.getElementById("loading");
+
+    // Função para mostrar mensagem de não autenticado
+    function showLoginMessage() {
+      resenhasContainer.style.display = "none";
+      loginMessage.style.display = "block";
+      loadingElement.style.display = "none";
+    }
+
+    // Função para carregar TODAS as resenhas
+    async function loadResenhas() {
+      try {
+        loadingElement.textContent = "Carregando resenhas...";
+        
+        const querySnapshot = await getDocs(
+          collection(db, "locais"),
+          orderBy("timestamp", "desc")
+        );
+
+        resenhasContainer.innerHTML = '';
+
+        if (querySnapshot.empty) {
+          resenhasContainer.innerHTML = '<p>Nenhuma resenha encontrada.</p>';
+          return;
+        }
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const card = document.createElement('div');
+          card.className = 'resenha-card';
+          
+          // Formata data
+          const dataFormatada = data.timestamp?.toDate()?.toLocaleString('pt-BR') || 'Data desconhecida';
+          
+          // Trata imagens (single ou array)
+          let imagensHTML = '';
+          if (data.imagem) {
+            if (Array.isArray(data.imagem)) {
+              imagensHTML = data.imagem.map(img => 
+                `<img src="${img}" style="max-width: 200px; margin: 5px; border-radius: 4px;">`
+              ).join('');
+            } else {
+              imagensHTML = `<img src="${data.imagem}" style="max-width: 200px; border-radius: 4px;">`;
+            }
+          }
+
+          card.innerHTML = `
+            <h3>${data.nome || 'Sem nome'}</h3>
+            <p><strong>Data:</strong> ${dataFormatada}</p>
+            <p><strong>Pedido:</strong> ${data.meu_pedido || 'Não informado'}</p>
+            <div style="background: #f5f5f5; padding: 10px; border-radius: 4px; margin: 10px 0;">
+              ${data.resenha || 'Sem resenha'}
+            </div>
+            ${imagensHTML ? `<div style="margin-top: 10px;">${imagensHTML}</div>` : ''}
+            <div class="resenha-actions" style="margin-top: 15px;">
+              <button onclick="window.deleteResenha('${doc.id}')" style="background: #ff4444; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">
+                🗑️ Deletar
+              </button>
+            </div>
+            <hr style="margin: 15px 0; border-color: #eee;">
+          `;
+          resenhasContainer.appendChild(card);
+        });
+
+      } catch (error) {
+        console.error("Erro ao carregar:", error);
+        loadingElement.innerHTML = `
+          <div style="color: red; background: #ffeeee; padding: 15px; border-radius: 8px;">
+            <p><strong>Erro ao carregar resenhas:</strong></p>
+            <p>${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    // Função global para deletar
+    window.deleteResenha = async (id) => {
+      if (!auth.currentUser) {
+        alert("⚠️ Sua sessão expirou. Faça login novamente.");
+        showLoginMessage();
+        return;
+      }
+
+      if (!confirm('Tem certeza que deseja deletar esta resenha?\n\nEsta ação não pode ser desfeita!')) return;
+      
+      try {
+        await deleteDoc(doc(db, "locais", id));
+        alert('✅ Resenha deletada com sucesso!');
+        loadResenhas();
+      } catch (error) {
+        alert(`❌ Erro ao deletar: ${error.message}`);
+      }
+    };
+
+    // Monitora estado de autenticação
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loadResenhas();
+      } else {
+        showLoginMessage();
+      }
+    });
+
+  </script>
 </head>
 <body>
-  <!-- Adicione esta div para debug -->
-  <div id="firebase-status" style="padding: 10px; background: #f0f0f0; display: none;">
-    Firebase loading status...
-  </div>
-  <h1>Gerenciar Resenhas</h1>
-  <div id="resenhas-container">
-    <p id="loading">Carregando suas resenhas...</p>
+  <h1 style="text-align: center; margin: 20px 0;">Gerenciar Resenhas</h1>
+  
+  <div id="resenhas-container" style="max-width: 800px; margin: 0 auto;">
+    <p id="loading" style="text-align: center; padding: 20px;">Carregando suas resenhas...</p>
   </div>
 
-  <div id="login-message" style="display: none;">
+  <div id="login-message" style="display: none; max-width: 500px; margin: 50px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center;">
     <h2>Acesso Restrito</h2>
     <p>Você precisa estar logado para acessar esta página.</p>
-    <p>Por favor, faça login na <a href="admin.html">Área do Dono</a> primeiro.</p>
+    <p>Por favor, faça login na <a href="admin.html" style="color: #ff6b6b; text-decoration: none; font-weight: bold;">Área do Dono</a> primeiro.</p>
   </div>
-
- <!-- Substitua todo o conteúdo do script no gerenciar.html por este: -->
-<script>
-  // Debug inicial
-  document.getElementById('firebase-status').style.display = 'block';
-  document.getElementById('firebase-status').textContent = 'Iniciando carregamento...';
-
-  // Configuração do Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyA7_SFUPE6n9KG6LhL9Y6DRanSW5Zn0-2k",
-    authDomain: "reliquias-do-xis.firebaseapp.com",
-    projectId: "reliquias-do-xis",
-    storageBucket: "reliquias-do-xis.appspot.com",
-    messagingSenderId: "936551505510",
-    appId: "1:936551505510:web:22de1482a8f8d9720257a7"
-  };
-
-  // Verificação de carregamento do Firebase
-  if (typeof firebase === 'undefined') {
-    document.getElementById('firebase-status').innerHTML = `
-      <strong style="color:red">ERRO:</strong> Firebase não carregado. Verifique:
-      <ul>
-        <li>Conexão com a internet</li>
-        <li>Bloqueio de scripts por extensões</li>
-        <li>URLs corretas nos scripts do Firebase</li>
-      </ul>
-    `;
-    throw new Error("Firebase não carregado");
-  }
-
-  try {
-    // Inicialização segura
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
-    document.getElementById('firebase-status').textContent = 'Firebase inicializado!';
-    
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-
-    // ... (o resto do seu código original) ...
-
-  } catch (error) {
-    document.getElementById('firebase-status').innerHTML = `
-      <strong style="color:red">ERRO CRÍTICO:</strong> ${error.message}
-      <br><br>Detalhes completos no console (F12)
-    `;
-    console.error("Erro na inicialização:", error);
-  }
-</script>
 </body>
 </html>
