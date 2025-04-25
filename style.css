@@ -87,50 +87,18 @@ header p {
   margin-left: 10px;
 }
 
-/* NOVOS ESTILOS PARA IMAGENS (ADICIONADOS) */
-.thumbnail-container {
-  text-align: center;
-  margin: 10px 0;
-}
-
-.thumbnail {
+.info-window-image {
   max-width: 100%;
-  max-height: 150px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border-radius: 6px;
+  margin: 0.8rem 0;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: all 0.3s ease;
 }
 
-.thumbnail:hover {
-  transform: scale(1.03);
+.info-window-image:hover {
+  transform: scale(1.02);
   box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-}
-
-/* NOVOS ESTILOS PARA AVALIAÇÕES (ADICIONADOS) */
-.rating-stars, .rating-hamburgers, .rating-poos {
-  display: flex;
-  gap: 3px;
-}
-
-.star, .hamburger, .poo {
-  font-size: 1.1rem;
-}
-
-.star {
-  color: #FFD700; /* Amarelo para estrelas */
-}
-
-.hamburger {
-  color: #8B4513; /* Marrom para hambúrgueres */
-}
-
-.poo {
-  color: #A0522D; /* Marrom escuro para cocôs */
-}
-
-.empty {
-  opacity: 0.3;
 }
 
 /* Tooltip */
@@ -194,14 +162,5 @@ header p {
   .tooltip-text {
     width: 160px;
     font-size: 0.7rem;
-  }
-
-  /* NOVOS ESTILOS RESPONSIVOS (ADICIONADOS) */
-  .thumbnail {
-    max-height: 120px;
-  }
-  
-  .star, .hamburger, .poo {
-    font-size: 1rem;
   }
 }
