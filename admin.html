@@ -316,7 +316,10 @@
         window.cloudinary.createUploadWidget(cloudinaryConfig, 
           (error, result) => {
             if (result?.event === "success") {
-              imagemUrl = result.info.secure_url;
+              if (!Array.isArray(imagemUrl)) {
+  imagemUrl = [];
+}
+imagemUrl.push(result.info.secure_url);
               document.getElementById('preview').src = imagemUrl;
               document.getElementById('image-preview').classList.remove('hidden');
             }
