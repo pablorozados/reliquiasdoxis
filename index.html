@@ -162,5 +162,31 @@
     // Inicia quando a página carregar
     window.addEventListener('DOMContentLoaded', loadGoogleMaps);
   </script>
+
+  <!-- Lightbox para imagens -->
+<div id="lightbox" onclick="this.style.display='none'">
+  <img id="lightbox-img" src="" alt="Imagem ampliada">
+</div>
+
+<script>
+  // Lightbox
+  function openLightbox(imgSrc) {
+    document.getElementById('lightbox-img').src = imgSrc;
+    document.getElementById('lightbox').style.display = 'block';
+  }
+
+  // Atualiza os tooltips
+  const tooltips = {
+    "sujeira": "Me sujei muito comendo o xis?",
+    "cagada": "Acho que isso é bem autoexplicativo. As vezes não cai bem. 😒"
+  };
+
+  document.querySelectorAll('.tooltip-icon').forEach(icon => {
+    const type = icon.closest('.rating-display').querySelector('.rating-label').textContent.trim();
+    if (tooltips[type]) {
+      icon.setAttribute('title', tooltips[type]);
+    }
+  });
+</script>
 </body>
 </html>
