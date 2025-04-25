@@ -104,7 +104,7 @@
               // Animação ao carregar
               setTimeout(() => dropMarker(marker, map), Math.random() * 1000);
 
-              // Janela de informações
+// Janela de informações
 const content = `
   <div class="info-window-content">
     <h3 class="info-window-title">${data.nome}</h3>
@@ -124,22 +124,28 @@ const content = `
     
     <div class="rating-display">
       <span class="rating-label">Me caguei comendo?</span>
-      <span class="tooltip-icon">?</span>
+      <span class="tooltip-icon">?
+        <span class="tooltip-text">Me sujei muito comendo o xis?</span>
+      </span>
       ${renderRating(data.sujeira_comendo || 0, 'sujeira')}
     </div>
     
     <div class="rating-display">
-      <span class="rating-label">Me caguei depois de comer?</span>
-      <span class="tooltip-icon">?</span>
+      <span class="rating-label">Me caguei depois?</span>
+      <span class="tooltip-icon">?
+        <span class="tooltip-text">Acho que isso é bem autoexplicativo. As vezes não cai bem. 😒</span>
+      </span>
       ${renderRating(data.cagada_depois || 0, 'cagada')}
     </div>
     
     ${data.imagem ? `
       <div class="thumbnail-container">
-        <img src="${data.imagem}" 
-             class="thumbnail" 
-             alt="Foto do ${data.nome}"
-             onclick="openLightbox('${data.imagem}')">
+        ${Array.isArray(data.imagem) ? 
+          data.imagem.map(img => `
+            <img src="${img}" class="thumbnail" onclick="openLightbox('${img}')">
+          `).join('') : `
+          <img src="${data.imagem}" class="thumbnail" onclick="openLightbox('${data.imagem}')">
+        `}
       </div>
     ` : ''}
   </div>
