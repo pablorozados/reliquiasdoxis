@@ -152,12 +152,6 @@ Dark mode
 🔧 Versão: 2.1
 📧 Contato: [e-mail privado nos secrets do GitHub]
 
-
-### Como usar:
-1. Substitua `{{DATA_ATUAL}}` pela data de hoje (formato DD/MM/YYYY)
-2. Adicione este arquivo como `DOCUMENTACAO.md` no seu repositório
-3. Atualize sempre que fizer novas modificações
-
 ### Destaques:
 - ✔️ Todas as novas páginas documentadas
 - ✔️ Fluxo de contato anônimo explicado
