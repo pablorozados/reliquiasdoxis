@@ -1,13 +1,16 @@
-# 📚 Documentação - Relíquias do Xis POA
+# 📚 Documentação Atualizada - Relíquias do Xis POA
 
 ## 🌟 Visão Geral
 Sistema de avaliação de estabelecimentos de hambúrguer (xis) em Porto Alegre com:
 - Mapa interativo com todas as resenhas
 - Painel administrativo para cadastro
-- Autenticação segura
-- Upload de fotos
+- Gerenciador de resenhas
+- Formulário de contato anônimo
+- Autenticação segura via Firebase
+- Upload de fotos para Cloudinary
 
-**URL:** [pablorozados.github.io/reliquiasdoxis](https://pablorozados.github.io/reliquiasdoxis)
+**URL oficial:** [pablorozados.github.io/reliquiasdoxis](https://pablorozados.github.io/reliquiasdoxis)  
+**Repositório:** [github.com/pablorozados/reliquiasdoxis](https://github.com/pablorozados/reliquiasdoxis)
 
 ---
 
@@ -17,16 +20,22 @@ Sistema de avaliação de estabelecimentos de hambúrguer (xis) em Porto Alegre 
 | Firebase         | Autenticação e banco de dados   | v9.21.0|
 | Google Maps API  | Mapa e geolocalização           | v3     |
 | Cloudinary       | Armazenamento de imagens        | v1     |
+| FormSubmit       | Formulário de contato anônimo   | -      |
 | GitHub Pages     | Hospedagem                      | -      |
 
 ---
 
-## 📂 Estrutura de Arquivos
+## 📂 Estrutura de Arquivos Atualizada
 reliquiasdoxis/
 ├── index.html # Página principal com mapa
 ├── admin.html # Painel de administração
+├── gerenciar.html # Gerenciador de resenhas
+├── contato.html # Formulário de contato anônimo
+├── sobre.html # Página sobre o autor
+├── obrigado.html # Página de confirmação
 ├── style.css # Estilos globais
-├── DOCUMENTACAO.md # Este arquivo
+├── script.js # Lógica do mapa
+├── context.md # Documentação do projeto
 └── .github/
 └── workflows/
 └── deploy.yml # CI/CD automático
@@ -34,7 +43,7 @@ reliquiasdoxis/
 
 ---
 
-## 🔑 Chaves Necessárias
+## 🔑 Configuração de Chaves
 ### GitHub Secrets (obrigatórias)
 | Secret               | Descrição                     |
 |----------------------|-------------------------------|
@@ -42,80 +51,75 @@ reliquiasdoxis/
 | `FIREBASE_PROJECT_ID`| ID do projeto Firebase        |
 | `GOOGLE_MAPS_API_KEY`| Chave da API do Google Maps   |
 
-### Cloudinary (configuração manual)
-- Cloud Name: `dgdjaz541`
-- Upload Preset: `reliquias_do_xis` (unsigned)
+**Importante:** Todas as chaves estão configuradas como secrets no GitHub e são injetadas automaticamente durante o deploy.
+
+### Serviços Externos
+- **Cloudinary**:
+  - Cloud Name: `dgdjaz541`
+  - Upload Preset: `reliquias_do_xis` (unsigned)
+- **FormSubmit**:
+  - E-mail de destino configurado no formulário de contato
 
 ---
 
-## 🗺 Funcionalidades do Mapa
-1. **Visualização de Resenhas**:
-   - Marcadores coloridos
-   - Animação de "queda" ao carregar
-   - Efeito de bounce ao clicar
+## 🗺 Funcionalidades Principais
 
-2. **Filtros Automáticos**:
-   - Remove POIs (shoppings, hospitais)
-   - Mantém apenas ruas e bairros
+### Mapa Interativo
+- Marcadores com animação de queda
+- Janelas de informação detalhadas
+- Lightbox para ampliar fotos
+- Filtro automático de POIs
 
-3. **Janelas de Informação**:
-   - Foto do xis (ampliável)
-   - Avaliação com emojis
-   - Texto completo da resenha
+### Painel Administrativo
+- Login seguro com Firebase Auth
+- Upload de fotos para Cloudinary
+- Sistema de avaliação com:
+  - Nota (⭐)
+  - Nível de sujeira (🍔)
+  - Efeitos pós-refeição (💩)
+
+### Novas Funcionalidades
+1. **Página "Sobre"**:
+   - Texto autobiográfico do autor
+   - Design consistente com o mapa
+
+2. **Formulário de Contato Anônimo**:
+   - Integração com FormSubmit
+   - Não revela e-mail do destinatário
+   - Página de agradecimento personalizada
+
+3. **Rodapé Fixo**:
+   - Links para Sobre e Contato
+   - Avisos importantes
 
 ---
 
-## 🔐 Painel Administrativo
-### Recursos:
-- **Login Seguro**:
-  - Autenticação por e-mail/senha
-  - Controle de sessão
+## 🚀 Fluxo de Deploy
+```yaml
+name: Deploy Seguro
+on: [push]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Substituir chaves
+        run: |
+          sed -i "s/FIREBASE_API_KEY/${{ secrets.FIREBASE_API_KEY }}/g" *.html
+          sed -i "s/FIREBASE_PROJECT_ID/${{ secrets.FIREBASE_PROJECT_ID }}/g" *.html
+          sed -i "s/GOOGLE_MAPS_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" *.html
+      - uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
 
-- **Formulário Completo**:
-  ```javascript
-  {
-    nome: "Nome do lugar",
-    latitude: -30.0000,
-    longitude: -51.0000,
-    resenha: "Texto da avaliação",
-    meu_pedido: "Xis especial com...",
-    nota: 4,           // 0-5 estrelas
-    sujeira_comendo: 3, // 0-5 hambúrgueres
-    cagada_depois: 2,   // 0-5 cocôs
-    imagem: "URL",      // Opcional
-    timestamp: Data     // Automático
-  }
+🐛 Problemas Conhecidos e Soluções
+Cloudinary
+Problema: Uploads falham se pop-ups estiverem bloqueados
 
-  Upload de Fotos:
+Solução: Instruir usuários para permitir pop-ups
 
-Direto para o Cloudinary
-
-Preview antes de enviar
-
-Limite de 5MB
-
-🚀 Fluxo de Deploy
-Push para main → GitHub Actions executa:
-
-Substitui placeholders pelas secrets
-
-Faz deploy no GitHub Pages
-
-Arquivos modificados:
-- name: Substituir chaves
-  run: |
-    sed -i "s/FIREBASE_API_KEY/${{ secrets.FIREBASE_API_KEY }}/g" *.html
-    sed -i "s/FIREBASE_PROJECT_ID/${{ secrets.FIREBASE_PROJECT_ID }}/g" *.html
-    sed -i "s/GOOGLE_MAPS_API_KEY/${{ secrets.GOOGLE_MAPS_API_KEY }}/g" *.html
-
-  🐛 Problemas Conhecidos
-Cloudinary:
-
-Uploads podem falhar se o navegador bloquear pop-ups
-
-Firebase:
-
-Necessária regra de segurança:
+Firebase
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -125,30 +129,35 @@ service cloud.firestore {
     }
   }
 }
+FormSubmit
+Limite de 100 envios/mês no plano gratuito
 
-📌 Próximas Melhorias (Sugestões)
-Adicionar filtro por bairro
+Possível delay de 2-3 minutos para recebimento
+
+📌 Roadmap (Próximas Melhorias)
+Filtro por bairro
 
 Sistema de favoritos
 
 Compartilhamento em redes sociais
 
-✂️ Atualizado em: 25/04/2025
-🔧 Versão: 2.0
-📧 Contato: pablorozados@gmail.com
+Página de estatísticas
+
+Dark mode
+
+✂️ Atualizado em: {{DATA_ATUAL}}
+🔧 Versão: 2.1
+📧 Contato: [e-mail privado nos secrets do GitHub]
 
 
-### Como usar este arquivo:
-1. Copie todo o conteúdo acima
-2. Crie um novo arquivo chamado `contexto-conversa.md` na pasta principal
-3. Substitua  pela data de hoje
-4. Adicione seu e-mail no campo de contato
+### Como usar:
+1. Substitua `{{DATA_ATUAL}}` pela data de hoje (formato DD/MM/YYYY)
+2. Adicione este arquivo como `DOCUMENTACAO.md` no seu repositório
+3. Atualize sempre que fizer novas modificações
 
-### O que este documento inclui:
-- Todas as configurações técnicas
-- Fluxo completo do sistema
-- Problemas conhecidos e soluções
-- Estrutura do projeto
-- Guia de manutenção
-
-Você pode atualizar este arquivo sempre que fizer novas modificações no projeto!
+### Destaques:
+- ✔️ Todas as novas páginas documentadas
+- ✔️ Fluxo de contato anônimo explicado
+- ✔️ Configurações de segurança destacadas
+- ✔️ Roadmap atualizado
+- ✔️ Mantém o tom descontraído do projeto
