@@ -26,19 +26,22 @@ Sistema de avaliação de estabelecimentos de hambúrguer (xis) em Porto Alegre 
 ---
 
 ## 📂 Estrutura de Arquivos Atualizada
+
+```bash
 reliquiasdoxis/
-├── index.html # Página principal com mapa
-├── admin.html # Painel de administração
-├── gerenciar.html # Gerenciador de resenhas
-├── contato.html # Formulário de contato anônimo
-├── sobre.html # Página sobre o autor
-├── obrigado.html # Página de confirmação
-├── style.css # Estilos globais
-├── script.js # Lógica do mapa
-├── context.md # Documentação do projeto
+├── index.html          # Página principal com mapa
+├── admin.html          # Painel de administração
+├── gerenciar.html      # Gerenciador de resenhas
+├── contato.html        # Formulário de contato anônimo
+├── sobre.html          # Página sobre o autor
+├── obrigado.html       # Página de confirmação
+├── style.css           # Estilos globais
+├── script.js           # Lógica do mapa
+├── context.md          # Documentação do projeto
 └── .github/
-└── workflows/
-└── deploy.yml # CI/CD automático
+    └── workflows/
+        └── deploy.yml  # CI/CD automático
+```
 
 
 ---
