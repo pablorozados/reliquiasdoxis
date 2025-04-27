@@ -148,7 +148,7 @@ Página de estatísticas
 
 Dark mode
 
-✂️ Atualizado em: {{DATA_ATUAL}}
+✂️ Atualizado em: 27/04/2025
 🔧 Versão: 2.1
 📧 Contato: [e-mail privado nos secrets do GitHub]
 
