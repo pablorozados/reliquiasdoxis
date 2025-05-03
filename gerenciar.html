@@ -5,170 +5,92 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gerenciar Resenhas - Xis POA</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
   
-  <!-- Firebase 9 (modular) - ESSA É A VERSÃO CORRETA -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
-    import { getFirestore, collection, getDocs, doc, deleteDoc, orderBy } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyA7_SFUPE6n9KG6LhL9Y6DRanSW5Zn0-2k",
-      authDomain: "reliquias-do-xis.firebaseapp.com",
-      projectId: "reliquias-do-xis",
-      storageBucket: "reliquias-do-xis.appspot.com",
-      messagingSenderId: "936551505510",
-      appId: "1:936551505510:web:22de1482a8f8d9720257a7"
-    };
-
-    // Inicialização
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    // Elementos da UI
-    const resenhasContainer = document.getElementById("resenhas-container");
-    const loginMessage = document.getElementById("login-message");
-    const loadingElement = document.getElementById("loading");
-
-    // Função para mostrar mensagem de não autenticado
-    function showLoginMessage() {
-      resenhasContainer.style.display = "none";
-      loginMessage.style.display = "block";
-      loadingElement.style.display = "none";
+  <style>
+    .resenha-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
     }
-
-    // Função para carregar TODAS as resenhas
-    async function loadResenhas() {
-      try {
-        loadingElement.textContent = "Carregando resenhas...";
-        
-        const querySnapshot = await getDocs(
-          collection(db, "locais"),
-          orderBy("timestamp", "desc")
-        );
-
-        resenhasContainer.innerHTML = '';
-
-        if (querySnapshot.empty) {
-          resenhasContainer.innerHTML = '<p>Nenhuma resenha encontrada.</p>';
-          return;
-        }
-
-        querySnapshot.forEach((doc) => {
-          const data = doc.data();
-          const card = document.createElement('div');
-          card.className = 'resenha-card';
-          
-          // Formata data
-          const dataFormatada = data.timestamp?.toDate()?.toLocaleString('pt-BR') || 'Data desconhecida';
-          
-          // Trata imagens (single ou array)
-          let imagensHTML = '';
-          if (data.imagem) {
-            if (Array.isArray(data.imagem)) {
-              imagensHTML = data.imagem.map(img => 
-                `<img src="${img}" style="max-width: 200px; margin: 5px; border-radius: 4px;">`
-              ).join('');
-            } else {
-              imagensHTML = `<img src="${data.imagem}" style="max-width: 200px; border-radius: 4px;">`;
-            }
-          }
-
-          card.innerHTML = `
-            <h3>${data.nome || 'Sem nome'}</h3>
-            <p><strong>Data:</strong> ${dataFormatada}</p>
-            <p><strong>Pedido:</strong> ${data.meu_pedido || 'Não informado'}</p>
-            <div style="background: #f5f5f5; padding: 10px; border-radius: 4px; margin: 10px 0;">
-              ${data.resenha || 'Sem resenha'}
-            </div>
-            ${imagensHTML ? `<div style="margin-top: 10px;">${imagensHTML}</div>` : ''}
-            <div class="resenha-actions">
-  <button onclick="editarResenha('${doc.id}')" style="background: #4CAF50; margin-right: 10px;">
-    <i class="fas fa-edit"></i> Editar
-  </button>
-  <button onclick="deleteResenha('${doc.id}')">
-    <i class="fas fa-trash"></i> Deletar
-  </button>
-</div>
-            <hr style="margin: 15px 0; border-color: #eee;">
-          `;
-          resenhasContainer.appendChild(card);
-        });
-
-      } catch (error) {
-        console.error("Erro ao carregar:", error);
-        loadingElement.innerHTML = `
-          <div style="color: red; background: #ffeeee; padding: 15px; border-radius: 8px;">
-            <p><strong>Erro ao carregar resenhas:</strong></p>
-            <p>${error.message}</p>
-          </div>
-        `;
-      }
+    
+    .resenha-actions button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.3s;
     }
-
-    // Função global para deletar
-    window.deleteResenha = async (id) => {
-      if (!auth.currentUser) {
-        alert("⚠️ Sua sessão expirou. Faça login novamente.");
-        showLoginMessage();
-        return;
-      }
-
-      if (!confirm('Tem certeza que deseja deletar esta resenha?\n\nEsta ação não pode ser desfeita!')) return;
-      
-      try {
-        await deleteDoc(doc(db, "locais", id));
-        alert('✅ Resenha deletada com sucesso!');
-        loadResenhas();
-      } catch (error) {
-        alert(`❌ Erro ao deletar: ${error.message}`);
-      }
-    };
-
-    // Monitora estado de autenticação
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        loadResenhas();
-      } else {
-        showLoginMessage();
-      }
-    });
-
-    // Função para editar (global para os botões)
-window.editarResenha = async (id) => {
-  if (!auth.currentUser) {
-    alert("Sua sessão expirou. Faça login novamente.");
-    showLoginMessage();
-    return;
-  }
-
-  try {
-    const doc = await db.collection("locais").doc(id).get();
-    if (doc.exists && doc.data().userId === auth.currentUser.uid) {
-      // Redireciona para o admin.html com o ID na URL
-      window.location.href = `admin.html?edit=${id}`;
-    } else {
-      alert('Você só pode editar suas próprias resenhas.');
+    
+    .resenha-actions button:hover {
+      transform: scale(1.05);
     }
-  } catch (error) {
-    alert(`Erro ao carregar: ${error.message}`);
-  }
-};
-
-  </script>
+    
+    .resenha-actions button:first-child {
+      background-color: #4CAF50;
+    }
+    
+    .resenha-actions button:last-child {
+      background-color: #f44336;
+    }
+  </style>
 </head>
 <body>
-  <h1 style="text-align: center; margin: 20px 0;">Gerenciar Resenhas</h1>
-  
-  <div id="resenhas-container" style="max-width: 800px; margin: 0 auto;">
-    <p id="loading" style="text-align: center; padding: 20px;">Carregando suas resenhas...</p>
-  </div>
+  <!-- Seu conteúdo existente aqui -->
 
-  <div id="login-message" style="display: none; max-width: 500px; margin: 50px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center;">
-    <h2>Acesso Restrito</h2>
-    <p>Você precisa estar logado para acessar esta página.</p>
-    <p>Por favor, faça login na <a href="admin.html" style="color: #ff6b6b; text-decoration: none; font-weight: bold;">Área do Dono</a> primeiro.</p>
-  </div>
+  <!-- Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
+
+  <script>
+    // Configuração do Firebase
+    const firebaseConfig = {
+      apiKey: "SUA_API_KEY_FIREBASE",
+      projectId: "SEU_PROJECT_ID"
+    };
+
+    // Variáveis globais
+    let auth, db;
+
+    // Inicialização quando o DOM estiver pronto
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+        auth = firebase.auth();
+        db = firebase.firestore();
+        console.log("Firebase conectado!");
+
+        // Função para editar resenha
+        window.editarResenha = async (id) => {
+          if (!auth.currentUser) {
+            alert("Sua sessão expirou. Faça login novamente.");
+            return;
+          }
+          try {
+            const doc = await db.collection("locais").doc(id).get();
+            if (doc.exists && doc.data().userId === auth.currentUser.uid) {
+              window.location.href = `admin.html?edit=${id}`;
+            } else {
+              alert('Você só pode editar suas próprias resenhas.');
+            }
+          } catch (error) {
+            alert(`Erro ao carregar: ${error.message}`);
+          }
+        };
+
+        // Seu código existente para carregar resenhas...
+
+      } catch (e) {
+        console.error("Erro Firebase:", e);
+      }
+    });
+  </script>
 </body>
 </html>
