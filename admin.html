@@ -137,7 +137,7 @@
       background: var(--success) !important;
     }
 
-    /* --- NOVOS ESTILOS PARA EDIÇÃO --- */
+    /* Estilos para edição */
     .edit-mode-header {
       background-color: var(--edit-mode);
       color: white;
@@ -181,7 +181,6 @@
   </style>
 </head>
 <body>
-  <!-- Loading Overlay (NOVO) -->
   <div id="loading-overlay">
     <div class="spinner"></div>
   </div>
@@ -201,86 +200,140 @@
   </div>
 
   <div id="admin-panel" class="hidden">
-    <!-- Cabeçalho de Edição (NOVO) -->
     <div id="edit-mode-header" class="edit-mode-header hidden">
       <h2><i class="fas fa-edit"></i> Editando Resenha</h2>
     </div>
     <h2 id="normal-mode-header">Adicionar Novo Xis</h2>
 
     <form id="add-location-form">
-      <!-- ... (mantido igual ao original) ... -->
+      <label for="endereco">Buscar local:</label>
+      <input type="text" id="endereco" placeholder="Digite o endereço">
+      
+      <label for="nome">Nome do lugar:</label>
+      <input type="text" id="nome" required>
+      
+      <div class="grid-columns">
+        <div>
+          <label for="latitude">Latitude:</label>
+          <input type="text" id="latitude" readonly>
+        </div>
+        <div>
+          <label for="longitude">Longitude:</label>
+          <input type="text" id="longitude" readonly>
+        </div>
+      </div>
+      
+      <label for="resenha">Resenha:</label>
+      <textarea id="resenha" rows="5" required></textarea>
+
+      <label for="meu-pedido">Meu Pedido:</label>
+      <textarea id="meu-pedido" rows="2" required placeholder="Ex: Xis Bacon Especial com batata palha extra"></textarea>
+      
+      <div class="rating-container">
+        <div class="rating-title">
+          Nota (0-5 estrelas):
+        </div>
+        <div class="rating-options" id="nota-rating">
+          <div class="rating-option" data-value="0">Nenhuma</div>
+          <div class="rating-option" data-value="1">⭐</div>
+          <div class="rating-option" data-value="2">⭐⭐</div>
+          <div class="rating-option" data-value="3">⭐⭐⭐</div>
+          <div class="rating-option" data-value="4">⭐⭐⭐⭐</div>
+          <div class="rating-option" data-value="5">⭐⭐⭐⭐⭐</div>
+        </div>
+      </div>
+      
+      <div class="rating-container">
+        <div class="rating-title">
+          Me caguei comendo?
+          <span class="tooltip-icon">
+            <i class="fas fa-question-circle"></i>
+          </span>
+        </div>
+        <div class="rating-options" id="sujeira-rating">
+          <div class="rating-option" data-value="0">Nenhuma</div>
+          <div class="rating-option" data-value="1">🍔</div>
+          <div class="rating-option" data-value="2">🍔🍔</div>
+          <div class="rating-option" data-value="3">🍔🍔🍔</div>
+          <div class="rating-option" data-value="4">🍔🍔🍔🍔</div>
+          <div class="rating-option" data-value="5">🍔🍔🍔🍔🍔</div>
+        </div>
+      </div>
+      
+      <div class="rating-container">
+        <div class="rating-title">
+          Me caguei depois de comer?
+          <span class="tooltip-icon">
+            <i class="fas fa-question-circle"></i>
+          </span>
+        </div>
+        <div class="rating-options" id="cagada-rating">
+          <div class="rating-option" data-value="0">Nenhuma</div>
+          <div class="rating-option" data-value="1">💩</div>
+          <div class="rating-option" data-value="2">💩💩</div>
+          <div class="rating-option" data-value="3">💩💩💩</div>
+          <div class="rating-option" data-value="4">💩💩💩💩</div>
+          <div class="rating-option" data-value="5">💩💩💩💩💩</div>
+        </div>
+      </div>
+      
+      <label>Imagem (opcional):</label>
+      <button type="button" id="upload-btn">🖼️ Adicionar Foto</button>
+      <div id="image-preview" class="hidden">
+        <img id="preview" src="#" alt="Preview da imagem">
+      </div>
+      
+      <div class="action-buttons">
+        <button type="submit">Publicar</button>
+        <button type="button" id="delete-btn">🗑️ Apagar Última</button>
+        <button type="button" id="logout">Sair</button>
+      </div>
     </form>
   </div>
 
-  <!-- Scripts (ORDEM CRÍTICA - NÃO ALTERAR) -->
+  <!-- Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=SUA_CHAVE_GOOGLE_MAPS&libraries=places&callback=initMap" async defer></script>
 
   <script>
-    // CONFIGURAÇÃO DO FIREBASE (MANTIDO IGUAL)
+    // Configuração do Firebase
     const firebaseConfig = {
-      apiKey: "FIREBASE_API_KEY",
-      projectId: "FIREBASE_PROJECT_ID"
+      apiKey: "SUA_API_KEY_FIREBASE",
+      projectId: "SEU_PROJECT_ID"
     };
 
-    // INICIALIZAÇÃO (MANTIDO + CONTROLE DE EDIÇÃO)
+    // Variáveis globais
     let auth, db, editId = null;
-
-    try {
-      if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-      }
-      auth = firebase.auth();
-      db = firebase.firestore();
-      console.log("Firebase conectado!");
-    } catch (e) {
-      console.error("Erro Firebase:", e);
-      document.getElementById('login-error').textContent = "Erro de conexão";
-    }
-
-    // VARIÁVEIS GLOBAIS (MANTIDO)
     let imagemUrl = '';
     let selectedNota = 0;
     let selectedSujeira = 0;
     let selectedCagada = 0;
 
-    // CONTROLE DE LOGIN (MODIFICADO PARA SUPORTAR EDIÇÃO)
-    if (auth) {
-      auth.onAuthStateChanged(user => {
-        if (user) {
-          document.getElementById('login-section').classList.add('hidden');
-          document.getElementById('admin-panel').classList.remove('hidden');
-          
-          // Verifica se está editando (NOVO)
-          const urlParams = new URLSearchParams(window.location.search);
-          editId = urlParams.get('edit');
-          
-          if (editId) {
-            document.getElementById('edit-mode-header').classList.remove('hidden');
-            document.getElementById('normal-mode-header').classList.add('hidden');
-            document.getElementById('admin-panel').classList.add('edit-mode');
-            loadReviewForEditing(editId);
-          } else {
-            initForm();
-          }
-        } else {
-          document.getElementById('login-section').classList.remove('hidden');
-          document.getElementById('admin-panel').classList.add('hidden');
-        }
-      });
-
-      // ... (restante do login mantido igual) ...
+    // Função para mostrar/ocultar loading
+    function showLoading(show) {
+      document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
     }
 
-    // FUNÇÃO PARA CARREGAR RESENHA NA EDIÇÃO (NOVO)
+    // Função para configurar ratings
+    function setupRating(elementId, callback) {
+      const options = document.querySelectorAll(`#${elementId} .rating-option`);
+      options.forEach(option => {
+        option.addEventListener('click', () => {
+          options.forEach(opt => opt.classList.remove('selected'));
+          option.classList.add('selected');
+          callback(parseInt(option.dataset.value));
+        });
+      });
+    }
+
+    // Função para carregar resenha para edição
     async function loadReviewForEditing(id) {
       showLoading(true);
       try {
         const doc = await db.collection("locais").doc(id).get();
         if (doc.exists && doc.data().userId === auth.currentUser.uid) {
-          // Preenche os campos
           const data = doc.data();
           document.getElementById('nome').value = data.nome || '';
           document.getElementById('latitude').value = data.latitude || '';
@@ -288,12 +341,10 @@
           document.getElementById('resenha').value = data.resenha || '';
           document.getElementById('meu-pedido').value = data.meu_pedido || '';
           
-          // Preenche ratings
           if (data.nota) document.querySelector(`#nota-rating .rating-option[data-value="${data.nota}"]`).click();
           if (data.sujeira_comendo) document.querySelector(`#sujeira-rating .rating-option[data-value="${data.sujeira_comendo}"]`).click();
           if (data.cagada_depois) document.querySelector(`#cagada-rating .rating-option[data-value="${data.cagada_depois}"]`).click();
           
-          // Preenche imagem
           if (data.imagem) {
             imagemUrl = data.imagem;
             document.getElementById('preview').src = imagemUrl;
@@ -313,15 +364,15 @@
       }
     }
 
-    // FUNÇÃO PRINCIPAL (MODIFICADA PARA SUPORTAR EDIÇÃO)
+    // Função principal
     function initForm(isEditMode = false) {
-      // Configuração do Cloudinary (MANTIDO IGUAL)
+      // Configuração do Cloudinary
       const cloudinaryConfig = {
         cloudName: 'dgdjaz541',
         uploadPreset: 'reliquias_do_xis'
       };
 
-      // Upload de Imagem (MANTIDO IGUAL)
+      // Upload de imagem
       document.getElementById('upload-btn').addEventListener('click', () => {
         window.cloudinary.createUploadWidget(cloudinaryConfig, 
           (error, result) => {
@@ -335,32 +386,16 @@
         ).open();
       });
 
-      // Ratings (MANTIDO IGUAL)
+      // Configura ratings
       setupRating('nota-rating', value => selectedNota = value);
       setupRating('sujeira-rating', value => selectedSujeira = value);
       setupRating('cagada-rating', value => selectedCagada = value);
 
-      // Google Maps (MANTIDO IGUAL)
-      const autocomplete = new google.maps.places.Autocomplete(
-        document.getElementById('endereco'),
-        { types: ['establishment'], componentRestrictions: { country: 'BR' } }
-      );
-
-      autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace();
-        if (place.geometry) {
-          document.getElementById('latitude').value = place.geometry.location.lat();
-          document.getElementById('longitude').value = place.geometry.location.lng();
-          document.getElementById('nome').value = place.name || '';
-        }
-      });
-
-      // SUBMIT DO FORMULÁRIO (MODIFICADO PARA EDIÇÃO)
-      document.getElementById('add-location-form').onsubmit = async (e) => {
+      // Configura submit do formulário
+      document.getElementById('add-location-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         showLoading(true);
         
-        // Validação (MANTIDO IGUAL)
         const nome = document.getElementById('nome').value;
         const latitude = parseFloat(document.getElementById('latitude').value);
         const longitude = parseFloat(document.getElementById('longitude').value);
@@ -374,7 +409,6 @@
         }
 
         try {
-          // Dados para salvar (MANTIDO IGUAL + userId)
           const reviewData = {
             nome,
             latitude,
@@ -388,10 +422,8 @@
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
           };
 
-          // Adiciona imagem se existir
           if (imagemUrl) reviewData.imagem = imagemUrl;
 
-          // Modo Edição (NOVO)
           if (isEditMode && editId) {
             await db.collection("locais").doc(editId).update(reviewData);
             alert("Resenha atualizada com sucesso!");
@@ -399,7 +431,6 @@
             return;
           }
 
-          // Modo Criação (MANTIDO IGUAL)
           await db.collection("locais").add(reviewData);
           alert("Resenha publicada com sucesso!");
           document.getElementById('add-location-form').reset();
@@ -411,9 +442,9 @@
         } finally {
           showLoading(false);
         }
-      };
+      });
 
-      // Botão Deletar (AJUSTADO)
+      // Configura botão de deletar
       document.getElementById('delete-btn').style.display = isEditMode ? 'none' : 'block';
       if (!isEditMode) {
         document.getElementById('delete-btn').addEventListener('click', async () => {
@@ -437,21 +468,61 @@
       }
     }
 
-    // Funções Auxiliares (MANTIDAS)
-    function setupRating(elementId, callback) {
-      const options = document.querySelectorAll(`#${elementId} .rating-option`);
-      options.forEach(option => {
-        option.addEventListener('click', () => {
-          options.forEach(opt => opt.classList.remove('selected'));
-          option.classList.add('selected');
-          callback(parseInt(option.dataset.value));
-        });
-      });
-    }
+    // Inicialização quando o DOM estiver pronto
+    document.addEventListener('DOMContentLoaded', () => {
+      try {
+        if (!firebase.apps.length) {
+          firebase.initializeApp(firebaseConfig);
+        }
+        auth = firebase.auth();
+        db = firebase.firestore();
+        console.log("Firebase conectado!");
 
-    function showLoading(show) {
-      document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
-    }
+        // Controle de login
+        auth.onAuthStateChanged(user => {
+          if (user) {
+            document.getElementById('login-section').classList.add('hidden');
+            document.getElementById('admin-panel').classList.remove('hidden');
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            editId = urlParams.get('edit');
+            
+            if (editId) {
+              document.getElementById('edit-mode-header').classList.remove('hidden');
+              document.getElementById('normal-mode-header').classList.add('hidden');
+              document.getElementById('admin-panel').classList.add('edit-mode');
+              loadReviewForEditing(editId);
+            } else {
+              initForm();
+            }
+          } else {
+            document.getElementById('login-section').classList.remove('hidden');
+            document.getElementById('admin-panel').classList.add('hidden');
+          }
+        });
+
+        // Configura login
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const email = document.getElementById('email').value;
+          const password = document.getElementById('password').value;
+          
+          try {
+            await auth.signInWithEmailAndPassword(email, password);
+          } catch (error) {
+            document.getElementById('login-error').textContent = "E-mail ou senha incorretos";
+          }
+        });
+
+        document.getElementById('logout').addEventListener('click', () => {
+          auth.signOut();
+        });
+
+      } catch (e) {
+        console.error("Erro Firebase:", e);
+        document.getElementById('login-error').textContent = "Erro de conexão";
+      }
+    });
   </script>
 </body>
 </html>
