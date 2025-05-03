@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gerenciar Resenhas - Xis POA</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
   <!-- Firebase 9 (modular) - ESSA É A VERSÃO CORRETA -->
   <script type="module">
@@ -83,11 +83,14 @@
               ${data.resenha || 'Sem resenha'}
             </div>
             ${imagensHTML ? `<div style="margin-top: 10px;">${imagensHTML}</div>` : ''}
-            <div class="resenha-actions" style="margin-top: 15px;">
-              <button onclick="window.deleteResenha('${doc.id}')" style="background: #ff4444; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer;">
-                🗑️ Deletar
-              </button>
-            </div>
+            <div class="resenha-actions">
+  <button onclick="editarResenha('${doc.id}')" style="background: #4CAF50; margin-right: 10px;">
+    <i class="fas fa-edit"></i> Editar
+  </button>
+  <button onclick="deleteResenha('${doc.id}')">
+    <i class="fas fa-trash"></i> Deletar
+  </button>
+</div>
             <hr style="margin: 15px 0; border-color: #eee;">
           `;
           resenhasContainer.appendChild(card);
@@ -131,6 +134,27 @@
         showLoginMessage();
       }
     });
+
+    // Função para editar (global para os botões)
+window.editarResenha = async (id) => {
+  if (!auth.currentUser) {
+    alert("Sua sessão expirou. Faça login novamente.");
+    showLoginMessage();
+    return;
+  }
+
+  try {
+    const doc = await db.collection("locais").doc(id).get();
+    if (doc.exists && doc.data().userId === auth.currentUser.uid) {
+      // Redireciona para o admin.html com o ID na URL
+      window.location.href = `admin.html?edit=${id}`;
+    } else {
+      alert('Você só pode editar suas próprias resenhas.');
+    }
+  } catch (error) {
+    alert(`Erro ao carregar: ${error.message}`);
+  }
+};
 
   </script>
 </head>
