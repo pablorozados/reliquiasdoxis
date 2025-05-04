@@ -177,6 +177,16 @@
     .editor-btn-red { background: #e03131; color: white; }
     .editor-btn-green { background: #2b8a3e; color: white; }
     .editor-btn-blue { background: #1971c2; color: white; }
+    .editor-btn-paragraph { background: #17a2b8; color: white; }
+    .editor-btn-h2 { background: #28a745; color: white; }
+    .editor-btn-h3 { background: #20c997; color: white; }
+    .editor-btn-h4 { background: #6f42c1; color: white; }
+    .editor-btn-quote { background: #6c757d; color: white; }
+    .editor-btn-hr { background: #343a40; color: white; }
+    .editor-btn-small { background: #6c757d; color: white; }
+    .editor-btn-mark { background: #ffc107; color: black; }
+    .editor-btn-em { background: #007bff; color: white; }
+    .editor-btn-yellow { background: #ffc107; color: black; }
     
     /* Ajuste do textarea */
     #resenha {
@@ -221,18 +231,38 @@
         </div>
       </div>
       
-      <label for="resenha">Resenha:</label>
-      <div class="editor-toolbar">
-        <button type="button" class="editor-btn editor-btn-bold" onclick="formatText('bold')" title="Negrito"><b>B</b></button>
-        <button type="button" class="editor-btn editor-btn-italic" onclick="formatText('italic')" title="Itálico"><i>I</i></button>
-        <button type="button" class="editor-btn editor-btn-underline" onclick="formatText('underline')" title="Sublinhado"><u>S</u></button>
-        <button type="button" class="editor-btn editor-btn-strike" onclick="formatText('strike')" title="Riscado"><s>R</s></button>
-        <button type="button" class="editor-btn editor-btn-link" onclick="insertLink()" title="Inserir Link"><i class="fas fa-link fa-sm"></i></button>
-        <button type="button" class="editor-btn editor-btn-red" onclick="setColor('red')" title="Vermelho"><i class="fas fa-font fa-sm"></i></button>
-        <button type="button" class="editor-btn editor-btn-green" onclick="setColor('green')" title="Verde"><i class="fas fa-font fa-sm"></i></button>
-        <button type="button" class="editor-btn editor-btn-blue" onclick="setColor('blue')" title="Azul"><i class="fas fa-font fa-sm"></i></button>
-      </div>
-      <textarea id="resenha" rows="5" required></textarea>
+     <!-- BARRA DE FERRAMENTAS ATUALIZADA COM TODOS OS BOTÕES -->
+  <label for="resenha">Resenha:</label>
+  <div class="editor-toolbar">
+    <!-- Botões básicos de formatação -->
+    <button type="button" class="editor-btn editor-btn-bold" onclick="formatText('bold')" title="Negrito"><b>B</b></button>
+    <button type="button" class="editor-btn editor-btn-italic" onclick="formatText('italic')" title="Itálico"><i>I</i></button>
+    <button type="button" class="editor-btn editor-btn-underline" onclick="formatText('underline')" title="Sublinhado"><u>S</u></button>
+    <button type="button" class="editor-btn editor-btn-strike" onclick="formatText('strike')" title="Riscado"><s>R</s></button>
+    
+    <!-- Novos botões de formatação -->
+    <button type="button" class="editor-btn editor-btn-em" onclick="formatText('em')" title="Ênfase"><em>E</em></button>
+    <button type="button" class="editor-btn editor-btn-mark" onclick="formatText('mark')" title="Marcado"><mark>M</mark></button>
+    <button type="button" class="editor-btn editor-btn-small" onclick="formatText('small')" title="Pequeno"><small>Pq</small></button>
+    
+    <!-- Estrutura de texto -->
+    <button type="button" class="editor-btn editor-btn-paragraph" onclick="formatText('p')" title="Parágrafo">[P]</button>
+    <button type="button" class="editor-btn editor-btn-h2" onclick="formatText('h2')" title="Título 2">[2]</button>
+    <button type="button" class="editor-btn editor-btn-h3" onclick="formatText('h3')" title="Título 3">[3]</button>
+    <button type="button" class="editor-btn editor-btn-h4" onclick="formatText('h4')" title="Título 4">[4]</button>
+    <button type="button" class="editor-btn editor-btn-quote" onclick="formatText('blockquote')" title="Citação">Cit.</button>
+    <button type="button" class="editor-btn editor-btn-hr" onclick="formatText('hr')" title="Linha horizontal">HR</button>
+    
+    <!-- Cores -->
+    <button type="button" class="editor-btn editor-btn-red" onclick="setColor('red')" title="Vermelho"><i class="fas fa-font"></i></button>
+    <button type="button" class="editor-btn editor-btn-green" onclick="setColor('green')" title="Verde"><i class="fas fa-font"></i></button>
+    <button type="button" class="editor-btn editor-btn-blue" onclick="setColor('blue')" title="Azul"><i class="fas fa-font"></i></button>
+    <button type="button" class="editor-btn editor-btn-yellow" onclick="setColor('yellow')" title="Amarelo"><i class="fas fa-font"></i></button>
+    
+    <!-- Link -->
+    <button type="button" class="editor-btn editor-btn-link" onclick="insertLink()" title="Inserir Link"><i class="fas fa-link"></i></button>
+  </div>
+  <textarea id="resenha" rows="5" required></textarea>
 
       <label for="meu-pedido">Meu Pedido:</label>
       <textarea id="meu-pedido" rows="2" required placeholder="Ex: Xis Bacon Especial com batata palha extra"></textarea>
@@ -481,7 +511,7 @@
     }
 
     // FUNÇÕES DO EDITOR DE TEXTO
-    function formatText(tag) {
+ function formatText(tag) {
       const textarea = document.getElementById('resenha');
       const start = textarea.selectionStart;
       const end = textarea.selectionEnd;
@@ -491,16 +521,27 @@
         bold: ['<b>', '</b>'],
         italic: ['<i>', '</i>'],
         underline: ['<u>', '</u>'],
-        strike: ['<s>', '</s>']
+        strike: ['<s>', '</s>'],
+        em: ['<em>', '</em>'],
+        mark: ['<mark>', '</mark>'],
+        small: ['<small>', '</small>'],
+        p: ['<p>', '</p>'],
+        h2: ['<h2>', '</h2>'],
+        h3: ['<h3>', '</h3>'],
+        h4: ['<h4>', '</h4>'],
+        blockquote: ['<blockquote>', '</blockquote>'],
+        hr: ['<hr>', '']
       };
       
-      textarea.value = textarea.value.substring(0, start) + 
-                      tags[tag][0] + selectedText + tags[tag][1] + 
-                      textarea.value.substring(end);
-      
-      // Mantém o foco e seleção
-      textarea.focus();
-      textarea.setSelectionRange(start + tags[tag][0].length, end + tags[tag][0].length);
+      if (tag === 'hr') {
+        textarea.value = textarea.value.substring(0, start) + tags[tag][0] + textarea.value.substring(end);
+        textarea.focus();
+        textarea.setSelectionRange(start + tags[tag][0].length, start + tags[tag][0].length);
+      } else {
+        textarea.value = textarea.value.substring(0, start) + tags[tag][0] + selectedText + tags[tag][1] + textarea.value.substring(end);
+        textarea.focus();
+        textarea.setSelectionRange(start + tags[tag][0].length, end + tags[tag][0].length);
+      }
     }
 
     function insertLink() {
