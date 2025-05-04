@@ -5,12 +5,66 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gerenciar Resenhas - Xis POA</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Estilos do Modal de Edição */
+    .edit-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+    }
+    
+    .edit-modal-content {
+      background-color: #fefefe;
+      margin: 10% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 600px;
+      border-radius: 8px;
+    }
+    
+    .close-edit {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .close-edit:hover {
+      color: black;
+    }
+    
+    .edit-form input,
+    .edit-form textarea,
+    .edit-form select {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .edit-form button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
   
-  <!-- Firebase 9 (modular) - ESSA É A VERSÃO CORRETA -->
+  <!-- Firebase 9 (modular) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
-    import { getFirestore, collection, getDocs, doc, deleteDoc, orderBy } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, deleteDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA7_SFUPE6n9KG6LhL9Y6DRanSW5Zn0-2k",
@@ -31,6 +85,37 @@
     const loginMessage = document.getElementById("login-message");
     const loadingElement = document.getElementById("loading");
 
+    // Modal de Edição
+    const editModal = document.createElement('div');
+    editModal.className = 'edit-modal';
+    editModal.innerHTML = `
+      <div class="edit-modal-content">
+        <span class="close-edit">&times;</span>
+        <h2>Editar Resenha</h2>
+        <form class="edit-form" id="editForm">
+          <input type="hidden" id="editId">
+          <input type="text" id="editNome" placeholder="Nome do Local" required>
+          <input type="text" id="editPedido" placeholder="Seu pedido" required>
+          <textarea id="editResenha" placeholder="Sua resenha" required rows="5"></textarea>
+          <select id="editNota" required>
+            <option value="">Selecione a nota</option>
+            <option value="1">1 ⭐</option>
+            <option value="2">2 ⭐⭐</option>
+            <option value="3">3 ⭐⭐⭐</option>
+            <option value="4">4 ⭐⭐⭐⭐</option>
+            <option value="5">5 ⭐⭐⭐⭐⭐</option>
+          </select>
+          <button type="submit">Salvar Alterações</button>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(editModal);
+
+    // Fechar modal
+    document.querySelector('.close-edit').onclick = () => {
+      editModal.style.display = 'none';
+    };
+
     // Função para mostrar mensagem de não autenticado
     function showLoginMessage() {
       resenhasContainer.style.display = "none";
@@ -43,10 +128,7 @@
       try {
         loadingElement.textContent = "Carregando resenhas...";
         
-        const querySnapshot = await getDocs(
-          collection(db, "locais"),
-          orderBy("timestamp", "desc")
-        );
+        const querySnapshot = await getDocs(collection(db, "locais"));
 
         resenhasContainer.innerHTML = '';
 
@@ -79,18 +161,19 @@
             <h3>${data.nome || 'Sem nome'}</h3>
             <p><strong>Data:</strong> ${dataFormatada}</p>
             <p><strong>Pedido:</strong> ${data.meu_pedido || 'Não informado'}</p>
+            <p><strong>Nota:</strong> ${'⭐'.repeat(data.nota) || 'Sem nota'}</p>
             <div style="background: #f5f5f5; padding: 10px; border-radius: 4px; margin: 10px 0;">
               ${data.resenha || 'Sem resenha'}
             </div>
             ${imagensHTML ? `<div style="margin-top: 10px;">${imagensHTML}</div>` : ''}
             <div class="resenha-actions">
-  <button onclick="editarResenha('${doc.id}')" style="background: #4CAF50; margin-right: 10px;">
-    <i class="fas fa-edit"></i> Editar
-  </button>
-  <button onclick="deleteResenha('${doc.id}')">
-    <i class="fas fa-trash"></i> Deletar
-  </button>
-</div>
+              <button onclick="editarResenha('${doc.id}')" style="background: #4CAF50; margin-right: 10px;">
+                <i class="fas fa-edit"></i> Editar
+              </button>
+              <button onclick="deleteResenha('${doc.id}')" style="background: #f44336;">
+                <i class="fas fa-trash"></i> Deletar
+              </button>
+            </div>
             <hr style="margin: 15px 0; border-color: #eee;">
           `;
           resenhasContainer.appendChild(card);
@@ -106,6 +189,61 @@
         `;
       }
     }
+
+    // Função para editar resenha
+    window.editarResenha = async (id) => {
+      if (!auth.currentUser) {
+        alert("⚠️ Sua sessão expirou. Faça login novamente.");
+        showLoginMessage();
+        return;
+      }
+
+      try {
+        const docRef = doc(db, "locais", id);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          
+          // Preenche o formulário de edição
+          document.getElementById('editId').value = id;
+          document.getElementById('editNome').value = data.nome || '';
+          document.getElementById('editPedido').value = data.meu_pedido || '';
+          document.getElementById('editResenha').value = data.resenha || '';
+          document.getElementById('editNota').value = data.nota || '';
+          
+          // Mostra o modal
+          editModal.style.display = 'block';
+        } else {
+          alert('Resenha não encontrada!');
+        }
+      } catch (error) {
+        alert(`❌ Erro ao carregar: ${error.message}`);
+      }
+    };
+
+    // Formulário de edição
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const id = document.getElementById('editId').value;
+      const updatedData = {
+        nome: document.getElementById('editNome').value,
+        meu_pedido: document.getElementById('editPedido').value,
+        resenha: document.getElementById('editResenha').value,
+        nota: parseInt(document.getElementById('editNota').value),
+        updatedAt: new Date()
+      };
+
+      try {
+        await updateDoc(doc(db, "locais", id), updatedData);
+        alert('✅ Resenha atualizada com sucesso!');
+        editModal.style.display = 'none';
+        loadResenhas();
+      } catch (error) {
+        alert(`❌ Erro ao atualizar: ${error.message}`);
+      }
+    });
 
     // Função global para deletar
     window.deleteResenha = async (id) => {
@@ -134,27 +272,6 @@
         showLoginMessage();
       }
     });
-
-    // Função para editar (global para os botões)
-window.editarResenha = async (id) => {
-  if (!auth.currentUser) {
-    alert("Sua sessão expirou. Faça login novamente.");
-    showLoginMessage();
-    return;
-  }
-
-  try {
-    const doc = await db.collection("locais").doc(id).get();
-    if (doc.exists && doc.data().userId === auth.currentUser.uid) {
-      // Redireciona para o admin.html com o ID na URL
-      window.location.href = `admin.html?edit=${id}`;
-    } else {
-      alert('Você só pode editar suas próprias resenhas.');
-    }
-  } catch (error) {
-    alert(`Erro ao carregar: ${error.message}`);
-  }
-};
 
   </script>
 </head>
