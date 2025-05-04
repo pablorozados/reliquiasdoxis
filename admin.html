@@ -136,16 +136,17 @@
       background: var(--success) !important;
     }
 
-    /* BARRA DE FERRAMENTAS EDITOR */
+    /* BARRA DE FERRAMENTAS EDITOR - ESTILOS CORRIGIDOS */
     .editor-toolbar {
       display: flex;
       flex-wrap: wrap;
-      gap: 5px;
+      gap: 8px;
       padding: 10px;
       background: #f5f5f5;
       border-radius: 8px 8px 0 0;
       border: 1px solid #ddd;
-      margin-bottom: -1px;
+      border-bottom: none;
+      margin-bottom: 0;
     }
 
     .editor-btn {
@@ -155,6 +156,11 @@
       cursor: pointer;
       font-weight: bold;
       font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 36px;
+      height: 36px;
     }
 
     /* Cores dos botões */
@@ -166,9 +172,16 @@
     .editor-btn-red { background: #dc3545; color: white; }
     .editor-btn-green { background: #28a745; color: white; }
     .editor-btn-blue { background: #007bff; color: white; }
+    
+    /* Garante que o textarea fique colado à barra de ferramentas */
+    #resenha {
+      border-radius: 0 0 8px 8px;
+      margin-top: 0;
+    }
   </style>
 </head>
 <body>
+  <!-- Seção de Login (mantida igual) -->
   <div id="login-section">
     <h2>Área do Dono</h2>
     <form id="login-form">
@@ -183,9 +196,11 @@
     </form>
   </div>
 
+  <!-- Painel Admin (com barra de ferramentas adicionada) -->
   <div id="admin-panel" class="hidden">
     <h2>Adicionar Novo Xis</h2>
     <form id="add-location-form">
+      <!-- Campos existentes mantidos iguais -->
       <label for="endereco">Buscar local:</label>
       <input type="text" id="endereco" placeholder="Digite o endereço">
       
@@ -203,22 +218,25 @@
         </div>
       </div>
       
+      <!-- ÁREA DA RESENHA COM BARRA DE FERRAMENTAS -->
       <label for="resenha">Resenha:</label>
       <div class="editor-toolbar">
-        <button type="button" class="editor-btn editor-btn-bold" onclick="formatText('bold')"><b>B</b></button>
-        <button type="button" class="editor-btn editor-btn-italic" onclick="formatText('italic')"><i>I</i></button>
-        <button type="button" class="editor-btn editor-btn-underline" onclick="formatText('underline')"><u>S</u></button>
-        <button type="button" class="editor-btn editor-btn-strike" onclick="formatText('strike')"><s>R</s></button>
-        <button type="button" class="editor-btn editor-btn-link" onclick="insertLink()"><i class="fas fa-link"></i></button>
-        <button type="button" class="editor-btn editor-btn-red" onclick="setColor('red')"><i class="fas fa-font" style="color: white;"></i></button>
-        <button type="button" class="editor-btn editor-btn-green" onclick="setColor('green')"><i class="fas fa-font" style="color: white;"></i></button>
-        <button type="button" class="editor-btn editor-btn-blue" onclick="setColor('blue')"><i class="fas fa-font" style="color: white;"></i></button>
+        <button type="button" class="editor-btn editor-btn-bold" onclick="formatText('bold')" title="Negrito"><b>B</b></button>
+        <button type="button" class="editor-btn editor-btn-italic" onclick="formatText('italic')" title="Itálico"><i>I</i></button>
+        <button type="button" class="editor-btn editor-btn-underline" onclick="formatText('underline')" title="Sublinhado"><u>S</u></button>
+        <button type="button" class="editor-btn editor-btn-strike" onclick="formatText('strike')" title="Riscado"><s>R</s></button>
+        <button type="button" class="editor-btn editor-btn-link" onclick="insertLink()" title="Inserir Link"><i class="fas fa-link"></i></button>
+        <button type="button" class="editor-btn editor-btn-red" onclick="setColor('red')" title="Texto Vermelho"><i class="fas fa-font" style="color:white;"></i></button>
+        <button type="button" class="editor-btn editor-btn-green" onclick="setColor('green')" title="Texto Verde"><i class="fas fa-font" style="color:white;"></i></button>
+        <button type="button" class="editor-btn editor-btn-blue" onclick="setColor('blue')" title="Texto Azul"><i class="fas fa-font" style="color:white;"></i></button>
       </div>
       <textarea id="resenha" rows="5" required></textarea>
 
+      <!-- Restante do formulário mantido igual -->
       <label for="meu-pedido">Meu Pedido:</label>
       <textarea id="meu-pedido" rows="2" required placeholder="Ex: Xis Bacon Especial com batata palha extra"></textarea>
       
+      <!-- Sistema de avaliação mantido igual -->
       <div class="rating-container">
         <div class="rating-title">
           Nota (0-5 estrelas):
@@ -281,20 +299,20 @@
     </form>
   </div>
 
-  <!-- Scripts no FINAL na ORDEM CORRETA -->
+  <!-- Scripts do Firebase (mantidos iguais) -->
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
   <script src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places"></script>
 
   <script>
-    // CONFIGURAÇÃO DO FIREBASE
+    // CONFIGURAÇÃO DO FIREBASE (mantida igual)
     const firebaseConfig = {
       apiKey: "FIREBASE_API_KEY",
       projectId: "FIREBASE_PROJECT_ID"
     };
 
-    // INICIALIZAÇÃO
+    // INICIALIZAÇÃO (mantida igual)
     let auth, db;
     try {
       if (!firebase.apps.length) {
@@ -308,13 +326,13 @@
       document.getElementById('login-error').textContent = "Erro de conexão";
     }
 
-    // VARIÁVEIS GLOBAIS
+    // VARIÁVEIS GLOBAIS (mantidas iguais)
     let imagemUrl = '';
     let selectedNota = 0;
     let selectedSujeira = 0;
     let selectedCagada = 0;
 
-    // CONTROLE DE LOGIN
+    // CONTROLE DE LOGIN (mantido igual)
     if (auth) {
       auth.onAuthStateChanged(user => {
         if (user) {
@@ -344,15 +362,15 @@
       });
     }
 
-    // INICIALIZAÇÃO DO FORMULÁRIO
+    // INICIALIZAÇÃO DO FORMULÁRIO (mantida igual)
     function initForm() {
-      // Configuração do Cloudinary
+      // Configuração do Cloudinary (mantida igual)
       const cloudinaryConfig = {
         cloudName: 'dgdjaz541',
         uploadPreset: 'reliquias_do_xis'
       };
 
-      // Upload de imagem
+      // Upload de imagem (mantido igual)
       document.getElementById('upload-btn').addEventListener('click', () => {
         window.cloudinary.createUploadWidget(cloudinaryConfig, 
           (error, result) => {
@@ -368,12 +386,12 @@
         ).open();
       });
 
-      // Configuração dos ratings
+      // Configuração dos ratings (mantida igual)
       setupRating('nota-rating', value => selectedNota = value);
       setupRating('sujeira-rating', value => selectedSujeira = value);
       setupRating('cagada-rating', value => selectedCagada = value);
 
-      // Autocomplete do Google Maps
+      // Autocomplete do Google Maps (mantido igual)
       const autocomplete = new google.maps.places.Autocomplete(
         document.getElementById('endereco'),
         { types: ['establishment'], componentRestrictions: { country: 'BR' } }
@@ -388,7 +406,7 @@
         }
       });
 
-      // Envio do formulário
+      // Envio do formulário (mantido igual)
       document.getElementById('add-location-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -428,7 +446,7 @@
         }
       });
 
-      // Botão de deletar
+      // Botão de deletar (mantido igual)
       document.getElementById('delete-btn').addEventListener('click', async () => {
         if (!confirm('Tem certeza que deseja apagar sua última resenha?')) return;
         
@@ -450,7 +468,7 @@
       });
     }
 
-    // Função auxiliar para ratings
+    // Função auxiliar para ratings (mantida igual)
     function setupRating(elementId, callback) {
       const options = document.querySelectorAll(`#${elementId} .rating-option`);
       options.forEach(option => {
@@ -462,7 +480,10 @@
       });
     }
 
-    // FUNÇÕES DO EDITOR (NOVAS)
+    // =============================================
+    // FUNÇÕES DO EDITOR DE TEXTO (NOVAS)
+    // =============================================
+    
     function formatText(tag) {
       const textarea = document.getElementById('resenha');
       const start = textarea.selectionStart;
@@ -480,22 +501,31 @@
                       tags[tag][0] + selectedText + tags[tag][1] + 
                       textarea.value.substring(end);
       
+      // Mantém o foco e seleção
       textarea.focus();
+      textarea.setSelectionRange(start + tags[tag][0].length, end + tags[tag][0].length);
     }
 
     function insertLink() {
       const textarea = document.getElementById('resenha');
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = textarea.value.substring(start, end);
+      
       const url = prompt('Digite a URL do link:', 'https://');
-      if (url) {
-        const text = prompt('Digite o texto do link:', 'Clique aqui');
-        const start = textarea.selectionStart;
-        const end = textarea.selectionEnd;
-        const selectedText = textarea.value.substring(start, end) || text;
-        
-        textarea.value = textarea.value.substring(0, start) + 
-                        `<a href="${url}" target="_blank">${selectedText}</a>` + 
-                        textarea.value.substring(end);
-      }
+      if (!url) return;
+      
+      const text = prompt('Digite o texto do link:', selectedText || 'Clique aqui');
+      if (!text) return;
+      
+      const html = `<a href="${url}" target="_blank">${text}</a>`;
+      
+      textarea.value = textarea.value.substring(0, start) + html + textarea.value.substring(end);
+      
+      // Mantém o foco
+      textarea.focus();
+      const newCursorPos = start + html.length;
+      textarea.setSelectionRange(newCursorPos, newCursorPos);
     }
 
     function setColor(color) {
@@ -504,11 +534,18 @@
       const end = textarea.selectionEnd;
       const selectedText = textarea.value.substring(start, end);
       
-      textarea.value = textarea.value.substring(0, start) + 
-                      `<span style="color:${color}">${selectedText}</span>` + 
-                      textarea.value.substring(end);
+      if (!selectedText) {
+        alert("Selecione um texto para aplicar a cor");
+        return;
+      }
       
+      const coloredText = `<span style="color:${color}">${selectedText}</span>`;
+      
+      textarea.value = textarea.value.substring(0, start) + coloredText + textarea.value.substring(end);
+      
+      // Mantém o foco
       textarea.focus();
+      textarea.setSelectionRange(start, start + coloredText.length);
     }
   </script>
 </body>
