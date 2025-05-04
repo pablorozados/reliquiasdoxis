@@ -17,405 +17,198 @@
       --success: #4caf50;
     }
     
-    body {
-      font-family: 'Poppins', sans-serif;
+    /* ... (mantenha todos os estilos existentes) ... */
+
+    /* NOVOS ESTILOS PARA O EDITOR */
+    .editor-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      padding: 10px;
       background: #f5f5f5;
-      margin: 0;
-      padding: 20px;
-    }
-    
-    #login-section, #admin-panel {
-      max-width: 600px;
-      margin: 2rem auto;
-      padding: 2rem;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    
-    h2 {
-      color: #333;
-      text-align: center;
-      margin-bottom: 1.5rem;
-    }
-    
-    label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: 500;
-    }
-    
-    input, textarea, button {
-      width: 100%;
-      padding: 12px;
-      margin-bottom: 1rem;
+      border-radius: 8px 8px 0 0;
       border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 16px;
+      margin-bottom: -1px;
     }
     
-    button {
-      background: var(--primary);
-      color: white;
+    .editor-toolbar button {
+      padding: 8px 12px;
       border: none;
-      cursor: pointer;
-      font-weight: 600;
-      transition: background 0.3s;
-    }
-    
-    button:hover {
-      background: #e05555;
-    }
-    
-    #login-error {
-      color: var(--error);
-      text-align: center;
-      margin-top: 1rem;
-    }
-    
-    .hidden {
-      display: none;
-    }
-    
-    .grid-columns {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
-    
-    #image-preview {
-      margin: 1rem 0;
-      text-align: center;
-    }
-    
-    #preview {
-      max-width: 100%;
-      max-height: 200px;
-      border-radius: 4px;
-    }
-    
-    .rating-container {
-      margin: 1rem 0;
-    }
-    
-    .rating-options {
-      display: flex;
-      gap: 10px;
-      margin-top: 0.5rem;
-    }
-    
-    .rating-option {
-      padding: 5px 10px;
-      background: #f0f0f0;
       border-radius: 4px;
       cursor: pointer;
-    }
-    
-    .rating-option.selected {
-      background: var(--primary);
-      color: white;
-    }
-    
-    .tooltip-icon {
-      margin-left: 5px;
-      color: #666;
-      cursor: help;
-    }
-    
-    .action-buttons {
+      font-weight: bold;
       display: flex;
-      gap: 10px;
-      margin-top: 1.5rem;
+      align-items: center;
+      gap: 5px;
     }
     
-    #delete-btn {
-      background: var(--error) !important;
+    .editor-toolbar button:hover {
+      opacity: 0.9;
     }
     
-    #upload-btn {
-      background: var(--success) !important;
+    /* Cores dos botões */
+    .btn-bold { background: #333; color: white; }
+    .btn-italic { background: #555; color: white; }
+    .btn-underline { background: #777; color: white; }
+    .btn-strike { background: #999; color: white; }
+    .btn-em { background: #007bff; color: white; }
+    .btn-mark { background: #ffc107; color: black; }
+    .btn-small { background: #6c757d; color: white; }
+    .btn-paragraph { background: #17a2b8; color: white; }
+    .btn-h2 { background: #28a745; color: white; }
+    .btn-h3 { background: #20c997; color: white; }
+    .btn-h4 { background: #6f42c1; color: white; }
+    .btn-quote { background: #6c757d; color: white; }
+    .btn-hr { background: #343a40; color: white; }
+    .btn-link { background: #007bff; color: white; }
+    .btn-red { background: #dc3545; color: white; }
+    .btn-green { background: #28a745; color: white; }
+    .btn-yellow { background: #ffc107; color: black; }
+    .btn-blue { background: #007bff; color: white; }
+    
+    /* Área de texto do editor */
+    #resenha, #meu-pedido {
+      width: 100%;
+      min-height: 100px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      font-family: Arial, sans-serif;
     }
   </style>
 </head>
 <body>
-  <div id="login-section">
-    <h2>Área do Dono</h2>
-    <form id="login-form">
-      <label for="email">E-mail:</label>
-      <input type="email" id="email" required>
-      
-      <label for="password">Senha:</label>
-      <input type="password" id="password" required>
-      
-      <button type="submit">Entrar</button>
-      <p id="login-error"></p>
-    </form>
-  </div>
+  <!-- ... (mantenha todo o conteúdo existente até o formulário) ... -->
 
   <div id="admin-panel" class="hidden">
     <h2>Adicionar Novo Xis</h2>
     <form id="add-location-form">
-      <label for="endereco">Buscar local:</label>
-      <input type="text" id="endereco" placeholder="Digite o endereço">
-      
-      <label for="nome">Nome do lugar:</label>
-      <input type="text" id="nome" required>
-      
-      <div class="grid-columns">
-        <div>
-          <label for="latitude">Latitude:</label>
-          <input type="text" id="latitude" readonly>
-        </div>
-        <div>
-          <label for="longitude">Longitude:</label>
-          <input type="text" id="longitude" readonly>
-        </div>
-      </div>
+      <!-- ... (mantenha todos os campos existentes) ... -->
       
       <label for="resenha">Resenha:</label>
+      <div class="editor-toolbar">
+        <!-- Botões de formatação -->
+        <button type="button" class="btn-bold" onclick="formatText('resenha', 'bold')"><b>B</b></button>
+        <button type="button" class="btn-italic" onclick="formatText('resenha', 'italic')"><i>I</i></button>
+        <button type="button" class="btn-underline" onclick="formatText('resenha', 'underline')"><u>S</u></button>
+        <button type="button" class="btn-strike" onclick="formatText('resenha', 'strike')"><s>R</s></button>
+        <button type="button" class="btn-em" onclick="formatText('resenha', 'em')"><em>E</em></button>
+        <button type="button" class="btn-mark" onclick="formatText('resenha', 'mark')"><mark>M</mark></button>
+        <button type="button" class="btn-small" onclick="formatText('resenha', 'small')"><small>Pq</small></button>
+        
+        <button type="button" class="btn-paragraph" onclick="formatText('resenha', 'p')">[P]</button>
+        <button type="button" class="btn-h2" onclick="formatText('resenha', 'h2')">[2]</button>
+        <button type="button" class="btn-h3" onclick="formatText('resenha', 'h3')">[3]</button>
+        <button type="button" class="btn-h4" onclick="formatText('resenha', 'h4')">[4]</button>
+        
+        <button type="button" class="btn-quote" onclick="formatText('resenha', 'blockquote')">Cit.</button>
+        <button type="button" class="btn-hr" onclick="formatText('resenha', 'hr')">HR</button>
+        <button type="button" class="btn-link" onclick="insertLink('resenha')"><i class="fas fa-link"></i></button>
+        
+        <!-- Botões de cor -->
+        <button type="button" class="btn-red" onclick="setColor('resenha', 'red')"><i class="fas fa-font"></i></button>
+        <button type="button" class="btn-green" onclick="setColor('resenha', 'green')"><i class="fas fa-font"></i></button>
+        <button type="button" class="btn-yellow" onclick="setColor('resenha', 'yellow')"><i class="fas fa-font"></i></button>
+        <button type="button" class="btn-blue" onclick="setColor('resenha', 'blue')"><i class="fas fa-font"></i></button>
+      </div>
       <textarea id="resenha" rows="5" required></textarea>
 
       <label for="meu-pedido">Meu Pedido:</label>
+      <div class="editor-toolbar">
+        <!-- Repetir os mesmos botões para o campo de pedido -->
+        <button type="button" class="btn-bold" onclick="formatText('meu-pedido', 'bold')"><b>B</b></button>
+        <button type="button" class="btn-italic" onclick="formatText('meu-pedido', 'italic')"><i>I</i></button>
+        <!-- ... (todos os outros botões para o segundo editor) ... -->
+      </div>
       <textarea id="meu-pedido" rows="2" required placeholder="Ex: Xis Bacon Especial com batata palha extra"></textarea>
-      
-      <div class="rating-container">
-        <div class="rating-title">
-          Nota (0-5 estrelas):
-        </div>
-        <div class="rating-options" id="nota-rating">
-          <div class="rating-option" data-value="0">Nenhuma</div>
-          <div class="rating-option" data-value="1">⭐</div>
-          <div class="rating-option" data-value="2">⭐⭐</div>
-          <div class="rating-option" data-value="3">⭐⭐⭐</div>
-          <div class="rating-option" data-value="4">⭐⭐⭐⭐</div>
-          <div class="rating-option" data-value="5">⭐⭐⭐⭐⭐</div>
-        </div>
-      </div>
-      
-      <div class="rating-container">
-        <div class="rating-title">
-          Me caguei comendo?
-          <span class="tooltip-icon">
-            <i class="fas fa-question-circle"></i>
-          </span>
-        </div>
-        <div class="rating-options" id="sujeira-rating">
-          <div class="rating-option" data-value="0">Nenhuma</div>
-          <div class="rating-option" data-value="1">🍔</div>
-          <div class="rating-option" data-value="2">🍔🍔</div>
-          <div class="rating-option" data-value="3">🍔🍔🍔</div>
-          <div class="rating-option" data-value="4">🍔🍔🍔🍔</div>
-          <div class="rating-option" data-value="5">🍔🍔🍔🍔🍔</div>
-        </div>
-      </div>
-      
-      <div class="rating-container">
-        <div class="rating-title">
-          Me caguei depois de comer?
-          <span class="tooltip-icon">
-            <i class="fas fa-question-circle"></i>
-          </span>
-        </div>
-        <div class="rating-options" id="cagada-rating">
-          <div class="rating-option" data-value="0">Nenhuma</div>
-          <div class="rating-option" data-value="1">💩</div>
-          <div class="rating-option" data-value="2">💩💩</div>
-          <div class="rating-option" data-value="3">💩💩💩</div>
-          <div class="rating-option" data-value="4">💩💩💩💩</div>
-          <div class="rating-option" data-value="5">💩💩💩💩💩</div>
-        </div>
-      </div>
-      
-      <label>Imagem (opcional):</label>
-      <button type="button" id="upload-btn">🖼️ Adicionar Foto</button>
-      <div id="image-preview" class="hidden">
-        <img id="preview" src="#" alt="Preview da imagem">
-      </div>
-      
-      <div class="action-buttons">
-        <button type="submit">Publicar</button>
-        <button type="button" id="delete-btn">🗑️ Apagar Última</button>
-        <button type="button" id="logout">Sair</button>
-      </div>
+
+      <!-- ... (mantenha o resto do formulário existente) ... -->
     </form>
   </div>
 
-  <!-- Scripts no FINAL na ORDEM CORRETA -->
-  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places"></script>
+  <!-- ... (mantenha todos os scripts existentes do Firebase) ... -->
 
+  <!-- NOVOS SCRIPTS PARA O EDITOR -->
   <script>
-    // CONFIGURAÇÃO DO FIREBASE
-    const firebaseConfig = {
-      apiKey: "FIREBASE_API_KEY",
-      projectId: "FIREBASE_PROJECT_ID"
-    };
-
-    // INICIALIZAÇÃO
-    let auth, db;
-    try {
-      if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-      }
-      auth = firebase.auth();
-      db = firebase.firestore();
-      console.log("Firebase conectado!");
-    } catch (e) {
-      console.error("Erro Firebase:", e);
-      document.getElementById('login-error').textContent = "Erro de conexão";
-    }
-
-    // VARIÁVEIS GLOBAIS
-    let imagemUrl = [];
-    let selectedNota = 0;
-    let selectedSujeira = 0;
-    let selectedCagada = 0;
-
-    // CONTROLE DE LOGIN
-    if (auth) {
-      auth.onAuthStateChanged(user => {
-        if (user) {
-          document.getElementById('login-section').classList.add('hidden');
-          document.getElementById('admin-panel').classList.remove('hidden');
-          initForm();
-        } else {
-          document.getElementById('login-section').classList.remove('hidden');
-          document.getElementById('admin-panel').classList.add('hidden');
-        }
-      });
-
-      document.getElementById('login-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        
-        try {
-          await auth.signInWithEmailAndPassword(email, password);
-        } catch (error) {
-          document.getElementById('login-error').textContent = "E-mail ou senha incorretos";
-        }
-      });
-
-      document.getElementById('logout').addEventListener('click', () => {
-        auth.signOut();
-      });
-    }
-
-    // INICIALIZAÇÃO DO FORMULÁRIO
-    function initForm() {
-      // Configuração do Cloudinary
-      const cloudinaryConfig = {
-        cloudName: 'dgdjaz541',
-        uploadPreset: 'reliquias_do_xis'
+    // Função principal de formatação
+    function formatText(textareaId, tag) {
+      const textarea = document.getElementById(textareaId);
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = textarea.value.substring(start, end);
+      let before = textarea.value.substring(0, start);
+      let after = textarea.value.substring(end);
+      
+      // Tags especiais
+      const tags = {
+        bold: ['<b>', '</b>'],
+        italic: ['<i>', '</i>'],
+        underline: ['<u>', '</u>'],
+        strike: ['<s>', '</s>'],
+        em: ['<em>', '</em>'],
+        mark: ['<mark>', '</mark>'],
+        small: ['<small>', '</small>'],
+        p: ['<p>', '</p>'],
+        h2: ['<h2>', '</h2>'],
+        h3: ['<h3>', '</h3>'],
+        h4: ['<h4>', '</h4>'],
+        blockquote: ['<blockquote>', '</blockquote>'],
+        hr: ['<hr>', '']
       };
-
-      // Upload de imagem
-      document.getElementById('upload-btn').addEventListener('click', () => {
-        window.cloudinary.createUploadWidget(cloudinaryConfig, 
-          (error, result) => {
-            if (result?.event === "success") {
-              imagemUrl.push(result.info.secure_url);
-              document.getElementById('preview').src = result.info.secure_url;
-              document.getElementById('image-preview').classList.remove('hidden');
-            }
-          }
-        ).open();
-      });
-
-      // Configuração dos ratings
-      setupRating('nota-rating', value => selectedNota = value);
-      setupRating('sujeira-rating', value => selectedSujeira = value);
-      setupRating('cagada-rating', value => selectedCagada = value);
-
-      // Autocomplete do Google Maps
-      const autocomplete = new google.maps.places.Autocomplete(
-        document.getElementById('endereco'),
-        { types: ['establishment'], componentRestrictions: { country: 'BR' } }
-      );
-
-      autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace();
-        if (place.geometry) {
-          document.getElementById('latitude').value = place.geometry.location.lat();
-          document.getElementById('longitude').value = place.geometry.location.lng();
-          document.getElementById('nome').value = place.name || '';
-        }
-      });
-
-      // Envio do formulário
-      document.getElementById('add-location-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const nome = document.getElementById('nome').value;
-        const latitude = parseFloat(document.getElementById('latitude').value);
-        const longitude = parseFloat(document.getElementById('longitude').value);
-        const resenha = document.getElementById('resenha').value;
-        const meu_pedido = document.getElementById('meu-pedido').value;
-
-        if (!nome || isNaN(latitude) || isNaN(longitude) || !resenha || !meu_pedido) {
-          alert("Preencha todos os campos obrigatórios!");
-          return;
-        }
-
-        try {
-          await db.collection("locais").add({
-            nome,
-            latitude,
-            longitude,
-            resenha,
-            meu_pedido,
-            nota: selectedNota,
-            sujeira_comendo: selectedSujeira,
-            cagada_depois: selectedCagada,
-            imagem: imagemUrl.length > 0 ? imagemUrl : null,
-            userId: auth.currentUser.uid,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-          });
-          
-          alert("Resenha publicada com sucesso!");
-          document.getElementById('add-location-form').reset();
-          document.getElementById('image-preview').classList.add('hidden');
-          imagemUrl = [];
-        } catch (error) {
-          console.error("Erro ao publicar:", error);
-          alert("Erro ao publicar resenha");
-        }
-      });
-
-      // Botão de deletar
-      document.getElementById('delete-btn').addEventListener('click', async () => {
-        if (!confirm('Tem certeza que deseja apagar sua última resenha?')) return;
-        
-        try {
-          const query = await db.collection("locais")
-            .where("userId", "==", auth.currentUser.uid)
-            .orderBy("timestamp", "desc")
-            .limit(1)
-            .get();
-
-          if (!query.empty) {
-            await db.collection("locais").doc(query.docs[0].id).delete();
-            alert("Resenha apagada com sucesso!");
-          }
-        } catch (error) {
-          console.error("Erro ao apagar:", error);
-          alert("Erro ao apagar resenha");
-        }
-      });
+      
+      if (tag === 'hr') {
+        textarea.value = before + tags[tag][0] + after;
+        textarea.selectionStart = textarea.selectionEnd = start + 4;
+      } else {
+        textarea.value = before + tags[tag][0] + selectedText + tags[tag][1] + after;
+        textarea.selectionStart = start + tags[tag][0].length;
+        textarea.selectionEnd = end + tags[tag][0].length;
+      }
+      
+      textarea.focus();
     }
-
-    // Função auxiliar para ratings
-    function setupRating(elementId, callback) {
-      const options = document.querySelectorAll(`#${elementId} .rating-option`);
-      options.forEach(option => {
-        option.addEventListener('click', () => {
-          options.forEach(opt => opt.classList.remove('selected'));
-          option.classList.add('selected');
-          callback(parseInt(option.dataset.value));
-        });
-      });
+    
+    // Inserir link
+    function insertLink(textareaId) {
+      const textarea = document.getElementById(textareaId);
+      const url = prompt('Digite a URL do link:', 'https://');
+      if (url) {
+        const text = prompt('Digite o texto do link:', 'Clique aqui');
+        formatTextWithCustom(textareaId, `<a href="${url}" target="_blank">`, '</a>', text);
+      }
+    }
+    
+    // Definir cor
+    function setColor(textareaId, color) {
+      const colors = {
+        red: '#dc3545',
+        green: '#28a745',
+        yellow: '#ffc107',
+        blue: '#007bff'
+      };
+      formatTextWithCustom(textareaId, `<span style="color:${colors[color]};">`, '</span>');
+    }
+    
+    // Função auxiliar para formatação personalizada
+    function formatTextWithCustom(textareaId, openTag, closeTag, defaultText = null) {
+      const textarea = document.getElementById(textareaId);
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      let selectedText = textarea.value.substring(start, end);
+      
+      if (defaultText && !selectedText) {
+        selectedText = defaultText;
+      }
+      
+      textarea.value = 
+        textarea.value.substring(0, start) + 
+        openTag + selectedText + closeTag + 
+        textarea.value.substring(end);
+      
+      textarea.selectionStart = start + openTag.length;
+      textarea.selectionEnd = start + openTag.length + selectedText.length;
+      textarea.focus();
     }
   </script>
 </body>
