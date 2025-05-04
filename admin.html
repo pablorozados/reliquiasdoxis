@@ -4,96 +4,104 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Admin - Relíquias do Xis</title>
+  <link rel="stylesheet" href="estilos.css" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 800px;
-      margin: 40px auto;
-      padding: 20px;
-    }
-    textarea {
-      width: 100%;
-      height: 300px;
-      margin-top: 10px;
-      font-family: monospace;
-      font-size: 16px;
-    }
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-    .toolbar button {
-      padding: 5px 10px;
-      font-weight: bold;
+    .editor-botoes button {
+      margin: 2px;
+      padding: 4px 8px;
+      font-size: 0.9em;
       cursor: pointer;
     }
-    .toolbar button.red    { background-color: #f44336; color: white; }
-    .toolbar button.green  { background-color: #4CAF50; color: white; }
-    .toolbar button.yellow { background-color: #ffeb3b; color: black; }
-    .toolbar button.blue   { background-color: #2196F3; color: white; }
+    .editor-botoes {
+      margin-bottom: 8px;
+    }
   </style>
 </head>
 <body>
-  <h1>Painel do Admin</h1>
+  <h1>Publicar nova resenha</h1>
+  
+  <label for="titulo">Título:</label>
+  <input type="text" id="titulo" placeholder="Título da resenha" /><br /><br />
 
-  <div class="toolbar">
-    <button onclick="wrapTag('b')">B</button>
-    <button onclick="wrapTag('i')">I</button>
-    <button onclick="wrapTag('u')">S</button>
-    <button onclick="wrapTag('s')">R</button>
-    <button onclick="wrapTag('em')">E</button>
-    <button onclick="wrapTag('mark')">M</button>
-    <button onclick="wrapTag('small')">Pq</button>
-    <button onclick="wrapTag('p')">[P]</button>
-    <button onclick="wrapTag('h2')">[2]</button>
-    <button onclick="wrapTag('h3')">[3]</button>
-    <button onclick="wrapTag('h4')">[4]</button>
-    <button onclick="wrapTag('blockquote')">Cit.</button>
-    <button onclick="insertHr()">HR</button>
-    <button onclick="insertLink()">🔗</button>
-    <button class="red" onclick="wrapColor('red')">Vermelho</button>
-    <button class="green" onclick="wrapColor('green')">Verde</button>
-    <button class="yellow" onclick="wrapColor('yellow')">Amarelo</button>
-    <button class="blue" onclick="wrapColor('blue')">Azul</button>
+  <label for="pedido">O que foi pedido:</label>
+  <input type="text" id="pedido" placeholder="Ex: Xis Coração + batata + refri" /><br /><br />
+
+  <label for="nota">Nota (0 a 10):</label>
+  <input type="number" id="nota" min="0" max="10" /><br /><br />
+
+  <label for="diarreia">Me caguei comendo ou depois?</label>
+  <select id="diarreia">
+    <option value="nao">Não</option>
+    <option value="comendo">Comendo</option>
+    <option value="depois">Depois</option>
+    <option value="ambos">Ambos</option>
+  </select><br /><br />
+
+  <label for="resenha">Resenha:</label>
+  <div class="editor-botoes">
+    <button onclick="formatar('b')">B</button>
+    <button onclick="formatar('i')">I</button>
+    <button onclick="formatar('u')">S</button>
+    <button onclick="formatar('s')">R</button>
+    <button onclick="formatar('em')">E</button>
+    <button onclick="formatar('mark')">M</button>
+    <button onclick="formatar('small')">Pq</button>
+    <button onclick="formatar('p')">[P]</button>
+    <button onclick="formatar('h2')">[2]</button>
+    <button onclick="formatar('h3')">[3]</button>
+    <button onclick="formatar('h4')">[4]</button>
+    <button onclick="formatar('blockquote')">Cit.</button>
+    <button onclick="inserirLinha()">HR</button>
+    <button onclick="inserirLink()">🔗</button>
+    <button style="background:red;color:white" onclick="formatarCor('red')">🔴</button>
+    <button style="background:green;color:white" onclick="formatarCor('green')">🟢</button>
+    <button style="background:gold;color:black" onclick="formatarCor('gold')">🟡</button>
+    <button style="background:blue;color:white" onclick="formatarCor('blue')">🔵</button>
   </div>
+  <textarea id="resenha" rows="10" cols="50"></textarea><br /><br />
 
-  <textarea id="resenha" placeholder="Escreva sua resenha aqui..."></textarea>
   <button id="publicar">Publicar</button>
 
   <script type="module" src="admin.js"></script>
   <script>
-    function wrapTag(tag) {
+    function formatar(tag) {
       const textarea = document.getElementById("resenha");
-      const [start, end] = [textarea.selectionStart, textarea.selectionEnd];
-      const selected = textarea.value.slice(start, end);
-      const wrapped = `<${tag}>${selected}</${tag}>`;
-      textarea.setRangeText(wrapped, start, end, 'end');
+      const inicio = textarea.selectionStart;
+      const fim = textarea.selectionEnd;
+      const textoSelecionado = textarea.value.substring(inicio, fim);
+      const antes = textarea.value.substring(0, inicio);
+      const depois = textarea.value.substring(fim);
+      textarea.value = `${antes}<${tag}>${textoSelecionado}</${tag}>${depois}`;
     }
 
-    function wrapColor(color) {
-      const textarea = document.getElementById("resenha");
-      const [start, end] = [textarea.selectionStart, textarea.selectionEnd];
-      const selected = textarea.value.slice(start, end);
-      const wrapped = `<span style=\"color:${color}\">${selected}</span>`;
-      textarea.setRangeText(wrapped, start, end, 'end');
-    }
-
-    function insertHr() {
+    function inserirLinha() {
       const textarea = document.getElementById("resenha");
       const pos = textarea.selectionStart;
-      textarea.setRangeText("\n<hr>\n", pos, pos, 'end');
+      const antes = textarea.value.substring(0, pos);
+      const depois = textarea.value.substring(pos);
+      textarea.value = `${antes}<hr />${depois}`;
     }
 
-    function insertLink() {
-      const url = prompt("Digite a URL do link:");
-      if (url) {
-        const textarea = document.getElementById("resenha");
-        const [start, end] = [textarea.selectionStart, textarea.selectionEnd];
-        const selected = textarea.value.slice(start, end) || "link";
-        const wrapped = `<a href=\"${url}\">${selected}</a>`;
-        textarea.setRangeText(wrapped, start, end, 'end');
-      }
+    function inserirLink() {
+      const url = prompt("Digite a URL:");
+      if (!url) return;
+      const texto = prompt("Texto do link:");
+      if (!texto) return;
+      const textarea = document.getElementById("resenha");
+      const pos = textarea.selectionStart;
+      const antes = textarea.value.substring(0, pos);
+      const depois = textarea.value.substring(pos);
+      textarea.value = `${antes}<a href=\"${url}\">${texto}</a>${depois}`;
+    }
+
+    function formatarCor(cor) {
+      const textarea = document.getElementById("resenha");
+      const inicio = textarea.selectionStart;
+      const fim = textarea.selectionEnd;
+      const textoSelecionado = textarea.value.substring(inicio, fim);
+      const antes = textarea.value.substring(0, inicio);
+      const depois = textarea.value.substring(fim);
+      textarea.value = `${antes}<span style=\"color:${cor}\">${textoSelecionado}</span>${depois}`;
     }
   </script>
 </body>
