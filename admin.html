@@ -545,5 +545,43 @@
       textarea.setSelectionRange(start, start + coloredText.length);
     }
   </script>
+  <script>
+  document.getElementById("upload-btn").addEventListener("click", function () {
+    cloudinary.openUploadWidget(
+      {
+        cloudName: "SEU_CLOUD_NAME",
+        uploadPreset: "SEU_UPLOAD_PRESET",
+        sources: ["local", "url", "camera"],
+        multiple: false,
+        folder: "resenhas",
+        cropping: false,
+        resourceType: "image"
+      },
+      function (error, result) {
+        if (!error && result && result.event === "success") {
+          const imageUrl = result.info.secure_url;
+          const preview = document.getElementById("preview");
+          const previewContainer = document.getElementById("image-preview");
+
+          preview.src = imageUrl;
+          previewContainer.classList.remove("hidden");
+
+          // (Opcional) Salvar a URL da imagem para uso posterior no Firestore
+          // Exemplo: salvar no form usando um campo oculto
+          let hiddenInput = document.getElementById("uploaded-image-url");
+          if (!hiddenInput) {
+            hiddenInput = document.createElement("input");
+            hiddenInput.type = "hidden";
+            hiddenInput.id = "uploaded-image-url";
+            hiddenInput.name = "imageUrl";
+            document.getElementById("add-location-form").appendChild(hiddenInput);
+          }
+          hiddenInput.value = imageUrl;
+        }
+      }
+    );
+  });
+</script>
+
 </body>
 </html>
