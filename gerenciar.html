@@ -8,6 +8,10 @@
   <style>
     /* [SEUS ESTILOS ORIGINAIS PRESERVADOS] */
   </style>
+  <!-- Adicione os scripts do Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore.js"></script>
 </head>
 <body>
   <div id="login-message" style="display: none; color: red;">
@@ -26,7 +30,7 @@
     };
 
     // INICIALIZAÇÃO SIMPLIFICADA
-    firebase.initializeApp(firebaseConfig);
+    const app = firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
