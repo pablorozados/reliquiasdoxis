@@ -5,72 +5,166 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gerenciar Resenhas - Xis POA</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- Cloudinary -->
-  <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
-
   <style>
-    /* [SEUS ESTILOS ORIGINAIS PERMANECEM INTACTOS] */
     body {
       font-family: Arial, sans-serif;
       background: #f5f5f5;
       margin: 0;
       padding: 20px;
     }
-    /* ... (todos os outros estilos originais) ... */
+    
+    #resenhas-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .resenha-card {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .edit-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+    }
+    
+    .edit-modal-content {
+      background: white;
+      margin: 5% auto;
+      padding: 20px;
+      width: 90%;
+      max-width: 600px;
+      border-radius: 8px;
+    }
   </style>
 </head>
 <body>
-  <!-- [SEU HTML ORIGINAL PERMANECE INTACTO] -->
   <h1 style="text-align: center; margin: 20px 0;">Gerenciar Resenhas</h1>
   
   <div id="resenhas-container">
     <p id="loading" style="text-align: center;">Carregando resenhas...</p>
   </div>
 
-  <div id="login-message" style="display: none; text-align: center;">
+  <div id="login-message" style="display: none; text-align: center; padding: 20px; background: white; border-radius: 8px; max-width: 500px; margin: 20px auto;">
     <h2>Acesso Restrito</h2>
-    <p>Faça login na <a href="admin.html">Área do Dono</a> primeiro.</p>
+    <p>Redirecionando para login...</p>
   </div>
 
-  <!-- [MODAL DE EDIÇÃO ORIGINAL] -->
+  <!-- MODAL DE EDIÇÃO -->
   <div class="edit-modal">
-    <!-- ... (conteúdo original do modal) ... -->
+    <div class="edit-modal-content">
+      <span class="close-edit" style="float: right; font-size: 24px; cursor: pointer;">&times;</span>
+      <h2>Editar Resenha</h2>
+      <form id="editForm">
+        <input type="hidden" id="editId">
+        <input type="text" id="editNome" placeholder="Nome do local" style="width: 100%; padding: 8px; margin-bottom: 10px;">
+        <textarea id="editResenha" rows="10" style="width: 100%; padding: 8px;"></textarea>
+        <button type="submit" style="background: #4CAF50; color: white; padding: 10px; border: none; border-radius: 4px; margin-top: 10px;">Salvar</button>
+      </form>
+    </div>
   </div>
 
-  <!-- FIREBASE COM SECRETS DO GITHUB -->
+  <!-- FIREBASE -->
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
 
   <script>
-    // CONFIGURAÇÃO COM SECRETS
+    // CONFIGURAÇÃO FIREBASE (SECRETS SERÃO INJETADAS NO DEPLOY)
     const firebaseConfig = {
-      apiKey: "FIREBASE_API_KEY",  // Será substituído no deploy
-      projectId: "FIREBASE_PROJECT_ID"  // Será substituído no deploy
+      apiKey: "FIREBASE_API_KEY",
+      projectId: "FIREBASE_PROJECT_ID"
     };
 
-    // [RESTANTE DO SEU SCRIPT ORIGINAL PERMANECE INTACTO]
+    // INICIALIZAÇÃO
     let auth, db;
-    if (!firebase.apps.length) {
+    try {
       firebase.initializeApp(firebaseConfig);
+      auth = firebase.auth();
+      db = firebase.firestore();
+      
+      // VERIFICAÇÃO DE SESSÃO
+      auth.onAuthStateChanged(user => {
+        if (user) {
+          console.log("Usuário autenticado:", user.email);
+          document.getElementById('login-message').style.display = 'none';
+          loadResenhas();
+        } else {
+          console.log("Nenhum usuário logado - redirecionando...");
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('login-message').style.display = 'block';
+          setTimeout(() => {
+            window.location.href = "admin.html";
+          }, 1500);
+        }
+      });
+
+    } catch (error) {
+      console.error("Erro Firebase:", error);
+      document.getElementById('loading').innerHTML = "Erro de conexão com o servidor";
     }
-    auth = firebase.auth();
-    db = firebase.firestore();
 
-    // [TODAS AS SUAS FUNÇÕES ORIGINAIS PERMANECEM AQUI]
-    async function loadResenhas() { /* ... */ }
-    function openEditModal(id) { /* ... */ }
-    function deleteResenha(id) { /* ... */ }
-
-    // [SEU CÓDIGO ORIGINAL DE AUTENTICAÇÃO]
-    auth.onAuthStateChanged(user => {
-      if (user) {
-        loadResenhas();
-        document.getElementById('login-message').style.display = 'none';
-      } else {
-        document.getElementById('login-message').style.display = 'block';
+    // CARREGAR RESENHAS
+    async function loadResenhas() {
+      try {
+        const querySnapshot = await db.collection("locais").get();
+        const container = document.getElementById("resenhas-container");
+        container.innerHTML = '';
+        
+        querySnapshot.forEach(doc => {
+          const data = doc.data();
+          const card = document.createElement('div');
+          card.className = 'resenha-card';
+          card.innerHTML = `
+            <h3>${data.nome}</h3>
+            <p>${data.resenha}</p>
+            <p>Nota: ${'⭐'.repeat(data.nota)}</p>
+            <button onclick="openEditModal('${doc.id}')">Editar</button>
+          `;
+          container.appendChild(card);
+        });
+        
+        document.getElementById('loading').style.display = 'none';
+      } catch (error) {
+        console.error("Erro ao carregar:", error);
       }
+    }
+
+    // ABRIR MODAL DE EDIÇÃO
+    window.openEditModal = async function(id) {
+      const doc = await db.collection("locais").doc(id).get();
+      if (doc.exists) {
+        document.getElementById('editId').value = id;
+        document.getElementById('editNome').value = doc.data().nome;
+        document.getElementById('editResenha').value = doc.data().resenha;
+        document.querySelector('.edit-modal').style.display = 'block';
+      }
+    }
+
+    // FECHAR MODAL
+    document.querySelector('.close-edit').addEventListener('click', () => {
+      document.querySelector('.edit-modal').style.display = 'none';
+    });
+
+    // SALVAR EDIÇÃO
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('editId').value;
+      await db.collection("locais").doc(id).update({
+        nome: document.getElementById('editNome').value,
+        resenha: document.getElementById('editResenha').value
+      });
+      document.querySelector('.edit-modal').style.display = 'none';
+      loadResenhas();
     });
   </script>
 </body>
