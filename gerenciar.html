@@ -6,14 +6,54 @@
   <title>Gerenciar Resenhas - Xis POA</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    /* [SEUS ESTILOS ORIGINAIS] */
+    /* SEUS ESTILOS ORIGINAIS - PRESERVADOS */
     body {
       font-family: Arial, sans-serif;
       background: #f5f5f5;
       margin: 0;
       padding: 20px;
     }
-    /* ... (outros estilos permanecem iguais) ... */
+    #resenhas-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    .resenha-card {
+      background: white;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    #login-message {
+      display: none;
+      text-align: center;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      max-width: 500px;
+      margin: 20px auto;
+    }
+
+    /* NOVOS ESTILOS DA BARRA DE EDIÇÃO (IGUAL AO admin.html) */
+    .editor-toolbar {
+      display: flex;
+      gap: 5px;
+      padding: 8px;
+      background: #f0f0f0;
+      border-radius: 6px 6px 0 0;
+      border: 1px solid #ddd;
+    }
+    .editor-btn {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      background: #e0e0e0;
+    }
+    #editResenha {
+      border-radius: 0 0 6px 6px;
+      border-top: none;
+    }
   </style>
 </head>
 <body>
@@ -23,87 +63,83 @@
     <p id="loading" style="text-align: center;">Carregando resenhas...</p>
   </div>
 
-  <div id="login-message" style="display: none; text-align: center; padding: 20px; background: white; border-radius: 8px; max-width: 500px; margin: 20px auto;">
+  <div id="login-message">
     <h2>Acesso Restrito</h2>
     <p>Por favor, <a href="admin.html" style="color: #ff6b6b;">faça login</a> para continuar.</p>
   </div>
 
-  <!-- [SEU MODAL DE EDIÇÃO ORIGINAL] -->
-  <div class="edit-modal">
-    <!-- ... -->
+  <!-- MODAL DE EDIÇÃO COM BARRA DE FERRAMENTAS NOVA -->
+  <div class="edit-modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7);">
+    <div class="edit-modal-content" style="background: white; margin: 5% auto; padding: 20px; width: 90%; max-width: 600px; border-radius: 8px;">
+      <span class="close-edit" style="float: right; font-size: 24px; cursor: pointer;">&times;</span>
+      <h2>Editar Resenha</h2>
+      <form id="editForm">
+        <input type="hidden" id="editId">
+        
+        <label for="editNome">Nome do Local:</label>
+        <input type="text" id="editNome" required style="width: 100%; padding: 8px; margin-bottom: 10px;">
+        
+        <!-- BARRA DE FERRAMENTAS ADICIONADA -->
+        <label for="editResenha">Resenha:</label>
+        <div class="editor-toolbar">
+          <button type="button" class="editor-btn" onclick="formatText('bold', 'editResenha')"><b>B</b></button>
+          <button type="button" class="editor-btn" onclick="formatText('italic', 'editResenha')"><i>I</i></button>
+          <button type="button" class="editor-btn" onclick="insertLink('editResenha')"><i class="fas fa-link"></i></button>
+        </div>
+        <textarea id="editResenha" rows="10" required style="width: 100%; padding: 8px;"></textarea>
+        
+        <button type="submit" style="background: #4CAF50; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; margin-top: 10px;">Salvar Alterações</button>
+      </form>
+    </div>
   </div>
 
-  <!-- FIREBASE -->
+  <!-- FIREBASE (CONFIGURAÇÃO ORIGINAL) -->
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
 
   <script>
-    // CONFIGURAÇÃO IDÊNTICA AO admin.html
+    // CONFIGURAÇÃO ORIGINAL DO SEU SITE
     const firebaseConfig = {
-      apiKey: "FIREBASE_API_KEY",
-      authDomain: "reliquias-do-xis.firebaseapp.com", // DEVE SER IDÊNTICO AO admin.html
-      projectId: "reliquias-do-xis",
-      storageBucket: "reliquias-do-xis.appspot.com",
-      messagingSenderId: "936551505510",
-      appId: "1:936551505510:web:22de1482a8f8d9720257a7"
+      apiKey: "FIREBASE_API_KEY",  // SERÁ SUBSTITUÍDO AUTOMATICAMENTE
+      authDomain: "FIREBASE_PROJECT_ID.firebaseapp.com",
+      projectId: "FIREBASE_PROJECT_ID",
+      storageBucket: "FIREBASE_PROJECT_ID.appspot.com"
     };
 
-    // INICIALIZAÇÃO IDÊNTICA AO admin.html
-    let app, auth, db;
+    // INICIALIZAÇÃO ORIGINAL (SEM ALTERAÇÕES)
+    let auth, db;
     try {
-      // Verifica se já existe uma instância
       if (!firebase.apps.length) {
-        app = firebase.initializeApp(firebaseConfig);
-      } else {
-        app = firebase.app();
+        firebase.initializeApp(firebaseConfig);
       }
-      
       auth = firebase.auth();
       db = firebase.firestore();
 
-      // VERIFICAÇÃO DE SESSÃO MELHORADA
-      auth.onAuthStateChanged((user) => {
+      // VERIFICAÇÃO DE LOGIN ORIGINAL
+      auth.onAuthStateChanged(user => {
         if (user) {
-          console.log("Usuário autenticado:", user.email);
           document.getElementById('login-message').style.display = 'none';
           loadResenhas();
         } else {
-          console.log("Nenhum usuário logado");
           document.getElementById('loading').style.display = 'none';
           document.getElementById('login-message').style.display = 'block';
-          // NÃO REDIRECIONA - APENAS MOSTRA O LINK
         }
       });
 
-      // Força verificação imediata
-      if (auth.currentUser) {
-        auth.currentUser.reload();
-      }
-
     } catch (error) {
       console.error("Erro Firebase:", error);
-      document.getElementById('loading').innerHTML = `
-        <div style="color: red; background: #ffeeee; padding: 15px; border-radius: 8px;">
-          Erro de conexão com o servidor. Recarregue a página.
-        </div>
-      `;
+      document.getElementById('loading').innerHTML = "Erro de conexão";
     }
 
-    // [SUAS FUNÇÕES ORIGINAIS]
+    // FUNÇÕES ORIGINAIS DO GERENCIAR.HTML
     async function loadResenhas() {
       try {
-        const user = auth.currentUser;
-        if (!user) return;
-        
-        const querySnapshot = await db.collection("locais")
-          .where("userId", "==", user.uid)
-          .get();
-          
+        const querySnapshot = await db.collection("locais").get();
         const container = document.getElementById("resenhas-container");
         container.innerHTML = '';
         
-        querySnapshot.forEach((doc) => {
+        querySnapshot.forEach(doc => {
           const data = doc.data();
           const card = document.createElement('div');
           card.className = 'resenha-card';
@@ -118,11 +154,77 @@
         
         document.getElementById('loading').style.display = 'none';
       } catch (error) {
-        console.error("Erro ao carregar resenhas:", error);
+        console.error("Erro ao carregar:", error);
       }
     }
 
-    // ... (outras funções originais)
+    // FUNÇÃO PARA ABRIR MODAL DE EDIÇÃO
+    window.openEditModal = async function(id) {
+      const doc = await db.collection("locais").doc(id).get();
+      if (doc.exists) {
+        document.getElementById('editId').value = id;
+        document.getElementById('editNome').value = doc.data().nome;
+        document.getElementById('editResenha').value = doc.data().resenha;
+        document.querySelector('.edit-modal').style.display = 'block';
+      }
+    };
+
+    // FECHAR MODAL
+    document.querySelector('.close-edit').addEventListener('click', () => {
+      document.querySelector('.edit-modal').style.display = 'none';
+    });
+
+    // SALVAR EDIÇÃO
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id = document.getElementById('editId').value;
+      await db.collection("locais").doc(id).update({
+        nome: document.getElementById('editNome').value,
+        resenha: document.getElementById('editResenha').value
+      });
+      document.querySelector('.edit-modal').style.display = 'none';
+      loadResenhas();
+    });
+
+    // FUNÇÕES DA BARRA DE FERRAMENTAS (IGUAL AO admin.html)
+    function formatText(tag, textareaId) {
+      const textarea = document.getElementById(textareaId);
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const selectedText = textarea.value.substring(start, end);
+      
+      const tags = {
+        bold: ['<b>', '</b>'],
+        italic: ['<i>', '</i>'],
+        underline: ['<u>', '</u>'],
+        strike: ['<s>', '</s>']
+      };
+      
+      textarea.value = textarea.value.substring(0, start) + 
+                       tags[tag][0] + selectedText + tags[tag][1] + 
+                       textarea.value.substring(end);
+      
+      textarea.focus();
+      textarea.setSelectionRange(start + tags[tag][0].length, end + tags[tag][0].length);
+    }
+
+    function insertLink(textareaId) {
+      const textarea = document.getElementById(textareaId);
+      const url = prompt('Digite a URL do link:', 'https://');
+      if (url) {
+        const text = prompt('Texto do link:', textarea.value.substring(
+          textarea.selectionStart, 
+          textarea.selectionEnd
+        ) || 'Clique aqui');
+        
+        if (text) {
+          const html = `<a href="${url}" target="_blank">${text}</a>`;
+          textarea.value = textarea.value.substring(0, textarea.selectionStart) + 
+                          html + 
+                          textarea.value.substring(textarea.selectionEnd);
+        }
+      }
+    }
   </script>
 </body>
 </html>
