@@ -35,15 +35,30 @@
     const db = firebase.firestore();
 
     // VERIFICAÇÃO DE AUTENTICAÇÃO
-    auth.onAuthStateChanged(user => {
+    auth.onAuthStateChanged(async (user) => {
       if (user) {
-        // Usuário autenticado, exibe a página normalmente
-        document.getElementById('login-message').style.display = 'none';
+        // Usuário autenticado, verificar permissões
         console.log("Usuário autenticado:", user.email);
-        // Aqui você pode chamar a função para carregar as resenhas
-        loadResenhas();
+
+        try {
+          // Exemplo: Verificar permissões no Firestore
+          const userDoc = await db.collection('users').doc(user.uid).get();
+          if (userDoc.exists && userDoc.data().role === 'admin') {
+            // Usuário tem permissão para acessar a página
+            document.getElementById('login-message').style.display = 'none';
+            loadResenhas();
+          } else {
+            // Usuário não tem permissão, redirecionar para admin.html
+            alert("Você não tem permissão para acessar esta página.");
+            window.location.href = 'admin.html';
+          }
+        } catch (error) {
+          console.error("Erro ao verificar permissões:", error);
+          alert("Erro ao verificar permissões. Tente novamente.");
+          window.location.href = 'admin.html';
+        }
       } else {
-        // Usuário não autenticado, exibe mensagem e redireciona
+        // Usuário não autenticado, redirecionar para admin.html
         document.getElementById('login-message').style.display = 'block';
         setTimeout(() => {
           window.location.href = 'admin.html';
