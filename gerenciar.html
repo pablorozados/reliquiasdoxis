@@ -10,8 +10,12 @@
   </style>
 </head>
 <body>
-  <!-- [SEU HTML ORIGINAL] -->
+  <div id="login-message" style="display: none; color: red;">
+    Você não está autenticado. Redirecionando para a página de login...
+  </div>
   
+  <!-- [SEU HTML ORIGINAL] -->
+
   <script>
     // CONFIGURAÇÃO ORIGINAL DO SEU SITE
     const firebaseConfig = {
@@ -26,15 +30,28 @@
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // VERIFICAÇÃO DIRETA
+    // VERIFICAÇÃO DE AUTENTICAÇÃO
     auth.onAuthStateChanged(user => {
       if (user) {
+        // Usuário autenticado, exibe a página normalmente
         document.getElementById('login-message').style.display = 'none';
-        // SUA FUNÇÃO loadResenhas() ORIGINAL AQUI
+        console.log("Usuário autenticado:", user.email);
+        // Aqui você pode chamar a função para carregar as resenhas
+        loadResenhas();
       } else {
+        // Usuário não autenticado, exibe mensagem e redireciona
         document.getElementById('login-message').style.display = 'block';
+        setTimeout(() => {
+          window.location.href = 'admin.html';
+        }, 2000); // Redireciona após 2 segundos
       }
     });
+
+    // Exemplo de função para carregar resenhas
+    function loadResenhas() {
+      console.log("Carregando resenhas...");
+      // Adicione aqui a lógica para carregar as resenhas do Firestore
+    }
   </script>
 </body>
 </html>
