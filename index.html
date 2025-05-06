@@ -15,6 +15,17 @@
   </header>
   
   <main>
+    <div id="filter-container" style="margin: 10px;">
+      <label for="filter-rating">Filtrar por nota:</label>
+      <select id="filter-rating" onchange="filterMarkers()">
+        <option value="all">Todos</option>
+        <option value="5">5 estrelas</option>
+        <option value="4">4 estrelas</option>
+        <option value="3">3 estrelas</option>
+        <option value="2">2 estrelas</option>
+        <option value="1">1 estrela</option>
+      </select>
+    </div>
     <div id="map">
       <div class="loading-message">
         <i class="fas fa-hamburger fa-spin"></i>
@@ -72,6 +83,8 @@
       return html;
     }
 
+    let markers = []; // Array para armazenar os marcadores
+
     // Inicializa o mapa
     function initMap() {
       const map = new google.maps.Map(document.getElementById("map"), {
@@ -113,46 +126,25 @@
                 }
               });
 
+              // Adiciona o marcador ao array
+              markers.push({ marker, nota: data.nota });
+
               // Animação ao carregar
               setTimeout(() => dropMarker(marker, map), Math.random() * 1000);
 
               const content = `
                 <div class="info-window-content">
                   <h3 class="info-window-title">${data.nome}</h3>
-                  <div class="rating-display">
-                    <span class="rating-label">Nota:</span>
-                    ${renderRating(data.nota || 0, 'nota')}
-                  </div>
-                  <div class="rating-display">
-                    <span class="rating-label">Me caguei comendo?</span>
-                    <span class="tooltip-icon">?
-                      <span class="tooltip-text">Me sujei muito comendo o xis?</span>
-                    </span>
-                    ${renderRating(data.sujeira_comendo || 0, 'sujeira')}
-                  </div>
-                  <div class="rating-display">
-                    <span class="rating-label">Me caguei depois?</span>
-                    <span class="tooltip-icon">?
-                      <span class="tooltip-text">Acho que isso é bem autoexplicativo. As vezes não cai bem. 😒</span>
-                    </span>
-                    ${renderRating(data.cagada_depois || 0, 'cagada')}
-                  </div>
                   <div class="pedido-destaque">
                     <strong>O que pedi:</strong> ${data.meu_pedido || 'Não informado'}
                   </div>
                   <div class="resenha-texto">
                     ${data.resenha}
                   </div>
-                  ${data.imagem ? `
-                    <div class="thumbnail-container">
-                      ${Array.isArray(data.imagem) ? 
-                        data.imagem.map(img => `
-                          <img src="${img}" class="thumbnail" onclick="openLightbox('${img}')">
-                        `).join('') : `
-                        <img src="${data.imagem}" class="thumbnail" onclick="openLightbox('${data.imagem}')">
-                      `}
-                    </div>
-                  ` : ''}
+                  <div class="rating-display">
+                    <span class="rating-label">Nota:</span>
+                    ${renderRating(data.nota || 0, 'nota')}
+                  </div>
                 </div>
               `;
 
@@ -174,6 +166,19 @@
             </div>
           `;
         });
+    }
+
+    // Função para filtrar os marcadores
+    function filterMarkers() {
+      const selectedRating = document.getElementById("filter-rating").value;
+
+      markers.forEach(({ marker, nota }) => {
+        if (selectedRating === "all" || parseInt(selectedRating) === nota) {
+          marker.setMap(map); // Mostra o marcador
+        } else {
+          marker.setMap(null); // Esconde o marcador
+        }
+      });
     }
 
     // Carrega a API do Google Maps
@@ -231,3 +236,4 @@
 </div>
 </body>
 </html>
+``` 
