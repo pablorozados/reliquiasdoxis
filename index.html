@@ -93,15 +93,24 @@
                 map: map,
                 icon: (() => {
                   if (data.nota === 5) {
-                    return 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png'; // Dourado
+                    return {
+                      url: 'https://twemoji.maxcdn.com/v/latest/svg/1f947.svg', // Medalha de ouro
+                      scaledSize: new google.maps.Size(32, 32) // Ajusta o tamanho do emoji
+                    };
                   } else if (data.nota === 4) {
-                    return 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'; // Prateado
+                    return {
+                      url: 'https://twemoji.maxcdn.com/v/latest/svg/1f948.svg', // Medalha de prata
+                      scaledSize: new google.maps.Size(32, 32)
+                    };
                   } else if (data.nota === 3) {
-                    return 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png'; // Bronze
+                    return {
+                      url: 'https://twemoji.maxcdn.com/v/latest/svg/1f949.svg', // Medalha de bronze
+                      scaledSize: new google.maps.Size(32, 32)
+                    };
                   } else if (data.nota === 2) {
-                    return 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'; // Vermelho
+                    return 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'; // Pontinho vermelho
                   } else {
-                    return 'https://maps.google.com/mapfiles/kml/shapes/poop.png'; // Emoji de cocô
+                    return 'https://maps.google.com/mapfiles/ms/icons/brown-dot.png'; // Pontinho marrom
                   }
                 })()
               });
@@ -224,3 +233,4 @@
 </div>
 </body>
 </html>
+``` 
