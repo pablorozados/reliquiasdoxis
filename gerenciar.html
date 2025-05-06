@@ -369,78 +369,79 @@
         showLoginMessage();
       }
     });
-    function formatText(tag) {
-    const textarea = document.getElementById('editResenha');
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = textarea.value.substring(start, end);
-    
-    const tags = {
-        bold: ['<b>', '</b>'],
-        italic: ['<i>', '</i>'],
-        underline: ['<u>', '</u>'],
-        strike: ['<s>', '</s>'],
-        em: ['<em>', '</em>'],
-        mark: ['<mark>', '</mark>'],
-        small: ['<small>', '</small>'],
-        p: ['<p>', '</p>'],
-        h2: ['<h2>', '</h2>'],
-        h3: ['<h3>', '</h3>'],
-        h4: ['<h4>', '</h4>'],
-        blockquote: ['<blockquote>', '</blockquote>'],
-        hr: ['<hr>', '']
+
+    window.formatText = function formatText(tag) {
+        const textarea = document.getElementById('editResenha');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = textarea.value.substring(start, end);
+        
+        const tags = {
+            bold: ['<b>', '</b>'],
+            italic: ['<i>', '</i>'],
+            underline: ['<u>', '</u>'],
+            strike: ['<s>', '</s>'],
+            em: ['<em>', '</em>'],
+            mark: ['<mark>', '</mark>'],
+            small: ['<small>', '</small>'],
+            p: ['<p>', '</p>'],
+            h2: ['<h2>', '</h2>'],
+            h3: ['<h3>', '</h3>'],
+            h4: ['<h4>', '</h4>'],
+            blockquote: ['<blockquote>', '</blockquote>'],
+            hr: ['<hr>', '']
+        };
+        
+        if (tag === 'hr') {
+            textarea.value = textarea.value.substring(0, start) + tags[tag][0] + textarea.value.substring(end);
+            textarea.focus();
+            textarea.setSelectionRange(start + tags[tag][0].length, start + tags[tag][0].length);
+        } else {
+            textarea.value = textarea.value.substring(0, start) + tags[tag][0] + selectedText + tags[tag][1] + textarea.value.substring(end);
+            textarea.focus();
+            textarea.setSelectionRange(start + tags[tag][0].length, end + tags[tag][0].length);
+        }
     };
-    
-    if (tag === 'hr') {
-        textarea.value = textarea.value.substring(0, start) + tags[tag][0] + textarea.value.substring(end);
-        textarea.focus();
-        textarea.setSelectionRange(start + tags[tag][0].length, start + tags[tag][0].length);
-    } else {
-        textarea.value = textarea.value.substring(0, start) + tags[tag][0] + selectedText + tags[tag][1] + textarea.value.substring(end);
-        textarea.focus();
-        textarea.setSelectionRange(start + tags[tag][0].length, end + tags[tag][0].length);
-    }
-}
 
-function insertLink() {
-    const textarea = document.getElementById('editResenha');
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = textarea.value.substring(start, end);
-    
-    const url = prompt('Digite a URL do link:', 'https://');
-    if (!url) return;
-    
-    const text = prompt('Digite o texto do link:', selectedText || 'Clique aqui');
-    if (!text) return;
-    
-    const html = `<a href="${url}" target="_blank">${text}</a>`;
-    
-    textarea.value = textarea.value.substring(0, start) + html + textarea.value.substring(end);
-    
-    textarea.focus();
-    const newCursorPos = start + html.length;
-    textarea.setSelectionRange(newCursorPos, newCursorPos);
-}
+    window.insertLink = function insertLink() {
+        const textarea = document.getElementById('editResenha');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = textarea.value.substring(start, end);
+        
+        const url = prompt('Digite a URL do link:', 'https://');
+        if (!url) return;
+        
+        const text = prompt('Digite o texto do link:', selectedText || 'Clique aqui');
+        if (!text) return;
+        
+        const html = `<a href="${url}" target="_blank">${text}</a>`;
+        
+        textarea.value = textarea.value.substring(0, start) + html + textarea.value.substring(end);
+        
+        textarea.focus();
+        const newCursorPos = start + html.length;
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+    };
 
-function setColor(color) {
-    const textarea = document.getElementById('editResenha');
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = textarea.value.substring(start, end);
-    
-    if (!selectedText) {
-        alert("Selecione um texto para aplicar a cor");
-        return;
-    }
-    
-    const coloredText = `<span style="color:${color}">${selectedText}</span>`;
-    
-    textarea.value = textarea.value.substring(0, start) + coloredText + textarea.value.substring(end);
-    
-    textarea.focus();
-    textarea.setSelectionRange(start, start + coloredText.length);
-}
+    window.setColor = function setColor(color) {
+        const textarea = document.getElementById('editResenha');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = textarea.value.substring(start, end);
+        
+        if (!selectedText) {
+            alert("Selecione um texto para aplicar a cor");
+            return;
+        }
+        
+        const coloredText = `<span style="color:${color}">${selectedText}</span>`;
+        
+        textarea.value = textarea.value.substring(0, start) + coloredText + textarea.value.substring(end);
+        
+        textarea.focus();
+        textarea.setSelectionRange(start, start + coloredText.length);
+    };
   </script>
 </head>
 <body>
