@@ -91,38 +91,11 @@
     auth.onAuthStateChanged(async (user) => {
       if (user) {
         console.log("Usuário autenticado:", user.email);
-
-        try {
-          // Verificar permissões no Firestore
-          const userDoc = await db.collection('users').doc(user.uid).get();
-          if (userDoc.exists) {
-            const userData = userDoc.data();
-            if (userData.role === 'admin') {
-              // Usuário tem permissão para acessar a página
-              console.log("Permissão concedida para o usuário:", user.email);
-              document.getElementById('login-message').style.display = 'none';
-              document.getElementById('resenhas-container').style.display = 'block';
-              loadResenhas();
-            } else {
-              // Usuário autenticado, mas sem permissão
-              console.warn("Usuário sem permissão:", user.email);
-              alert("Você não tem permissão para acessar esta página.");
-              window.location.href = 'admin.html';
-            }
-          } else {
-            // Documento do usuário não encontrado
-            console.error("Documento do usuário não encontrado no Firestore.");
-            alert("Erro ao verificar permissões. Tente novamente.");
-            window.location.href = 'admin.html';
-          }
-        } catch (error) {
-          console.error("Erro ao verificar permissões:", error);
-          alert("Erro ao verificar permissões. Tente novamente.");
-          window.location.href = 'admin.html';
-        }
+        document.getElementById('login-message').style.display = 'none';
+        document.getElementById('resenhas-container').style.display = 'block';
+        loadResenhas(); // Função para carregar resenhas
       } else {
-        // Usuário não autenticado
-        console.warn("Usuário não autenticado. Redirecionando para admin.html...");
+        console.warn("Usuário não autenticado. Redirecionando...");
         document.getElementById('login-message').style.display = 'block';
         setTimeout(() => {
           window.location.href = 'admin.html';
