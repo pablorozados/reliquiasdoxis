@@ -89,17 +89,22 @@
 
     // Verificação de autenticação
     auth.onAuthStateChanged(async (user) => {
-      if (user) {
-        console.log("Usuário autenticado:", user.email);
-        document.getElementById('login-message').style.display = 'none';
-        document.getElementById('resenhas-container').style.display = 'block';
-        await loadResenhas(); // Função para carregar resenhas
-      } else {
-        console.warn("Usuário não autenticado. Redirecionando...");
-        document.getElementById('login-message').style.display = 'block';
-        setTimeout(() => {
-          window.location.href = 'admin.html';
-        }, 2000);
+      try {
+        if (user) {
+          console.log("Usuário autenticado:", user.email);
+          document.getElementById('login-message').style.display = 'none';
+          document.getElementById('resenhas-container').style.display = 'block';
+          await loadResenhas(); // Função para carregar resenhas
+        } else {
+          console.warn("Usuário não autenticado. Redirecionando...");
+          document.getElementById('login-message').style.display = 'block';
+          setTimeout(() => {
+            window.location.href = 'admin.html';
+          }, 2000);
+        }
+      } catch (error) {
+        console.error("Erro durante a verificação de autenticação:", error);
+        alert("Ocorreu um erro. Tente novamente mais tarde.");
       }
     });
 
