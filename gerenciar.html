@@ -6,143 +6,286 @@
   <title>Gerenciar Resenhas - Xis POA</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    /* Estilos básicos */
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-color: #f9f9f9;
+    /* Estilos do Modal de Edição */
+    .edit-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
     }
-
-    #resenhas-container {
-      max-width: 800px;
-      margin: 20px auto;
+    
+    .edit-modal-content {
+      background-color: #fefefe;
+      margin: 10% auto;
       padding: 20px;
-      background: white;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 600px;
       border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
-
-    .resenha-card {
-      margin-bottom: 20px;
-      padding: 15px;
+    
+    .close-edit {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .close-edit:hover {
+      color: black;
+    }
+    
+    .edit-form input,
+    .edit-form textarea,
+    .edit-form select {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
       border: 1px solid #ddd;
-      border-radius: 8px;
-      background: #fff;
+      border-radius: 4px;
     }
-
-    .resenha-card h3 {
-      margin: 0 0 10px;
-    }
-
-    .resenha-card p {
-      margin: 5px 0;
-    }
-
-    .resenha-actions button {
-      margin-right: 10px;
-      padding: 8px 12px;
+    
+    .edit-form button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
       border: none;
       border-radius: 4px;
       cursor: pointer;
     }
-
-    .resenha-actions button:first-child {
-      background-color: #4CAF50;
-      color: white;
-    }
-
-    .resenha-actions button:last-child {
-      background-color: #f44336;
-      color: white;
-    }
   </style>
-  <!-- Firebase Scripts -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-</head>
-<body>
-  <h1 style="text-align: center; margin: 20px 0;">Gerenciar Resenhas</h1>
+  
+  <!-- Firebase 9 (modular) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, doc, deleteDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
 
-  <div id="resenhas-container" style="display: none;">
-    <p id="loading" style="text-align: center;">Carregando resenhas...</p>
-  </div>
-
-  <div id="login-message" style="display: none; text-align: center; color: red;">
-    Você não está autenticado. Redirecionando para a página de login...
-  </div>
-
-  <script>
-    // Configuração do Firebase
     const firebaseConfig = {
-      apiKey: "FIREBASE_API_KEY",
+      apiKey: "AIzaSyA7_SFUPE6n9KG6LhL9Y6DRanSW5Zn0-2k",
       authDomain: "reliquias-do-xis.firebaseapp.com",
       projectId: "reliquias-do-xis",
-      storageBucket: "reliquias-do-xis.appspot.com"
+      storageBucket: "reliquias-do-xis.appspot.com",
+      messagingSenderId: "936551505510",
+      appId: "1:936551505510:web:22de1482a8f8d9720257a7"
     };
 
-    // Inicialização do Firebase
-    const app = firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+    // Inicialização
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    // Verificação de autenticação
-    auth.onAuthStateChanged(async (user) => {
-      console.log("onAuthStateChanged disparado");
-      try {
-        if (user) {
-          console.log("Usuário autenticado:", user.email);
-          document.getElementById('login-message').style.display = 'none';
-          document.getElementById('resenhas-container').style.display = 'block';
-          await loadResenhas(); // Função para carregar resenhas
-        } else {
-          console.warn("Usuário não autenticado. Redirecionando...");
-          document.getElementById('login-message').style.display = 'block';
-          setTimeout(() => {
-            window.location.href = 'admin.html';
-          }, 2000);
-        }
-      } catch (error) {
-        console.error("Erro durante a verificação de autenticação:", error);
-        alert("Ocorreu um erro. Tente novamente mais tarde.");
-      }
-    });
+    // Elementos da UI
+    const resenhasContainer = document.getElementById("resenhas-container");
+    const loginMessage = document.getElementById("login-message");
+    const loadingElement = document.getElementById("loading");
 
-    // Função para carregar resenhas da coleção "locais"
+    // Modal de Edição
+    const editModal = document.createElement('div');
+    editModal.className = 'edit-modal';
+    editModal.innerHTML = `
+      <div class="edit-modal-content">
+        <span class="close-edit">&times;</span>
+        <h2>Editar Resenha</h2>
+        <form class="edit-form" id="editForm">
+          <input type="hidden" id="editId">
+          <input type="text" id="editNome" placeholder="Nome do Local" required>
+          <input type="text" id="editPedido" placeholder="Seu pedido" required>
+          <textarea id="editResenha" placeholder="Sua resenha" required rows="5"></textarea>
+          <select id="editNota" required>
+            <option value="">Selecione a nota</option>
+            <option value="1">1 ⭐</option>
+            <option value="2">2 ⭐⭐</option>
+            <option value="3">3 ⭐⭐⭐</option>
+            <option value="4">4 ⭐⭐⭐⭐</option>
+            <option value="5">5 ⭐⭐⭐⭐⭐</option>
+          </select>
+          <button type="submit">Salvar Alterações</button>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(editModal);
+
+    // Fechar modal
+    document.querySelector('.close-edit').onclick = () => {
+      editModal.style.display = 'none';
+    };
+
+    // Função para mostrar mensagem de não autenticado
+    function showLoginMessage() {
+      resenhasContainer.style.display = "none";
+      loginMessage.style.display = "block";
+      loadingElement.style.display = "none";
+    }
+
+    // Função para carregar TODAS as resenhas
     async function loadResenhas() {
-      console.log("Carregando resenhas...");
-      const container = document.getElementById('resenhas-container');
-      container.innerHTML = '<p id="loading" style="text-align: center;">Carregando resenhas...</p>';
-
       try {
-        const querySnapshot = await db.collection('locais').get();
-        container.innerHTML = ''; // Limpa o conteúdo anterior
+        loadingElement.textContent = "Carregando resenhas...";
+        
+        const querySnapshot = await getDocs(collection(db, "locais"));
+
+        resenhasContainer.innerHTML = '';
 
         if (querySnapshot.empty) {
-          console.log("Nenhuma resenha encontrada.");
-          container.innerHTML = '<p style="text-align: center;">Nenhuma resenha encontrada.</p>';
+          resenhasContainer.innerHTML = '<p>Nenhuma resenha encontrada.</p>';
           return;
         }
 
         querySnapshot.forEach((doc) => {
-          const resenha = doc.data();
-          console.log("Resenha carregada:", resenha);
-          const resenhaCard = `
-            <div class="resenha-card">
-              <h3>${resenha.nome || 'Sem título'}</h3>
-              <p><strong>Pedido:</strong> ${resenha.pedido || 'Não informado'}</p>
-              <p><strong>Nota:</strong> ${resenha.nota || 'Sem nota'}</p>
-              <p><strong>Comentário:</strong> ${resenha.comentario || 'Sem comentário'}</p>
+          const data = doc.data();
+          const card = document.createElement('div');
+          card.className = 'resenha-card';
+          
+          // Formata data
+          const dataFormatada = data.timestamp?.toDate()?.toLocaleString('pt-BR') || 'Data desconhecida';
+          
+          // Trata imagens (single ou array)
+          let imagensHTML = '';
+          if (data.imagem) {
+            if (Array.isArray(data.imagem)) {
+              imagensHTML = data.imagem.map(img => 
+                `<img src="${img}" style="max-width: 200px; margin: 5px; border-radius: 4px;">`
+              ).join('');
+            } else {
+              imagensHTML = `<img src="${data.imagem}" style="max-width: 200px; border-radius: 4px;">`;
+            }
+          }
+
+          card.innerHTML = `
+            <h3>${data.nome || 'Sem nome'}</h3>
+            <p><strong>Data:</strong> ${dataFormatada}</p>
+            <p><strong>Pedido:</strong> ${data.meu_pedido || 'Não informado'}</p>
+            <p><strong>Nota:</strong> ${'⭐'.repeat(data.nota) || 'Sem nota'}</p>
+            <div style="background: #f5f5f5; padding: 10px; border-radius: 4px; margin: 10px 0;">
+              ${data.resenha || 'Sem resenha'}
             </div>
+            ${imagensHTML ? `<div style="margin-top: 10px;">${imagensHTML}</div>` : ''}
+            <div class="resenha-actions">
+              <button onclick="editarResenha('${doc.id}')" style="background: #4CAF50; margin-right: 10px;">
+                <i class="fas fa-edit"></i> Editar
+              </button>
+              <button onclick="deleteResenha('${doc.id}')" style="background: #f44336;">
+                <i class="fas fa-trash"></i> Deletar
+              </button>
+            </div>
+            <hr style="margin: 15px 0; border-color: #eee;">
           `;
-          container.innerHTML += resenhaCard;
+          resenhasContainer.appendChild(card);
         });
+
       } catch (error) {
-        console.error("Erro ao carregar resenhas:", error);
-        container.innerHTML = '<p style="text-align: center; color: red;">Erro ao carregar resenhas. Tente novamente mais tarde.</p>';
+        console.error("Erro ao carregar:", error);
+        loadingElement.innerHTML = `
+          <div style="color: red; background: #ffeeee; padding: 15px; border-radius: 8px;">
+            <p><strong>Erro ao carregar resenhas:</strong></p>
+            <p>${error.message}</p>
+          </div>
+        `;
       }
     }
+
+    // Função para editar resenha
+    window.editarResenha = async (id) => {
+      if (!auth.currentUser) {
+        alert("⚠️ Sua sessão expirou. Faça login novamente.");
+        showLoginMessage();
+        return;
+      }
+
+      try {
+        const docRef = doc(db, "locais", id);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          
+          // Preenche o formulário de edição
+          document.getElementById('editId').value = id;
+          document.getElementById('editNome').value = data.nome || '';
+          document.getElementById('editPedido').value = data.meu_pedido || '';
+          document.getElementById('editResenha').value = data.resenha || '';
+          document.getElementById('editNota').value = data.nota || '';
+          
+          // Mostra o modal
+          editModal.style.display = 'block';
+        } else {
+          alert('Resenha não encontrada!');
+        }
+      } catch (error) {
+        alert(`❌ Erro ao carregar: ${error.message}`);
+      }
+    };
+
+    // Formulário de edição
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const id = document.getElementById('editId').value;
+      const updatedData = {
+        nome: document.getElementById('editNome').value,
+        meu_pedido: document.getElementById('editPedido').value,
+        resenha: document.getElementById('editResenha').value,
+        nota: parseInt(document.getElementById('editNota').value),
+        updatedAt: new Date()
+      };
+
+      try {
+        await updateDoc(doc(db, "locais", id), updatedData);
+        alert('✅ Resenha atualizada com sucesso!');
+        editModal.style.display = 'none';
+        loadResenhas();
+      } catch (error) {
+        alert(`❌ Erro ao atualizar: ${error.message}`);
+      }
+    });
+
+    // Função global para deletar
+    window.deleteResenha = async (id) => {
+      if (!auth.currentUser) {
+        alert("⚠️ Sua sessão expirou. Faça login novamente.");
+        showLoginMessage();
+        return;
+      }
+
+      if (!confirm('Tem certeza que deseja deletar esta resenha?\n\nEsta ação não pode ser desfeita!')) return;
+      
+      try {
+        await deleteDoc(doc(db, "locais", id));
+        alert('✅ Resenha deletada com sucesso!');
+        loadResenhas();
+      } catch (error) {
+        alert(`❌ Erro ao deletar: ${error.message}`);
+      }
+    };
+
+    // Monitora estado de autenticação
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loadResenhas();
+      } else {
+        showLoginMessage();
+      }
+    });
+
   </script>
+</head>
+<body>
+  <h1 style="text-align: center; margin: 20px 0;">Gerenciar Resenhas</h1>
+  
+  <div id="resenhas-container" style="max-width: 800px; margin: 0 auto;">
+    <p id="loading" style="text-align: center; padding: 20px;">Carregando suas resenhas...</p>
+  </div>
+
+  <div id="login-message" style="display: none; max-width: 500px; margin: 50px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center;">
+    <h2>Acesso Restrito</h2>
+    <p>Você precisa estar logado para acessar esta página.</p>
+    <p>Por favor, faça login na <a href="admin.html" style="color: #ff6b6b; text-decoration: none; font-weight: bold;">Área do Dono</a> primeiro.</p>
+  </div>
 </body>
 </html>
