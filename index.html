@@ -91,19 +91,26 @@
               const marker = new google.maps.Marker({
                 position: { lat: data.latitude, lng: data.longitude },
                 map: map,
-                icon: (() => {
-                  if (data.nota === 5) {
-                    return 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png'; // Pontinho amarelo
-                  } else if (data.nota === 4) {
-                    return 'https://maps.google.com/mapfiles/ms/icons/ltblue-dot.png'; // Pontinho cinza claro
-                  } else if (data.nota === 3) {
-                    return 'https://maps.google.com/mapfiles/ms/icons/brown-dot.png'; // Pontinho marrom
-                  } else if (data.nota === 2) {
-                    return 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'; // Pontinho vermelho
-                  } else {
-                    return 'https://maps.google.com/mapfiles/ms/icons/black-dot.png'; // Pontinho preto
-                  }
-                })()
+                icon: {
+                  path: google.maps.SymbolPath.CIRCLE,
+                  fillColor: (() => {
+                    if (data.nota === 5) {
+                      return '#FFD700'; // Dourado (amarelo)
+                    } else if (data.nota === 4) {
+                      return '#C0C0C0'; // Prateado (cinza claro)
+                    } else if (data.nota === 3) {
+                      return '#CD7F32'; // Bronze (marrom claro)
+                    } else if (data.nota === 2) {
+                      return '#FF0000'; // Vermelho
+                    } else {
+                      return '#000000'; // Preto
+                    }
+                  })(),
+                  fillOpacity: 1,
+                  strokeColor: '#FFFFFF', // Contorno branco
+                  strokeWeight: 2,
+                  scale: 8 // Tamanho do círculo
+                }
               });
 
               // Animação ao carregar
@@ -224,4 +231,3 @@
 </div>
 </body>
 </html>
-``` 
