@@ -173,10 +173,12 @@
       const selectedRating = document.getElementById("filter-rating").value;
 
       markers.forEach(({ marker, nota }) => {
-        if (selectedRating === "all" || parseInt(selectedRating) === nota) {
-          marker.setMap(map); // Mostra o marcador
-        } else {
-          marker.setMap(null); // Esconde o marcador
+        // Mostra todos os marcadores inicialmente
+        marker.setMap(map);
+
+        // Aplica o filtro
+        if (selectedRating !== "all" && parseInt(selectedRating) !== nota) {
+          marker.setMap(null); // Esconde os marcadores que não correspondem ao filtro
         }
       });
     }
@@ -236,4 +238,3 @@
 </div>
 </body>
 </html>
-``` 
