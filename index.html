@@ -136,16 +136,40 @@
               const content = `
                 <div class="info-window-content">
                   <h3 class="info-window-title">${data.nome}</h3>
-                  <div class="pedido-destaque">
-                    <strong>O que pedi:</strong> ${data.meu_pedido || 'Não informado'}
-                  </div>
-                  <div class="resenha-texto">
-                    ${data.resenha}
-                  </div>
                   <div class="rating-display">
                     <span class="rating-label">Nota:</span>
                     ${renderRating(data.nota || 0, 'nota')}
                   </div>
+                  <div class="rating-display">
+                    <span class="rating-label">Me caguei comendo?</span>
+                    <span class="tooltip-icon">?
+                      <span class="tooltip-text">Me sujei muito comendo o xis?</span>
+                    </span>
+                    ${renderRating(data.sujeira_comendo || 0, 'sujeira')}
+                  </div>
+                  <div class="rating-display">
+                    <span class="rating-label">Me caguei depois?</span>
+                    <span class="tooltip-icon">?
+                      <span class="tooltip-text">Acho que isso é bem autoexplicativo. Às vezes não cai bem. 😒</span>
+                    </span>
+                    ${renderRating(data.cagada_depois || 0, 'cagada')}
+                  </div>
+                  <div class="pedido-destaque">
+                    <strong>O que pedi:</strong> ${data.meu_pedido || 'Não informado'}
+                  </div>
+                  <div class="resenha-texto">
+                    ${data.resenha || 'Sem resenha disponível.'}
+                  </div>
+                  ${data.imagem ? `
+                    <div class="thumbnail-container">
+                      ${Array.isArray(data.imagem) ? 
+                        data.imagem.map(img => `
+                          <img src="${img}" class="thumbnail" onclick="openLightbox('${img}')">
+                        `).join('') : `
+                        <img src="${data.imagem}" class="thumbnail" onclick="openLightbox('${data.imagem}')">
+                      `}
+                    </div>
+                  ` : ''}
                 </div>
               `;
 
@@ -239,3 +263,4 @@
 </div>
 </body>
 </html>
+``` 
