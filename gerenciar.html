@@ -6,22 +6,74 @@
   <title>Gerenciar Resenhas - Xis POA</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
-    /* [SEUS ESTILOS ORIGINAIS PRESERVADOS] */
+    /* Estilos básicos */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+    }
+
+    #resenhas-container {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 20px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .resenha-card {
+      margin-bottom: 20px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .resenha-card h3 {
+      margin: 0 0 10px;
+    }
+
+    .resenha-card p {
+      margin: 5px 0;
+    }
+
+    .resenha-actions button {
+      margin-right: 10px;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .resenha-actions button:first-child {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .resenha-actions button:last-child {
+      background-color: #f44336;
+      color: white;
+    }
   </style>
-  <!-- Adicione os scripts do Firebase (versão compatível) -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js"></script>
 </head>
 <body>
-  <div id="login-message" style="display: none; color: red;">
+  <h1 style="text-align: center; margin: 20px 0;">Gerenciar Resenhas</h1>
+
+  <div id="resenhas-container">
+    <p id="loading" style="text-align: center;">Carregando resenhas...</p>
+  </div>
+
+  <div id="login-message" style="display: none; text-align: center; color: red;">
     Você não está autenticado. Redirecionando para a página de login...
   </div>
-  
-  <!-- [SEU HTML ORIGINAL] -->
 
   <script>
-    // CONFIGURAÇÃO ORIGINAL DO SEU SITE
+    // Configuração do Firebase
     const firebaseConfig = {
       apiKey: "FIREBASE_API_KEY",
       authDomain: "reliquias-do-xis.firebaseapp.com",
@@ -29,27 +81,37 @@
       storageBucket: "reliquias-do-xis.appspot.com"
     };
 
-    // INICIALIZAÇÃO SIMPLIFICADA
+    // Inicialização do Firebase
     const app = firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    // VERIFICAÇÃO DE AUTENTICAÇÃO
+    // Verificação de autenticação
     auth.onAuthStateChanged(async (user) => {
       if (user) {
-        // Usuário autenticado, verificar permissões
         console.log("Usuário autenticado:", user.email);
 
         try {
-          // Exemplo: Verificar permissões no Firestore
+          // Verificar permissões no Firestore
           const userDoc = await db.collection('users').doc(user.uid).get();
-          if (userDoc.exists && userDoc.data().role === 'admin') {
-            // Usuário tem permissão para acessar a página
-            document.getElementById('login-message').style.display = 'none';
-            loadResenhas();
+          if (userDoc.exists) {
+            const userData = userDoc.data();
+            if (userData.role === 'admin') {
+              // Usuário tem permissão para acessar a página
+              console.log("Permissão concedida para o usuário:", user.email);
+              document.getElementById('login-message').style.display = 'none';
+              document.getElementById('resenhas-container').style.display = 'block';
+              loadResenhas();
+            } else {
+              // Usuário autenticado, mas sem permissão
+              console.warn("Usuário sem permissão:", user.email);
+              alert("Você não tem permissão para acessar esta página.");
+              window.location.href = 'admin.html';
+            }
           } else {
-            // Usuário não tem permissão, redirecionar para admin.html
-            alert("Você não tem permissão para acessar esta página.");
+            // Documento do usuário não encontrado
+            console.error("Documento do usuário não encontrado no Firestore.");
+            alert("Erro ao verificar permissões. Tente novamente.");
             window.location.href = 'admin.html';
           }
         } catch (error) {
@@ -58,18 +120,26 @@
           window.location.href = 'admin.html';
         }
       } else {
-        // Usuário não autenticado, redirecionar para admin.html
+        // Usuário não autenticado
+        console.warn("Usuário não autenticado. Redirecionando para admin.html...");
         document.getElementById('login-message').style.display = 'block';
         setTimeout(() => {
           window.location.href = 'admin.html';
-        }, 2000); // Redireciona após 2 segundos
+        }, 2000);
       }
     });
 
-    // Exemplo de função para carregar resenhas
+    // Função para carregar resenhas (exemplo básico)
     function loadResenhas() {
-      console.log("Carregando resenhas...");
-      // Adicione aqui a lógica para carregar as resenhas do Firestore
+      const container = document.getElementById('resenhas-container');
+      container.innerHTML = `
+        <div class="resenha-card">
+          <h3>Exemplo de Resenha</h3>
+          <p><strong>Pedido:</strong> Xis Bacon</p>
+          <p><strong>Nota:</strong> ⭐⭐⭐⭐⭐</p>
+          <p><strong>Comentário:</strong> Excelente!</p>
+        </div>
+      `;
     }
   </script>
 </body>
