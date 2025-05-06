@@ -129,17 +129,36 @@
       }
     });
 
-    // Função para carregar resenhas (exemplo básico)
-    function loadResenhas() {
+    // Função para carregar resenhas da coleção "locais"
+    async function loadResenhas() {
       const container = document.getElementById('resenhas-container');
-      container.innerHTML = `
-        <div class="resenha-card">
-          <h3>Exemplo de Resenha</h3>
-          <p><strong>Pedido:</strong> Xis Bacon</p>
-          <p><strong>Nota:</strong> ⭐⭐⭐⭐⭐</p>
-          <p><strong>Comentário:</strong> Excelente!</p>
-        </div>
-      `;
+      container.innerHTML = '<p id="loading" style="text-align: center;">Carregando resenhas...</p>';
+
+      try {
+        const querySnapshot = await db.collection('locais').get();
+        container.innerHTML = ''; // Limpa o conteúdo anterior
+
+        if (querySnapshot.empty) {
+          container.innerHTML = '<p style="text-align: center;">Nenhuma resenha encontrada.</p>';
+          return;
+        }
+
+        querySnapshot.forEach((doc) => {
+          const resenha = doc.data();
+          const resenhaCard = `
+            <div class="resenha-card">
+              <h3>${resenha.nome || 'Sem título'}</h3>
+              <p><strong>Pedido:</strong> ${resenha.pedido || 'Não informado'}</p>
+              <p><strong>Nota:</strong> ${resenha.nota || 'Sem nota'}</p>
+              <p><strong>Comentário:</strong> ${resenha.comentario || 'Sem comentário'}</p>
+            </div>
+          `;
+          container.innerHTML += resenhaCard;
+        });
+      } catch (error) {
+        console.error("Erro ao carregar resenhas:", error);
+        container.innerHTML = '<p style="text-align: center; color: red;">Erro ao carregar resenhas. Tente novamente mais tarde.</p>';
+      }
     }
   </script>
 </body>
