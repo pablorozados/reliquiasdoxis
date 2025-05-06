@@ -91,14 +91,19 @@
               const marker = new google.maps.Marker({
                 position: { lat: data.latitude, lng: data.longitude },
                 map: map,
-                icon: {
-                  path: google.maps.SymbolPath.CIRCLE,
-                  fillColor: '#ff6b6b',
-                  fillOpacity: 1,
-                  strokeColor: '#fff',
-                  strokeWeight: 2,
-                  scale: 8
-                }
+                icon: (() => {
+                  if (data.nota === 5) {
+                    return 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png'; // Dourado
+                  } else if (data.nota === 4) {
+                    return 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'; // Prateado
+                  } else if (data.nota === 3) {
+                    return 'https://maps.google.com/mapfiles/ms/icons/orange-dot.png'; // Bronze
+                  } else if (data.nota === 2) {
+                    return 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'; // Vermelho
+                  } else {
+                    return 'https://maps.google.com/mapfiles/kml/shapes/poop.png'; // Emoji de cocô
+                  }
+                })()
               });
 
               // Animação ao carregar
