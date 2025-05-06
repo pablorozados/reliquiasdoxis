@@ -65,7 +65,7 @@
 <body>
   <h1 style="text-align: center; margin: 20px 0;">Gerenciar Resenhas</h1>
 
-  <div id="resenhas-container">
+  <div id="resenhas-container" style="display: none;">
     <p id="loading" style="text-align: center;">Carregando resenhas...</p>
   </div>
 
@@ -93,7 +93,7 @@
         console.log("Usuário autenticado:", user.email);
         document.getElementById('login-message').style.display = 'none';
         document.getElementById('resenhas-container').style.display = 'block';
-        loadResenhas(); // Função para carregar resenhas
+        await loadResenhas(); // Função para carregar resenhas
       } else {
         console.warn("Usuário não autenticado. Redirecionando...");
         document.getElementById('login-message').style.display = 'block';
