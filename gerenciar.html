@@ -57,7 +57,7 @@
       color: white;
     }
   </style>
-  <!-- Firebase Scripts (compatíveis com navegadores) -->
+  <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
@@ -89,6 +89,7 @@
 
     // Verificação de autenticação
     auth.onAuthStateChanged(async (user) => {
+      console.log("onAuthStateChanged disparado");
       try {
         if (user) {
           console.log("Usuário autenticado:", user.email);
@@ -110,6 +111,7 @@
 
     // Função para carregar resenhas da coleção "locais"
     async function loadResenhas() {
+      console.log("Carregando resenhas...");
       const container = document.getElementById('resenhas-container');
       container.innerHTML = '<p id="loading" style="text-align: center;">Carregando resenhas...</p>';
 
@@ -118,12 +120,14 @@
         container.innerHTML = ''; // Limpa o conteúdo anterior
 
         if (querySnapshot.empty) {
+          console.log("Nenhuma resenha encontrada.");
           container.innerHTML = '<p style="text-align: center;">Nenhuma resenha encontrada.</p>';
           return;
         }
 
         querySnapshot.forEach((doc) => {
           const resenha = doc.data();
+          console.log("Resenha carregada:", resenha);
           const resenhaCard = `
             <div class="resenha-card">
               <h3>${resenha.nome || 'Sem título'}</h3>
