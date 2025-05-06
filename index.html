@@ -107,12 +107,6 @@
               const content = `
                 <div class="info-window-content">
                   <h3 class="info-window-title">${data.nome}</h3>
-                  <div class="pedido-destaque">
-                    <strong>O que pedi:</strong> ${data.meu_pedido || 'Não informado'}
-                  </div>
-                  <div class="resenha-texto">
-                    ${data.resenha}
-                  </div>
                   <div class="rating-display">
                     <span class="rating-label">Nota:</span>
                     ${renderRating(data.nota || 0, 'nota')}
@@ -130,6 +124,12 @@
                       <span class="tooltip-text">Acho que isso é bem autoexplicativo. As vezes não cai bem. 😒</span>
                     </span>
                     ${renderRating(data.cagada_depois || 0, 'cagada')}
+                  </div>
+                  <div class="pedido-destaque">
+                    <strong>O que pedi:</strong> ${data.meu_pedido || 'Não informado'}
+                  </div>
+                  <div class="resenha-texto">
+                    ${data.resenha}
                   </div>
                   ${data.imagem ? `
                     <div class="thumbnail-container">
