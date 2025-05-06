@@ -83,11 +83,12 @@
       return html;
     }
 
+    let map; // Variável global para o mapa
     let markers = []; // Array para armazenar os marcadores
 
     // Inicializa o mapa
     function initMap() {
-      const map = new google.maps.Map(document.getElementById("map"), {
+      map = new google.maps.Map(document.getElementById("map"), {
         center: { lat: -30.0346, lng: -51.2177 },
         zoom: 13,
         styles: mapStyle,
