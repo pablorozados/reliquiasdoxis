@@ -175,7 +175,7 @@
 
 const infoWindow = new google.maps.InfoWindow({
   content,
-  maxWidth: 600
+  maxWidth: 800 // tente 800 ou até 1000
 });
               marker.addListener('click', () => {
                 infoWindow.open(map, marker);
