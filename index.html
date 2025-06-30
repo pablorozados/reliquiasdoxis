@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🥇Relíquias do Xis 🍔</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Relíquias do Xis</h1>
+    <p>Do pão à maionese: crônicas de um caçador de xis</p>
+  </header>
+  
+  <main>
+    <div id="filter-container" style="margin: 10px;">
+      <label for="filter-rating">Filtrar por nota:</label>
+      <select id="filter-rating" onchange="filterMarkers()">
+        <option value="all">Todos</option>
+        <option value="5">5 estrelas</option>
+        <option value="4">4 estrelas</option>
+        <option value="3">3 estrelas</option>
+        <option value="2">2 estrelas</option>
+        <option value="1">1 estrela</option>
+      </select>
+    </div>
+    <div id="map">
+      <div class="loading-message">
+        <i class="fas fa-hamburger fa-spin"></i>
+        <p>Carregando mapa...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
+  
+  <script>
+    // Configuração do Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyA7_SFUPE6n9KG6LhL9Y6DRanSW5Zn0-2k",
+      projectId: "reliquias-do-xis"
+    };
+
+    // Inicialização
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    const db = firebase.firestore();
+
+    // Estilo do mapa limpo
+    const mapStyle = [{
+      "featureType": "poi",
+      "stylers": [{"visibility": "off"}]
+    }, {
+      "featureType": "transit",
+      "stylers": [{"visibility": "off"}]
+    }];
+
+    // Animação dos marcadores
+    function dropMarker(marker, map) {
+      marker.setAnimation(google.maps.Animation.DROP);
+      setTimeout(() => {
+        marker.setAnimation(null);
+      }, 1500);
+    }
+
+    // Função para mostrar avaliações
+    function renderRating(value, type) {
+      const icons = {
+        nota: '⭐', 
+        sujeira: '🍔', 
+        cagada: '💩'
+      };
+      
+      let html = '';
+      for (let i = 0; i < 5; i++) {
+        html += `<span class="${i < value ? '' : 'empty'}">${icons[type]}</span>`;
+      }
+      return html;
+    }
+
+    let map; // Variável global para o mapa
+    let markers = []; // Array para armazenar os marcadores
+
+    // Inicializa o mapa
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: -30.0346, lng: -51.2177 },
+        zoom: 13,
+        styles: mapStyle,
+        disableDefaultUI: true,
+        zoomControl: true
+      });
+
+      // Carrega as resenhas
+      db.collection("locais").orderBy("timestamp", "desc").get()
+        .then(querySnapshot => {
+          querySnapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.latitude && data.longitude) {
+              const marker = new google.maps.Marker({
+                position: { lat: data.latitude, lng: data.longitude },
+                map: map,
+                icon: {
+                  path: google.maps.SymbolPath.CIRCLE,
+                  fillColor: (() => {
+                    if (data.nota === 5) {
+                      return '#FFD700'; // Dourado (amarelo)
+                    } else if (data.nota === 4) {
+                      return '#C0C0C0'; // Prateado (cinza claro)
+                    } else if (data.nota === 3) {
+                      return '#CD7F32'; // Bronze (marrom claro)
+                    } else if (data.nota === 2) {
+                      return '#FF0000'; // Vermelho
+                    } else {
+                      return '#000000'; // Preto
+                    }
+                  })(),
+                  fillOpacity: 1,
+                  strokeColor: '#FFFFFF', // Contorno branco
+                  strokeWeight: 2,
+                  scale: 8 // Tamanho do círculo
+                }
+              });
+
+              // Adiciona o marcador ao array
+              markers.push({ marker, nota: data.nota });
+
+              // Animação ao carregar
+              setTimeout(() => dropMarker(marker, map), Math.random() * 1000);
+
+              const content = `
+                <div class="info-window-content">
+                  <h3 class="info-window-title">${data.nome}</h3>
+                  <div class="rating-display">
+                    <span class="rating-label">Nota:</span>
+                    ${renderRating(data.nota || 0, 'nota')}
+                  </div>
+                  <div class="rating-display">
+                    <span class="rating-label">Me caguei comendo?</span>
+                    <span class="tooltip-icon">?
+                      <span class="tooltip-text">Me sujei muito comendo o xis?</span>
+                    </span>
+                    ${renderRating(data.sujeira_comendo || 0, 'sujeira')}
+                  </div>
+                  <div class="rating-display">
+                    <span class="rating-label">Me caguei depois?</span>
+                    <span class="tooltip-icon">?
+                      <span class="tooltip-text">Acho que isso é bem autoexplicativo. Às vezes não cai bem. 😒</span>
+                    </span>
+                    ${renderRating(data.cagada_depois || 0, 'cagada')}
+                  </div>
+                  <div class="pedido-destaque">
+                    <strong>O que pedi:</strong> ${data.meu_pedido || 'Não informado'}
+                  </div>
+                  <div class="resenha-texto">
+                    ${data.resenha || 'Sem resenha disponível.'}
+                  </div>
+                  ${data.imagem ? `
+                    <div class="thumbnail-container">
+                      ${Array.isArray(data.imagem) ? 
+                        data.imagem.map(img => `
+                          <img src="${img}" class="thumbnail" onclick="openLightbox('${img}')">
+                        `).join('') : `
+                        <img src="${data.imagem}" class="thumbnail" onclick="openLightbox('${data.imagem}')">
+                      `}
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+
+const infoWindow = new google.maps.InfoWindow({
+  content,
+  maxWidth: 800 // tente 800 ou até 1000
+});
+              marker.addListener('click', () => {
+                infoWindow.open(map, marker);
+                marker.setAnimation(google.maps.Animation.BOUNCE);
+                setTimeout(() => marker.setAnimation(null), 1000);
+              });
+            }
+          });
+        })
+        .catch(error => {
+          console.error("Erro ao carregar resenhas:", error);
+          document.getElementById('map').innerHTML = `
+            <div class="error">
+              <i class="fas fa-exclamation-triangle"></i>
+              <p>Erro ao carregar o mapa</p>
+            </div>
+          `;
+        });
+    }
+
+    // Função para filtrar os marcadores
+    function filterMarkers() {
+      const selectedRating = document.getElementById("filter-rating").value;
+
+      markers.forEach(({ marker, nota }) => {
+        // Mostra todos os marcadores inicialmente
+        marker.setMap(map);
+
+        // Aplica o filtro
+        if (selectedRating !== "all" && parseInt(selectedRating) !== nota) {
+          marker.setMap(null); // Esconde os marcadores que não correspondem ao filtro
+        }
+      });
+    }
+
+    // Carrega a API do Google Maps
+    function loadGoogleMaps() {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyBjfkEwQ_gpYGjRlY9deWCoddEmrBNOQDc&callback=initMap`;
+      script.async = true;
+      script.onerror = () => {
+        document.getElementById('map').innerHTML = `
+          <div class="error">
+            <i class="fas fa-map-marked-alt"></i>
+            <p>Falha ao carregar o mapa</p>
+          </div>
+        `;
+      };
+      document.head.appendChild(script);
+    }
+
+    // Inicia quando a página carregar
+    window.addEventListener('DOMContentLoaded', loadGoogleMaps);
+  </script>
+
+  <!-- Lightbox para imagens -->
+  <div id="lightbox" onclick="this.style.display='none'">
+    <img id="lightbox-img" src="" alt="Imagem ampliada">
+  </div>
+
+  <script>
+    // Lightbox
+    function openLightbox(imgSrc) {
+      document.getElementById('lightbox-img').src = imgSrc;
+      document.getElementById('lightbox').style.display = 'block';
+    }
+  </script>
+
+<div style="
+    background: #fff9f9;
+    padding: 12px 5px;
+    text-align: center;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.85rem;
+    color: #666;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+">
+  <p id="frase-rotativa" style="margin: 0; font-weight: 300;">
+    <!-- Frase inicial será colocada pelo JS -->
+  </p>
+  <div>
+    <a href="sobre.html" style="color: #ff6b6b; text-decoration: none; margin: 0 5px;">Sobre</a> |
+    <a href="mailto:contato@reliquiasdoxis.com?subject=Contato%20Relíquias%20do%20Xis" style="color: #ff6b6b; text-decoration: none; margin: 0 5px;">Contato</a>
+  </div>
+</div>
+  <script>
+  const frases = [
+    "Saudades do Agápio lanches e do xis com alcaparras. 👏",
+    "Xis salada leva carne: sim!🥩",
+    "Maionese caseira não é diferencial: é obrigatório! 🫙",
+    "Desde quando pagar praticamente R$ 40 num xis qualquer virou padrão? Tão loucos? 🤬",
+    "⚠️ Por uma questão de ética, não avaliamos o 'Ô Xiss' - ele é tudo, menos um xis!",
+    "❤️Amor eterno ao xis coração! ❤️️"
+  ];
+
+  let fraseAtual = 0;
+  const fraseEl = document.getElementById("frase-rotativa");
+
+  function trocarFrase() {
+    fraseEl.textContent = frases[fraseAtual];
+    fraseAtual = (fraseAtual + 1) % frases.length;
+  }
+
+  trocarFrase(); // mostra a primeira frase
+  setInterval(trocarFrase, 10000); // troca a cada 10 segundos
+</script>
+</body>
+</html>
