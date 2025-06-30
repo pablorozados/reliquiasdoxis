@@ -78,12 +78,12 @@ header {
 
 /* Janela de informações padronizada */
 .info-window-content {
-  width: 600px !important;
-  max-width: 90vw !important;
-  max-height: 900px !important;
-  padding: 28px !important;
+  width: 100% !important;
+  min-width: 600px !important; /* igual ao maxWidth do InfoWindow */
+  max-width: 800px !important; /* igual ao maxWidth do InfoWindow */
+  box-sizing: border-box;
+  padding: 20px !important;
   font-family: 'Poppins', sans-serif !important;
-  overflow-y: auto !important;
 }
 
 .pedido-destaque {
