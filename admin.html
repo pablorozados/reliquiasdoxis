@@ -217,14 +217,9 @@
       <label for="endereco">Buscar local:</label>
       <input type="text" id="endereco" placeholder="Digite o endereço" style="margin-bottom: 0.5rem;">
       <div style="margin-bottom: 0.5rem;">
-        <button type="button" id="btn-link-gmaps" style="padding: 8px 12px; background: #1971c2; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">Obter latitude/longitude do Google Maps</button>
+        <button type="button" id="btn-colar-coord" style="padding: 8px 12px; background: #1971c2; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">Colar coordenadas</button>
       </div>
-      <div id="gmaps-link-area" style="display:none; margin-bottom: 0.5rem;">
-        <label for="gmaps-link" style="font-size: 14px; color: #444;">Cole aqui o link do Google Maps:</label>
-        <input type="text" id="gmaps-link" placeholder="Cole o link do Google Maps aqui">
-        <small style="color:#888;display:block;">Dica: No Google Maps, busque o endereço, clique com o botão direito no local desejado, escolha "O que há aqui?" e copie o link da barra de endereços.</small>
-      </div>
-      <small style="color:#888;display:block;margin-bottom:10px;">Dica: digite o endereço completo, incluindo cidade e estado. Ex: "Rua da República, Porto Alegre, RS". Se não encontrar, clique no mapa abaixo para marcar o local.</small>
+      <small style="color:#888;display:block;margin-bottom:10px;">Dica: digite o endereço completo, incluindo cidade e estado. Ex: "Rua da República, Porto Alegre, RS". Se não encontrar, clique no mapa abaixo para marcar o local.<br>Ou, no Google Maps, clique com o botão direito no ponto exato, escolha "O que há aqui?" e clique nas coordenadas que aparecem. Depois clique em "Colar coordenadas" abaixo e cole o texto (ex: <b>-30.0346, -51.2177</b>).</small>
       <div id="map-admin" style="height: 300px; width: 100%; border-radius: 8px; margin-bottom: 20px;"></div>
       
       <label for="nome">Nome do lugar:</label>
@@ -482,21 +477,13 @@
       });
 
 
-      // Botão para mostrar campo de link do Google Maps
-      document.getElementById('btn-link-gmaps').addEventListener('click', function() {
-        const area = document.getElementById('gmaps-link-area');
-        area.style.display = area.style.display === 'none' ? 'block' : 'none';
-      });
-
-      // Extrai latitude/longitude do link do Google Maps
-      document.getElementById('gmaps-link').addEventListener('change', function() {
-        const val = this.value.trim();
-        // Tenta extrair do formato @lat,lon,zoom
-        let match = val.match(/@(-?\d+\.\d+),(-?\d+\.\d+),/);
-        if (!match) {
-          // Tenta extrair do formato /place/.../lat,lon
-          match = val.match(/\/(-?\d+\.\d+),(-?\d+\.\d+)/);
-        }
+      // Botão para colar coordenadas
+      document.getElementById('btn-colar-coord').addEventListener('click', function() {
+        const texto = prompt('Cole aqui as coordenadas copiadas do Google Maps (ex: -30.0346, -51.2177):');
+        if (!texto) return;
+        // Aceita formatos com vírgula ou espaço
+        let match = texto.trim().match(/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/);
+        if (!match) match = texto.trim().match(/(-?\d+\.\d+)\s+(-?\d+\.\d+)/);
         if (match) {
           document.getElementById('latitude').value = match[1];
           document.getElementById('longitude').value = match[2];
@@ -507,7 +494,7 @@
             window.mapAdmin.setView([match[1], match[2]], 17);
           }
         } else {
-          alert('Não foi possível extrair latitude/longitude do link. Certifique-se de copiar o link completo da barra de endereços do Google Maps após clicar em "O que há aqui?"');
+          alert('Formato inválido. Cole exatamente como aparece no Google Maps, ex: -30.0346, -51.2177');
         }
       });
 
