@@ -7,6 +7,30 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Corrige popups do Leaflet para resenhas longas */
+    .leaflet-popup-content-wrapper {
+      max-width: 350px;
+      min-width: 220px;
+      max-height: 400px;
+      overflow: auto;
+      font-family: 'Poppins', sans-serif;
+    }
+    .leaflet-popup-content {
+      margin: 8px 0;
+      overflow: auto;
+      max-height: 350px;
+    }
+    .info-window-content {
+      word-break: break-word;
+    }
+    @media (max-width: 500px) {
+      .leaflet-popup-content-wrapper {
+        max-width: 95vw;
+        min-width: 0;
+      }
+    }
+  </style>
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
 </head>
