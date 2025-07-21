@@ -333,7 +333,11 @@
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places"></script>
+  <!-- Leaflet CSS/JS e Geocoder -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
   <script>
     // CONFIGURAÇÃO DO FIREBASE
@@ -421,18 +425,44 @@
       setupRating('sujeira-rating', value => selectedSujeira = value);
       setupRating('cagada-rating', value => selectedCagada = value);
 
-      // Autocomplete do Google Maps
-      const autocomplete = new google.maps.places.Autocomplete(
-        document.getElementById('endereco'),
-        { types: ['establishment'], componentRestrictions: { country: 'BR' } }
-      );
+      // Autocomplete de endereço com Nominatim/Leaflet
+      const enderecoInput = document.getElementById('endereco');
+      let geocodeTimeout;
+      enderecoInput.addEventListener('input', function() {
+        clearTimeout(geocodeTimeout);
+        const query = this.value;
+        if (query.length < 3) return;
+        geocodeTimeout = setTimeout(() => {
+          fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&countrycodes=br&limit=5`)
+            .then(res => res.json())
+            .then(results => {
+              let datalist = document.getElementById('endereco-datalist');
+              if (!datalist) {
+                datalist = document.createElement('datalist');
+                datalist.id = 'endereco-datalist';
+                enderecoInput.setAttribute('list', 'endereco-datalist');
+                document.body.appendChild(datalist);
+              }
+              datalist.innerHTML = '';
+              results.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.display_name;
+                option.setAttribute('data-lat', item.lat);
+                option.setAttribute('data-lon', item.lon);
+                datalist.appendChild(option);
+              });
+            });
+        }, 400);
+      });
 
-      autocomplete.addListener('place_changed', () => {
-        const place = autocomplete.getPlace();
-        if (place.geometry) {
-          document.getElementById('latitude').value = place.geometry.location.lat();
-          document.getElementById('longitude').value = place.geometry.location.lng();
-          document.getElementById('nome').value = place.name || '';
+      enderecoInput.addEventListener('change', function() {
+        const datalist = document.getElementById('endereco-datalist');
+        if (!datalist) return;
+        const option = Array.from(datalist.options).find(opt => opt.value === this.value);
+        if (option) {
+          document.getElementById('latitude').value = option.getAttribute('data-lat');
+          document.getElementById('longitude').value = option.getAttribute('data-lon');
+          document.getElementById('nome').value = this.value.split(',')[0];
         }
       });
 
