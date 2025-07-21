@@ -215,9 +215,14 @@
     <h2>Adicionar Novo Xis</h2>
     <form id="add-location-form">
       <label for="endereco">Buscar local:</label>
-      <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 0.5rem;">
-        <input type="text" id="endereco" placeholder="Digite o endereço" style="flex:1;">
-        <button type="button" id="btn-googlemaps" title="Buscar no Google Maps" style="padding: 8px 12px; background: #1971c2; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center;"><i class="fa fa-map-marker-alt" style="margin-right:4px;"></i>Google Maps</button>
+      <input type="text" id="endereco" placeholder="Digite o endereço" style="margin-bottom: 0.5rem;">
+      <div style="margin-bottom: 0.5rem;">
+        <button type="button" id="btn-link-gmaps" style="padding: 8px 12px; background: #1971c2; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">Obter latitude/longitude do Google Maps</button>
+      </div>
+      <div id="gmaps-link-area" style="display:none; margin-bottom: 0.5rem;">
+        <label for="gmaps-link" style="font-size: 14px; color: #444;">Cole aqui o link do Google Maps:</label>
+        <input type="text" id="gmaps-link" placeholder="Cole o link do Google Maps aqui">
+        <small style="color:#888;display:block;">Dica: No Google Maps, busque o endereço, clique com o botão direito no local desejado, escolha "O que há aqui?" e copie o link da barra de endereços.</small>
       </div>
       <small style="color:#888;display:block;margin-bottom:10px;">Dica: digite o endereço completo, incluindo cidade e estado. Ex: "Rua da República, Porto Alegre, RS". Se não encontrar, clique no mapa abaixo para marcar o local.</small>
       <div id="map-admin" style="height: 300px; width: 100%; border-radius: 8px; margin-bottom: 20px;"></div>
@@ -476,15 +481,34 @@
         }
       });
 
-      // Botão Buscar no Google Maps
-      document.getElementById('btn-googlemaps').addEventListener('click', function() {
-        const endereco = document.getElementById('endereco').value;
-        if (!endereco) {
-          alert('Digite um endereço para buscar no Google Maps.');
-          return;
+
+      // Botão para mostrar campo de link do Google Maps
+      document.getElementById('btn-link-gmaps').addEventListener('click', function() {
+        const area = document.getElementById('gmaps-link-area');
+        area.style.display = area.style.display === 'none' ? 'block' : 'none';
+      });
+
+      // Extrai latitude/longitude do link do Google Maps
+      document.getElementById('gmaps-link').addEventListener('change', function() {
+        const val = this.value.trim();
+        // Tenta extrair do formato @lat,lon,zoom
+        let match = val.match(/@(-?\d+\.\d+),(-?\d+\.\d+),/);
+        if (!match) {
+          // Tenta extrair do formato /place/.../lat,lon
+          match = val.match(/\/(-?\d+\.\d+),(-?\d+\.\d+)/);
         }
-        const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`;
-        window.open(url, '_blank');
+        if (match) {
+          document.getElementById('latitude').value = match[1];
+          document.getElementById('longitude').value = match[2];
+          // Atualiza marcador no mapa
+          if (window.markerAdmin && window.mapAdmin) window.mapAdmin.removeLayer(window.markerAdmin);
+          if (window.mapAdmin) {
+            window.markerAdmin = L.marker([match[1], match[2]]).addTo(window.mapAdmin);
+            window.mapAdmin.setView([match[1], match[2]], 17);
+          }
+        } else {
+          alert('Não foi possível extrair latitude/longitude do link. Certifique-se de copiar o link completo da barra de endereços do Google Maps após clicar em "O que há aqui?"');
+        }
       });
 
       // Mapa interativo para seleção manual
