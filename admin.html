@@ -215,7 +215,10 @@
     <h2>Adicionar Novo Xis</h2>
     <form id="add-location-form">
       <label for="endereco">Buscar local:</label>
-      <input type="text" id="endereco" placeholder="Digite o endereço">
+      <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 0.5rem;">
+        <input type="text" id="endereco" placeholder="Digite o endereço" style="flex:1;">
+        <button type="button" id="btn-googlemaps" title="Buscar no Google Maps" style="padding: 8px 12px; background: #1971c2; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center;"><i class="fa fa-map-marker-alt" style="margin-right:4px;"></i>Google Maps</button>
+      </div>
       <small style="color:#888;display:block;margin-bottom:10px;">Dica: digite o endereço completo, incluindo cidade e estado. Ex: "Rua da República, Porto Alegre, RS". Se não encontrar, clique no mapa abaixo para marcar o local.</small>
       <div id="map-admin" style="height: 300px; width: 100%; border-radius: 8px; margin-bottom: 20px;"></div>
       
@@ -225,11 +228,11 @@
       <div class="grid-columns">
         <div>
           <label for="latitude">Latitude:</label>
-          <input type="text" id="latitude" readonly>
+          <input type="text" id="latitude">
         </div>
         <div>
           <label for="longitude">Longitude:</label>
-          <input type="text" id="longitude" readonly>
+          <input type="text" id="longitude">
         </div>
       </div>
       
@@ -427,6 +430,7 @@
       setupRating('sujeira-rating', value => selectedSujeira = value);
       setupRating('cagada-rating', value => selectedCagada = value);
 
+
       // Autocomplete de endereço com Nominatim/Leaflet
       const enderecoInput = document.getElementById('endereco');
       let geocodeTimeout;
@@ -470,6 +474,17 @@
           window.markerAdmin = L.marker([option.getAttribute('data-lat'), option.getAttribute('data-lon')]).addTo(window.mapAdmin);
           window.mapAdmin.setView([option.getAttribute('data-lat'), option.getAttribute('data-lon')], 17);
         }
+      });
+
+      // Botão Buscar no Google Maps
+      document.getElementById('btn-googlemaps').addEventListener('click', function() {
+        const endereco = document.getElementById('endereco').value;
+        if (!endereco) {
+          alert('Digite um endereço para buscar no Google Maps.');
+          return;
+        }
+        const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(endereco)}`;
+        window.open(url, '_blank');
       });
 
       // Mapa interativo para seleção manual
