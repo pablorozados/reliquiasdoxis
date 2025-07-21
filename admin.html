@@ -216,6 +216,8 @@
     <form id="add-location-form">
       <label for="endereco">Buscar local:</label>
       <input type="text" id="endereco" placeholder="Digite o endereço">
+      <small style="color:#888;display:block;margin-bottom:10px;">Dica: digite o endereço completo, incluindo cidade e estado. Ex: "Rua da República, Porto Alegre, RS". Se não encontrar, clique no mapa abaixo para marcar o local.</small>
+      <div id="map-admin" style="height: 300px; width: 100%; border-radius: 8px; margin-bottom: 20px;"></div>
       
       <label for="nome">Nome do lugar:</label>
       <input type="text" id="nome" required>
@@ -463,8 +465,30 @@
           document.getElementById('latitude').value = option.getAttribute('data-lat');
           document.getElementById('longitude').value = option.getAttribute('data-lon');
           document.getElementById('nome').value = this.value.split(',')[0];
+          // Atualiza marcador no mapa
+          if (window.markerAdmin) window.mapAdmin.removeLayer(window.markerAdmin);
+          window.markerAdmin = L.marker([option.getAttribute('data-lat'), option.getAttribute('data-lon')]).addTo(window.mapAdmin);
+          window.mapAdmin.setView([option.getAttribute('data-lat'), option.getAttribute('data-lon')], 17);
         }
       });
+
+      // Mapa interativo para seleção manual
+      setTimeout(() => {
+        if (!window.mapAdmin) {
+          window.mapAdmin = L.map('map-admin').setView([-30.0346, -51.2177], 13);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          }).addTo(window.mapAdmin);
+        }
+        window.markerAdmin = null;
+        window.mapAdmin.on('click', function(e) {
+          const { lat, lng } = e.latlng;
+          document.getElementById('latitude').value = lat;
+          document.getElementById('longitude').value = lng;
+          if (window.markerAdmin) window.mapAdmin.removeLayer(window.markerAdmin);
+          window.markerAdmin = L.marker([lat, lng]).addTo(window.mapAdmin);
+        });
+      }, 500);
 
       // Envio do formulário
       document.getElementById('add-location-form').addEventListener('submit', async (e) => {
