@@ -10,6 +10,7 @@ if (!firebase.apps.length) {
 }
 const db = firebase.firestore();
 let map;
+let markers = []; // array global de marcadores (para filtro)
 
 // Inicializa o mapa com tratamento de erros
 function initMap() {
@@ -32,6 +33,8 @@ function initMap() {
           map: map,
           title: local.nome
         });
+        // guarda referência para filtrar depois
+        markers.push({ marker, nota: local.nota });
 
         const infoWindow = new google.maps.InfoWindow({
           content: `
@@ -59,3 +62,17 @@ function initMap() {
 
 // Garante que 'initMap' seja global
 window.initMap = initMap;
+
+// Função para filtrar os marcadores por nota
+function filterMarkers() {
+  const selectedRating = document.getElementById("filter-rating").value;
+  markers.forEach(({ marker, nota }) => {
+    if (selectedRating === "all" || parseInt(selectedRating) === nota) {
+      marker.setMap(map);
+    } else {
+      marker.setMap(null);
+    }
+  });
+}
+
+window.filterMarkers = filterMarkers;
