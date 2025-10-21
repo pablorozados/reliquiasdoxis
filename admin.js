@@ -1,13 +1,26 @@
 // admin.js
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAEcQDgKssjXZQ54Bsid3vPIKiGm36l4wM",
-  authDomain: "reliquiasdoxis.firebaseapp.com",
-  projectId: "reliquiasdoxis",
-  storageBucket: "reliquiasdoxis.appspot.com",
-  messagingSenderId: "673027539850",
-  appId: "1:673027539850:web:c8c5fa9e5dbff158cf92ed"
-};
+// Carregar variáveis de ambiente e inicializar
+fetch('/.env')
+  .then(response => response.text())
+  .then(text => {
+    const vars = {};
+    text.split('\n').forEach(line => {
+      const [key, value] = line.split('=');
+      if (key && value) {
+        vars[key] = value;
+      }
+    });
+    
+    // Configura Firebase
+    const firebaseConfig = {
+      apiKey: vars.FIREBASE_API_KEY,
+      authDomain: "reliquiasdoxis.firebaseapp.com",
+      projectId: "reliquiasdoxis",
+      storageBucket: "reliquiasdoxis.appspot.com",
+      messagingSenderId: "673027539850",
+      appId: "1:673027539850:web:c8c5fa9e5dbff158cf92ed"
+    };
 
 // Inicializa Firebase
 firebase.initializeApp(firebaseConfig);
@@ -200,3 +213,6 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
 document.getElementById('logout').addEventListener('click', () => {
   auth.signOut();
 });
+
+
+
