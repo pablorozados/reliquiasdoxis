@@ -16,7 +16,12 @@
   <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
   
   <!-- Config -->
-  <script src="secrets.js"></script>
+  <script>
+    // Carrega o arquivo de configuração apropriado
+    const configScript = document.createElement('script');
+    configScript.src = window.location.hostname === 'localhost' ? 'secrets.js' : 'config.prod.js';
+    document.head.appendChild(configScript);
+  </script>
   
   <!-- Admin Script (antes do Google Maps) -->
   <script src="admin.js"></script>
