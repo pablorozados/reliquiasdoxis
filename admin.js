@@ -1,26 +1,14 @@
 // admin.js
 
-// Carregar variáveis de ambiente e inicializar
-fetch('/.env')
-  .then(response => response.text())
-  .then(text => {
-    const vars = {};
-    text.split('\n').forEach(line => {
-      const [key, value] = line.split('=');
-      if (key && value) {
-        vars[key] = value;
-      }
-    });
-    
-    // Configura Firebase
-    const firebaseConfig = {
-      apiKey: vars.FIREBASE_API_KEY,
-      authDomain: "reliquiasdoxis.firebaseapp.com",
-      projectId: "reliquiasdoxis",
-      storageBucket: "reliquiasdoxis.appspot.com",
-      messagingSenderId: "673027539850",
-      appId: "1:673027539850:web:c8c5fa9e5dbff158cf92ed"
-    };
+// Configura Firebase (usando a chave do secrets.js)
+const firebaseConfig = {
+  apiKey: FIREBASE_API_KEY,
+  authDomain: "reliquiasdoxis.firebaseapp.com",
+  projectId: "reliquiasdoxis",
+  storageBucket: "reliquiasdoxis.appspot.com",
+  messagingSenderId: "673027539850",
+  appId: "1:673027539850:web:c8c5fa9e5dbff158cf92ed"
+};
 
 // Inicializa Firebase
 firebase.initializeApp(firebaseConfig);

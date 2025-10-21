@@ -16,7 +16,22 @@
   <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
   
   <!-- Config -->
-  <script src="config.js"></script>
+  <script src="secrets.js"></script>
+  
+  <!-- Admin Script (antes do Google Maps) -->
+  <script src="admin.js"></script>
+  
+  <!-- Google Maps (por último) -->
+  <script>
+    // Carregar Google Maps depois que o DOM estiver pronto
+    document.addEventListener('DOMContentLoaded', function() {
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap`;
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    });
+  </script>
 
   <style>
     :root {
