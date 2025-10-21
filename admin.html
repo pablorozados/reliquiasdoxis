@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Xis POA</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.6.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore-compat.js"></script>
+  
+  <!-- Cloudinary -->
+  <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
+  
+  <!-- Config Local (apenas desenvolvimento) -->
+  <script>
+    if (window.location.hostname === 'localhost') {
+      const configScript = document.createElement('script');
+      configScript.src = 'secrets.js';
+      document.head.appendChild(configScript);
+    }
+  </script>
+  
+  <!-- Firebase Config -->
+  <script>
+    const firebaseConfig = {
+      apiKey: 'AIzaSyA7_SFUPE6n9KG6LhL9Y6DRanSW5Zn0-2k',
+      authDomain: 'reliquias-do-xis.firebaseapp.com',
+      projectId: 'reliquias-do-xis',
+      storageBucket: 'reliquias-do-xis.appspot.com',
+      messagingSenderId: 'SEU_MESSAGING_SENDER_ID',
+      appId: 'SEU_APP_ID'
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+  
+  <!-- Admin Script -->
+  <script src="admin.js"></script>
+  
+  <!-- Google Maps -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBjfkEwQ_gpYGjRlY9deWCoddEmrBNOQDc&libraries=places&callback=initMap" async defer></script>
+
+  <style>
+    :root {
+      --primary: #ff6b6b;
+      --error: #f44336;
+      --success: #4caf50;
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+    
+    #login-section, #admin-panel {
+      max-width: 600px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    h2 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    
+    input, textarea, button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.3s;
+    }
+    
+    button:hover {
+      background: #e05555;
+    }
+    
+    #login-error {
+      color: var(--error);
+      text-align: center;
+      margin-top: 1rem;
+    }
+    
+    .hidden {
+      display: none;
+    }
+    
+    .grid-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    
+    #image-preview {
+      margin: 1rem 0;
+      text-align: center;
+    }
+    
+    #preview {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 4px;
+    }
+    
+    #map {
+      height: 400px;
+      width: 100%;
+      margin-bottom: 1rem;
+      border-radius: 4px;
+    }
+
+    #locationField {
+      margin-bottom: 1rem;
+    }
+    
+    .rating-container {
+      margin: 1rem 0;
+    }
+    
+    .rating-options {
+      display: flex;
+      gap: 10px;
+      margin-top: 0.5rem;
+    }
+    
+    .rating-option {
+      padding: 5px 10px;
+      background: #f0f0f0;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    
+    .rating-option.selected {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .tooltip-icon {
+      margin-left: 5px;
+      color: #666;
+      cursor: help;
+    }
+    
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+      margin-top: 1.5rem;
+    }
+    
+    #delete-btn {
+      background: var(--error) !important;
+    }
+    
+    #upload-btn {
+      background: var(--success) !important;
+    }
+  </style>
+</head>
+<body>
+    <div id="login-section">
+      <h2>Login</h2>
+      <form id="login-form">
+        <label for="email">E-mail:</label>
+        <input type="email" id="email" required>
+        
+        <label for="password">Senha:</label>
+        <input type="password" id="password" required>
+        
+        <button type="submit">Entrar</button>
+      </form>
+      <p id="login-error"></p>
+    </div>
+    
+    <div id="admin-panel" class="hidden">
+      <h2>Painel Administrativo</h2>
+      
+      <!-- Campo de busca do local -->
+      <div>
+        <label for="locationField">Buscar local:</label>
+        <input id="locationField" type="text" placeholder="Digite o nome do local ou endereço">
+      </div>
+
+      <!-- Mapa -->
+      <div id="map"></div>
+
+      <!-- Campos ocultos para latitude e longitude -->
+      <input type="hidden" id="latitude">
+      <input type="hidden" id="longitude">
+      <input type="hidden" id="nome">
+      
+      <div class="grid-columns">
+        <div class="rating-container">
+          <label>Nota <i class="fas fa-info-circle tooltip-icon" title="Nota geral do estabelecimento"></i></label>
+          <div class="rating-options" id="nota-rating">
+            <div class="rating-option" data-value="1">1</div>
+            <div class="rating-option" data-value="2">2</div>
+            <div class="rating-option" data-value="3">3</div>
+            <div class="rating-option" data-value="4">4</div>
+            <div class="rating-option" data-value="5">5</div>
+          </div>
+        </div>
+        
+        <div class="rating-container">
+          <label>Nível de Sujeira <i class="fas fa-info-circle tooltip-icon" title="1 = Muito sujo, 5 = Muito limpo"></i></label>
+          <div class="rating-options" id="sujeira-rating">
+            <div class="rating-option" data-value="1">1</div>
+            <div class="rating-option" data-value="2">2</div>
+            <div class="rating-option" data-value="3">3</div>
+            <div class="rating-option" data-value="4">4</div>
+            <div class="rating-option" data-value="5">5</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="grid-columns">
+        <div class="rating-container">
+          <label>Nível de Cagada <i class="fas fa-info-circle tooltip-icon" title="1 = Pouca comida, 5 = Muita comida"></i></label>
+          <div class="rating-options" id="cagada-rating">
+            <div class="rating-option" data-value="1">1</div>
+            <div class="rating-option" data-value="2">2</div>
+            <div class="rating-option" data-value="3">3</div>
+            <div class="rating-option" data-value="4">4</div>
+            <div class="rating-option" data-value="5">5</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <button id="upload-btn">
+          <i class="fas fa-cloud-upload-alt"></i>
+          Upload de Imagem
+        </button>
+      </div>
+
+      <div id="image-preview" class="hidden">
+        <img id="preview" src="" alt="Preview">
+      </div>
+
+      <div class="editor-toolbar">
+        <button class="editor-btn editor-btn-bold" onclick="formatText('bold')" title="Negrito">
+          <i class="fas fa-bold"></i>
+        </button>
+        <button class="editor-btn editor-btn-italic" onclick="formatText('italic')" title="Itálico">
+          <i class="fas fa-italic"></i>
+        </button>
+        <button class="editor-btn editor-btn-underline" onclick="formatText('underline')" title="Sublinhado">
+          <i class="fas fa-underline"></i>
+        </button>
+        <button class="editor-btn editor-btn-strike" onclick="formatText('strikethrough')" title="Tachado">
+          <i class="fas fa-strikethrough"></i>
+        </button>
+        <button class="editor-btn editor-btn-link" onclick="insertLink()" title="Link">
+          <i class="fas fa-link"></i>
+        </button>
+        <button class="editor-btn editor-btn-red" onclick="formatText('color', '#ff0000')" title="Texto Vermelho">
+          <i class="fas fa-paint-brush"></i>
+        </button>
+        <button class="editor-btn editor-btn-green" onclick="formatText('color', '#00ff00')" title="Texto Verde">
+          <i class="fas fa-paint-brush"></i>
+        </button>
+        <button class="editor-btn editor-btn-blue" onclick="formatText('color', '#0000ff')" title="Texto Azul">
+          <i class="fas fa-paint-brush"></i>
+        </button>
+        <button class="editor-btn editor-btn-paragraph" onclick="formatText('paragraph')" title="Parágrafo">
+          <i class="fas fa-paragraph"></i>
+        </button>
+        <button class="editor-btn editor-btn-h2" onclick="formatText('h2')" title="Título H2">
+          <i class="fas fa-heading"></i>
+        </button>
+        <button class="editor-btn editor-btn-h3" onclick="formatText('h3')" title="Título H3">H3</button>
+        <button class="editor-btn editor-btn-h4" onclick="formatText('h4')" title="Título H4">H4</button>
+        <button class="editor-btn editor-btn-quote" onclick="formatText('quote')" title="Citação">
+          <i class="fas fa-quote-right"></i>
+        </button>
+        <button class="editor-btn editor-btn-hr" onclick="formatText('hr')" title="Linha Horizontal">
+          <i class="fas fa-minus"></i>
+        </button>
+        <button class="editor-btn editor-btn-small" onclick="formatText('small')" title="Texto Pequeno">
+          <i class="fas fa-text-height fa-flip-vertical"></i>
+        </button>
+      </div>
+
+      <textarea id="resenha" rows="10" placeholder="Digite sua resenha aqui..."></textarea>
+      
+      <div class="action-buttons">
+        <button id="publicar">Publicar</button>
+        <button id="logout">Sair</button>
+      </div>
+    </div>
+
+    <!-- Scripts já foram incluídos no head -->
+</body>
+</html>
+
+
+

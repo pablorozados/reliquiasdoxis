@@ -1,0 +1,21 @@
+.env
+node_modules/
+.DS_Store# Secrets and local config
+secrets.js
+.env
+config.js
+*.bak
+
+# Node / macOS
+node_modules/
+.DS_Store
+# local secrets
+.env
+config.js
+secrets.js
+*.bak
+# local secrets
+.env
+config.js
+secrets.js
+*.bak
