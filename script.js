@@ -40,7 +40,7 @@ function initMap() {
           content: `
             <h3>${local.nome}</h3>
             <p>${local.resenha}</p>
-            ${local.imagem ? `<img src="${local.imagem}" alt="${local.nome}" style="max-width: 200px;">` : ""}
+            ${local.imagem ? `<img src="${local.imagem}" alt="${local.nome}" style="max-width: 200px;" crossorigin="anonymous" onerror="this.style.display='none';console.warn('Imagem falhou ao carregar:', this.src);">` : ""}
           `
         });
 
