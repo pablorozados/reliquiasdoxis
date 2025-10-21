@@ -1,17 +1,6 @@
 // admin.js
 
-// Configura Firebase (usando a chave do secrets.js)
-const firebaseConfig = {
-  apiKey: FIREBASE_API_KEY,
-  authDomain: "reliquiasdoxis.firebaseapp.com",
-  projectId: "reliquiasdoxis",
-  storageBucket: "reliquiasdoxis.appspot.com",
-  messagingSenderId: "673027539850",
-  appId: "1:673027539850:web:c8c5fa9e5dbff158cf92ed"
-};
-
-// Inicializa Firebase
-firebase.initializeApp(firebaseConfig);
+// Firebase já foi inicializado no HTML
 const db = firebase.firestore();
 const auth = firebase.auth();
 

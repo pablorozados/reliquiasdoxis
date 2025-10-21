@@ -15,28 +15,33 @@
   <!-- Cloudinary -->
   <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
   
-  <!-- Config -->
+  <!-- Config Local (apenas desenvolvimento) -->
   <script>
-    // Carrega o arquivo de configuração apropriado
-    const configScript = document.createElement('script');
-    configScript.src = window.location.hostname === 'localhost' ? 'secrets.js' : 'config.prod.js';
-    document.head.appendChild(configScript);
+    if (window.location.hostname === 'localhost') {
+      const configScript = document.createElement('script');
+      configScript.src = 'secrets.js';
+      document.head.appendChild(configScript);
+    }
   </script>
   
-  <!-- Admin Script (antes do Google Maps) -->
+  <!-- Firebase Config -->
+  <script>
+    const firebaseConfig = {
+      apiKey: 'FIREBASE_API_KEY',
+      authDomain: 'FIREBASE_PROJECT_ID.firebaseapp.com',
+      projectId: 'FIREBASE_PROJECT_ID',
+      storageBucket: 'FIREBASE_PROJECT_ID.appspot.com',
+      messagingSenderId: 'SEU_MESSAGING_SENDER_ID',
+      appId: 'SEU_APP_ID'
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+  
+  <!-- Admin Script -->
   <script src="admin.js"></script>
   
-  <!-- Google Maps (por último) -->
-  <script>
-    // Carregar Google Maps depois que o DOM estiver pronto
-    document.addEventListener('DOMContentLoaded', function() {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initMap`;
-      script.async = true;
-      script.defer = true;
-      document.head.appendChild(script);
-    });
-  </script>
+  <!-- Google Maps -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places&callback=initMap" async defer></script>
 
   <style>
     :root {
