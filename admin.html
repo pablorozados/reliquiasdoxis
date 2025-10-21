@@ -7,6 +7,9 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
   
+  <!-- Google Maps -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBjfkEwQ_gpYGjRlY9deWCoddEmrBNOQDc&libraries=places&callback=initMap" async defer></script>
+  
   <!-- Cloudinary -->
   <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
 
@@ -94,6 +97,17 @@
       border-radius: 4px;
     }
     
+    #map {
+      height: 400px;
+      width: 100%;
+      margin-bottom: 1rem;
+      border-radius: 4px;
+    }
+
+    #locationField {
+      margin-bottom: 1rem;
+    }
+    
     .rating-container {
       margin: 1rem 0;
     }
@@ -135,574 +149,140 @@
     #upload-btn {
       background: var(--success) !important;
     }
-
-    /* BARRA DE FERRAMENTAS EDITOR - ESTILOS OTIMIZADOS */
-    .editor-toolbar {
-      display: flex;
-      gap: 6px;
-      padding: 8px;
-      background: #f8f9fa;
-      border-radius: 6px 6px 0 0;
-      border: 1px solid #dee2e6;
-      border-bottom: none;
-      margin-bottom: 0;
-      flex-wrap: wrap;
-    }
-
-    .editor-btn {
-      padding: 0;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 13px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 32px;
-      height: 32px;
-      transition: all 0.2s;
-    }
-
-    .editor-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    /* Cores dos botões */
-    .editor-btn-bold { background: #495057; color: white; }
-    .editor-btn-italic { background: #6c757d; color: white; }
-    .editor-btn-underline { background: #868e96; color: white; }
-    .editor-btn-strike { background: #adb5bd; color: white; }
-    .editor-btn-link { background: #1971c2; color: white; }
-    .editor-btn-red { background: #e03131; color: white; }
-    .editor-btn-green { background: #2b8a3e; color: white; }
-    .editor-btn-blue { background: #1971c2; color: white; }
-    .editor-btn-paragraph { background: #17a2b8; color: white; }
-    .editor-btn-h2 { background: #28a745; color: white; }
-    .editor-btn-h3 { background: #20c997; color: white; }
-    .editor-btn-h4 { background: #6f42c1; color: white; }
-    .editor-btn-quote { background: #6c757d; color: white; }
-    .editor-btn-hr { background: #343a40; color: white; }
-    .editor-btn-small { background: #6c757d; color: white; }
-    .editor-btn-mark { background: #ffc107; color: black; }
-    .editor-btn-em { background: #007bff; color: white; }
-    .editor-btn-yellow { background: #ffc107; color: black; }
-    
-    /* Ajuste do textarea */
-    #resenha {
-      border-radius: 0 0 6px 6px;
-      margin-top: 0;
-      border-top: none;
-    }
   </style>
 </head>
 <body>
-  <div id="login-section">
-    <h2>Área do Dono</h2>
-    <form id="login-form">
-      <label for="email">E-mail:</label>
-      <input type="email" id="email" required>
-      
-      <label for="password">Senha:</label>
-      <input type="password" id="password" required>
-      
-      <button type="submit">Entrar</button>
+    <div id="login-section">
+      <h2>Login</h2>
+      <form id="login-form">
+        <label for="email">E-mail:</label>
+        <input type="email" id="email" required>
+        
+        <label for="password">Senha:</label>
+        <input type="password" id="password" required>
+        
+        <button type="submit">Entrar</button>
+      </form>
       <p id="login-error"></p>
-    </form>
-  </div>
-
-  <div id="admin-panel" class="hidden">
-    <h2>Adicionar Novo Xis</h2>
-    <form id="add-location-form">
-      <label for="endereco">Buscar local:</label>
-      <input type="text" id="endereco" placeholder="Digite o endereço" style="margin-bottom: 0.5rem;">
-      <div style="margin-bottom: 0.5rem;">
-        <button type="button" id="btn-colar-coord" style="padding: 8px 12px; background: #1971c2; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px;">Colar coordenadas</button>
-      </div>
-      <small style="color:#888;display:block;margin-bottom:10px;">Dica: digite o endereço completo, incluindo cidade e estado. Ex: "Rua da República, Porto Alegre, RS". Se não encontrar, clique no mapa abaixo para marcar o local.<br>Ou, no Google Maps, clique com o botão direito no ponto exato, escolha "O que há aqui?" e clique nas coordenadas que aparecem. Depois clique em "Colar coordenadas" abaixo e cole o texto (ex: <b>-30.0346, -51.2177</b>).</small>
-      <div id="map-admin" style="height: 300px; width: 100%; border-radius: 8px; margin-bottom: 20px;"></div>
+    </div>
+    
+    <div id="admin-panel" class="hidden">
+      <h2>Painel Administrativo</h2>
       
-      <label for="nome">Nome do lugar:</label>
-      <input type="text" id="nome" required>
+      <!-- Campo de busca do local -->
+      <div>
+        <label for="locationField">Buscar local:</label>
+        <input id="locationField" type="text" placeholder="Digite o nome do local ou endereço">
+      </div>
+
+      <!-- Mapa -->
+      <div id="map"></div>
+
+      <!-- Campos ocultos para latitude e longitude -->
+      <input type="hidden" id="latitude">
+      <input type="hidden" id="longitude">
+      <input type="hidden" id="nome">
       
       <div class="grid-columns">
-        <div>
-          <label for="latitude">Latitude:</label>
-          <input type="text" id="latitude">
+        <div class="rating-container">
+          <label>Nota <i class="fas fa-info-circle tooltip-icon" title="Nota geral do estabelecimento"></i></label>
+          <div class="rating-options" id="nota-rating">
+            <div class="rating-option" data-value="1">1</div>
+            <div class="rating-option" data-value="2">2</div>
+            <div class="rating-option" data-value="3">3</div>
+            <div class="rating-option" data-value="4">4</div>
+            <div class="rating-option" data-value="5">5</div>
+          </div>
         </div>
-        <div>
-          <label for="longitude">Longitude:</label>
-          <input type="text" id="longitude">
+        
+        <div class="rating-container">
+          <label>Nível de Sujeira <i class="fas fa-info-circle tooltip-icon" title="1 = Muito sujo, 5 = Muito limpo"></i></label>
+          <div class="rating-options" id="sujeira-rating">
+            <div class="rating-option" data-value="1">1</div>
+            <div class="rating-option" data-value="2">2</div>
+            <div class="rating-option" data-value="3">3</div>
+            <div class="rating-option" data-value="4">4</div>
+            <div class="rating-option" data-value="5">5</div>
+          </div>
         </div>
       </div>
       
-     <!-- BARRA DE FERRAMENTAS ATUALIZADA COM TODOS OS BOTÕES -->
-  <label for="resenha">Resenha:</label>
-  <div class="editor-toolbar">
-    <!-- Botões básicos de formatação -->
-    <button type="button" class="editor-btn editor-btn-bold" onclick="formatText('bold')" title="Negrito"><b>B</b></button>
-    <button type="button" class="editor-btn editor-btn-italic" onclick="formatText('italic')" title="Itálico"><i>I</i></button>
-    <button type="button" class="editor-btn editor-btn-underline" onclick="formatText('underline')" title="Sublinhado"><u>S</u></button>
-    <button type="button" class="editor-btn editor-btn-strike" onclick="formatText('strike')" title="Riscado"><s>R</s></button>
-    
-    <!-- Novos botões de formatação -->
-    <button type="button" class="editor-btn editor-btn-em" onclick="formatText('em')" title="Ênfase"><em>E</em></button>
-    <button type="button" class="editor-btn editor-btn-mark" onclick="formatText('mark')" title="Marcado"><mark>M</mark></button>
-    <button type="button" class="editor-btn editor-btn-small" onclick="formatText('small')" title="Pequeno"><small>Pq</small></button>
-    
-    <!-- Estrutura de texto -->
-    <button type="button" class="editor-btn editor-btn-paragraph" onclick="formatText('p')" title="Parágrafo">[P]</button>
-    <button type="button" class="editor-btn editor-btn-h2" onclick="formatText('h2')" title="Título 2">[2]</button>
-    <button type="button" class="editor-btn editor-btn-h3" onclick="formatText('h3')" title="Título 3">[3]</button>
-    <button type="button" class="editor-btn editor-btn-h4" onclick="formatText('h4')" title="Título 4">[4]</button>
-    <button type="button" class="editor-btn editor-btn-quote" onclick="formatText('blockquote')" title="Citação">Cit.</button>
-    <button type="button" class="editor-btn editor-btn-hr" onclick="formatText('hr')" title="Linha horizontal">HR</button>
-    
-    <!-- Cores -->
-    <button type="button" class="editor-btn editor-btn-red" onclick="setColor('red')" title="Vermelho"><i class="fas fa-font"></i></button>
-    <button type="button" class="editor-btn editor-btn-green" onclick="setColor('green')" title="Verde"><i class="fas fa-font"></i></button>
-    <button type="button" class="editor-btn editor-btn-blue" onclick="setColor('blue')" title="Azul"><i class="fas fa-font"></i></button>
-    <button type="button" class="editor-btn editor-btn-yellow" onclick="setColor('yellow')" title="Amarelo"><i class="fas fa-font"></i></button>
-    
-    <!-- Link -->
-    <button type="button" class="editor-btn editor-btn-link" onclick="insertLink()" title="Inserir Link"><i class="fas fa-link"></i></button>
-  </div>
-  <textarea id="resenha" rows="5" required></textarea>
+      <div class="grid-columns">
+        <div class="rating-container">
+          <label>Nível de Cagada <i class="fas fa-info-circle tooltip-icon" title="1 = Pouca comida, 5 = Muita comida"></i></label>
+          <div class="rating-options" id="cagada-rating">
+            <div class="rating-option" data-value="1">1</div>
+            <div class="rating-option" data-value="2">2</div>
+            <div class="rating-option" data-value="3">3</div>
+            <div class="rating-option" data-value="4">4</div>
+            <div class="rating-option" data-value="5">5</div>
+          </div>
+        </div>
+      </div>
 
-      <label for="meu-pedido">Meu Pedido:</label>
-      <textarea id="meu-pedido" rows="2" required placeholder="Ex: Xis Bacon Especial com batata palha extra"></textarea>
-      
-      <div class="rating-container">
-        <div class="rating-title">
-          Nota (0-5 estrelas):
-        </div>
-        <div class="rating-options" id="nota-rating">
-          <div class="rating-option" data-value="0">Nenhuma</div>
-          <div class="rating-option" data-value="1">⭐</div>
-          <div class="rating-option" data-value="2">⭐⭐</div>
-          <div class="rating-option" data-value="3">⭐⭐⭐</div>
-          <div class="rating-option" data-value="4">⭐⭐⭐⭐</div>
-          <div class="rating-option" data-value="5">⭐⭐⭐⭐⭐</div>
-        </div>
+      <div class="action-buttons">
+        <button id="upload-btn">
+          <i class="fas fa-cloud-upload-alt"></i>
+          Upload de Imagem
+        </button>
       </div>
-      
-      <div class="rating-container">
-        <div class="rating-title">
-          Me caguei comendo?
-          <span class="tooltip-icon">
-            <i class="fas fa-question-circle"></i>
-          </span>
-        </div>
-        <div class="rating-options" id="sujeira-rating">
-          <div class="rating-option" data-value="0">Nenhuma</div>
-          <div class="rating-option" data-value="1">🍔</div>
-          <div class="rating-option" data-value="2">🍔🍔</div>
-          <div class="rating-option" data-value="3">🍔🍔🍔</div>
-          <div class="rating-option" data-value="4">🍔🍔🍔🍔</div>
-          <div class="rating-option" data-value="5">🍔🍔🍔🍔🍔</div>
-        </div>
-      </div>
-      
-      <div class="rating-container">
-        <div class="rating-title">
-          Me caguei depois de comer?
-          <span class="tooltip-icon">
-            <i class="fas fa-question-circle"></i>
-          </span>
-        </div>
-        <div class="rating-options" id="cagada-rating">
-          <div class="rating-option" data-value="0">Nenhuma</div>
-          <div class="rating-option" data-value="1">💩</div>
-          <div class="rating-option" data-value="2">💩💩</div>
-          <div class="rating-option" data-value="3">💩💩💩</div>
-          <div class="rating-option" data-value="4">💩💩💩💩</div>
-          <div class="rating-option" data-value="5">💩💩💩💩💩</div>
-        </div>
-      </div>
-      
-      <label>Imagem (opcional):</label>
-      <button type="button" id="upload-btn">🖼️ Adicionar Foto</button>
+
       <div id="image-preview" class="hidden">
-        <img id="preview" src="#" alt="Preview da imagem">
+        <img id="preview" src="" alt="Preview">
       </div>
+
+      <div class="editor-toolbar">
+        <button class="editor-btn editor-btn-bold" onclick="formatText('bold')" title="Negrito">
+          <i class="fas fa-bold"></i>
+        </button>
+        <button class="editor-btn editor-btn-italic" onclick="formatText('italic')" title="Itálico">
+          <i class="fas fa-italic"></i>
+        </button>
+        <button class="editor-btn editor-btn-underline" onclick="formatText('underline')" title="Sublinhado">
+          <i class="fas fa-underline"></i>
+        </button>
+        <button class="editor-btn editor-btn-strike" onclick="formatText('strikethrough')" title="Tachado">
+          <i class="fas fa-strikethrough"></i>
+        </button>
+        <button class="editor-btn editor-btn-link" onclick="insertLink()" title="Link">
+          <i class="fas fa-link"></i>
+        </button>
+        <button class="editor-btn editor-btn-red" onclick="formatText('color', '#ff0000')" title="Texto Vermelho">
+          <i class="fas fa-paint-brush"></i>
+        </button>
+        <button class="editor-btn editor-btn-green" onclick="formatText('color', '#00ff00')" title="Texto Verde">
+          <i class="fas fa-paint-brush"></i>
+        </button>
+        <button class="editor-btn editor-btn-blue" onclick="formatText('color', '#0000ff')" title="Texto Azul">
+          <i class="fas fa-paint-brush"></i>
+        </button>
+        <button class="editor-btn editor-btn-paragraph" onclick="formatText('paragraph')" title="Parágrafo">
+          <i class="fas fa-paragraph"></i>
+        </button>
+        <button class="editor-btn editor-btn-h2" onclick="formatText('h2')" title="Título H2">
+          <i class="fas fa-heading"></i>
+        </button>
+        <button class="editor-btn editor-btn-h3" onclick="formatText('h3')" title="Título H3">H3</button>
+        <button class="editor-btn editor-btn-h4" onclick="formatText('h4')" title="Título H4">H4</button>
+        <button class="editor-btn editor-btn-quote" onclick="formatText('quote')" title="Citação">
+          <i class="fas fa-quote-right"></i>
+        </button>
+        <button class="editor-btn editor-btn-hr" onclick="formatText('hr')" title="Linha Horizontal">
+          <i class="fas fa-minus"></i>
+        </button>
+        <button class="editor-btn editor-btn-small" onclick="formatText('small')" title="Texto Pequeno">
+          <i class="fas fa-text-height fa-flip-vertical"></i>
+        </button>
+      </div>
+
+      <textarea id="resenha" rows="10" placeholder="Digite sua resenha aqui..."></textarea>
       
       <div class="action-buttons">
-        <button type="submit">Publicar</button>
-        <button type="button" id="delete-btn">🗑️ Apagar Última</button>
-        <button type="button" id="logout">Sair</button>
+        <button id="publicar">Publicar</button>
+        <button id="logout">Sair</button>
       </div>
-    </form>
-  </div>
+    </div>
 
-  <!-- Scripts no FINAL na ORDEM CORRETA -->
-  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
-  <!-- Leaflet CSS/JS e Geocoder -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-  <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-
-  <script>
-    // CONFIGURAÇÃO DO FIREBASE
-    const firebaseConfig = {
-      apiKey: "FIREBASE_API_KEY",
-      projectId: "FIREBASE_PROJECT_ID"
-    };
-
-    // INICIALIZAÇÃO
-    let auth, db;
-    try {
-      if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-      }
-      auth = firebase.auth();
-      db = firebase.firestore();
-      console.log("Firebase conectado!");
-    } catch (e) {
-      console.error("Erro Firebase:", e);
-      document.getElementById('login-error').textContent = "Erro de conexão";
-    }
-
-    // VARIÁVEIS GLOBAIS
-    let imagemUrl = '';
-    let selectedNota = 0;
-    let selectedSujeira = 0;
-    let selectedCagada = 0;
-
-    // CONTROLE DE LOGIN
-    if (auth) {
-      auth.onAuthStateChanged(user => {
-        if (user) {
-          document.getElementById('login-section').classList.add('hidden');
-          document.getElementById('admin-panel').classList.remove('hidden');
-          initForm();
-        } else {
-          document.getElementById('login-section').classList.remove('hidden');
-          document.getElementById('admin-panel').classList.add('hidden');
-        }
-      });
-
-      document.getElementById('login-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        
-        try {
-          await auth.signInWithEmailAndPassword(email, password);
-        } catch (error) {
-          document.getElementById('login-error').textContent = "E-mail ou senha incorretos";
-        }
-      });
-
-      document.getElementById('logout').addEventListener('click', () => {
-        auth.signOut();
-      });
-    }
-
-    // INICIALIZAÇÃO DO FORMULÁRIO
-    function initForm() {
-      // Configuração do Cloudinary
-      const cloudinaryConfig = {
-        cloudName: 'dgdjaz541',
-        uploadPreset: 'reliquias_do_xis'
-      };
-
-      // Upload de imagem
-      document.getElementById('upload-btn').addEventListener('click', () => {
-        window.cloudinary.createUploadWidget(cloudinaryConfig, 
-          (error, result) => {
-            if (result?.event === "success") {
-              if (!Array.isArray(imagemUrl)) {
-                imagemUrl = [];
-              }
-              imagemUrl.push(result.info.secure_url);
-              document.getElementById('preview').src = imagemUrl;
-              document.getElementById('image-preview').classList.remove('hidden');
-            }
-          }
-        ).open();
-      });
-
-      // Configuração dos ratings
-      setupRating('nota-rating', value => selectedNota = value);
-      setupRating('sujeira-rating', value => selectedSujeira = value);
-      setupRating('cagada-rating', value => selectedCagada = value);
-
-
-      // Autocomplete de endereço com Nominatim/Leaflet
-      const enderecoInput = document.getElementById('endereco');
-      let geocodeTimeout;
-      enderecoInput.addEventListener('input', function() {
-        clearTimeout(geocodeTimeout);
-        const query = this.value;
-        if (query.length < 3) return;
-        geocodeTimeout = setTimeout(() => {
-          fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&countrycodes=br&limit=5`)
-            .then(res => res.json())
-            .then(results => {
-              let datalist = document.getElementById('endereco-datalist');
-              if (!datalist) {
-                datalist = document.createElement('datalist');
-                datalist.id = 'endereco-datalist';
-                enderecoInput.setAttribute('list', 'endereco-datalist');
-                document.body.appendChild(datalist);
-              }
-              datalist.innerHTML = '';
-              results.forEach(item => {
-                const option = document.createElement('option');
-                option.value = item.display_name;
-                option.setAttribute('data-lat', item.lat);
-                option.setAttribute('data-lon', item.lon);
-                datalist.appendChild(option);
-              });
-            });
-        }, 400);
-      });
-
-      enderecoInput.addEventListener('change', function() {
-        const datalist = document.getElementById('endereco-datalist');
-        if (!datalist) return;
-        const option = Array.from(datalist.options).find(opt => opt.value === this.value);
-        if (option) {
-          document.getElementById('latitude').value = option.getAttribute('data-lat');
-          document.getElementById('longitude').value = option.getAttribute('data-lon');
-          document.getElementById('nome').value = this.value.split(',')[0];
-          // Atualiza marcador no mapa
-          if (window.markerAdmin) window.mapAdmin.removeLayer(window.markerAdmin);
-          window.markerAdmin = L.marker([option.getAttribute('data-lat'), option.getAttribute('data-lon')]).addTo(window.mapAdmin);
-          window.mapAdmin.setView([option.getAttribute('data-lat'), option.getAttribute('data-lon')], 17);
-        }
-      });
-
-
-      // Botão para colar coordenadas
-      document.getElementById('btn-colar-coord').addEventListener('click', function() {
-        const texto = prompt('Cole aqui as coordenadas copiadas do Google Maps (ex: -30.0346, -51.2177):');
-        if (!texto) return;
-        // Aceita formatos com vírgula ou espaço
-        let match = texto.trim().match(/(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/);
-        if (!match) match = texto.trim().match(/(-?\d+\.\d+)\s+(-?\d+\.\d+)/);
-        if (match) {
-          document.getElementById('latitude').value = match[1];
-          document.getElementById('longitude').value = match[2];
-          // Atualiza marcador no mapa
-          if (window.markerAdmin && window.mapAdmin) window.mapAdmin.removeLayer(window.markerAdmin);
-          if (window.mapAdmin) {
-            window.markerAdmin = L.marker([match[1], match[2]]).addTo(window.mapAdmin);
-            window.mapAdmin.setView([match[1], match[2]], 17);
-          }
-        } else {
-          alert('Formato inválido. Cole exatamente como aparece no Google Maps, ex: -30.0346, -51.2177');
-        }
-      });
-
-      // Mapa interativo para seleção manual
-      setTimeout(() => {
-        if (!window.mapAdmin) {
-          window.mapAdmin = L.map('map-admin').setView([-30.0346, -51.2177], 13);
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          }).addTo(window.mapAdmin);
-        }
-        window.markerAdmin = null;
-        window.mapAdmin.on('click', function(e) {
-          const { lat, lng } = e.latlng;
-          document.getElementById('latitude').value = lat;
-          document.getElementById('longitude').value = lng;
-          if (window.markerAdmin) window.mapAdmin.removeLayer(window.markerAdmin);
-          window.markerAdmin = L.marker([lat, lng]).addTo(window.mapAdmin);
-        });
-      }, 500);
-
-      // Envio do formulário
-      document.getElementById('add-location-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const nome = document.getElementById('nome').value;
-        const latitude = parseFloat(document.getElementById('latitude').value);
-        const longitude = parseFloat(document.getElementById('longitude').value);
-        const resenha = document.getElementById('resenha').value;
-        const meu_pedido = document.getElementById('meu-pedido').value;
-
-        if (!nome || isNaN(latitude) || isNaN(longitude) || !resenha || !meu_pedido) {
-          alert("Preencha todos os campos obrigatórios!");
-          return;
-        }
-
-        try {
-          await db.collection("locais").add({
-            nome,
-            latitude,
-            longitude,
-            resenha,
-            meu_pedido,
-            nota: selectedNota,
-            sujeira_comendo: selectedSujeira,
-            cagada_depois: selectedCagada,
-            imagem: imagemUrl || null,
-            userId: auth.currentUser.uid,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-          });
-          
-          alert("Resenha publicada com sucesso!");
-          document.getElementById('add-location-form').reset();
-          document.getElementById('image-preview').classList.add('hidden');
-          imagemUrl = '';
-        } catch (error) {
-          console.error("Erro ao publicar:", error);
-          alert("Erro ao publicar resenha");
-        }
-      });
-
-      // Botão de deletar
-      document.getElementById('delete-btn').addEventListener('click', async () => {
-        if (!confirm('Tem certeza que deseja apagar sua última resenha?')) return;
-        
-        try {
-          const query = await db.collection("locais")
-            .where("userId", "==", auth.currentUser.uid)
-            .orderBy("timestamp", "desc")
-            .limit(1)
-            .get();
-
-          if (!query.empty) {
-            await db.collection("locais").doc(query.docs[0].id).delete();
-            alert("Resenha apagada com sucesso!");
-          }
-        } catch (error) {
-          console.error("Erro ao apagar:", error);
-          alert("Erro ao apagar resenha");
-        }
-      });
-    }
-
-    // Função auxiliar para ratings
-    function setupRating(elementId, callback) {
-      const options = document.querySelectorAll(`#${elementId} .rating-option`);
-      options.forEach(option => {
-        option.addEventListener('click', () => {
-          options.forEach(opt => opt.classList.remove('selected'));
-          option.classList.add('selected');
-          callback(parseInt(option.dataset.value));
-        });
-      });
-    }
-
-    // FUNÇÕES DO EDITOR DE TEXTO
- function formatText(tag) {
-      const textarea = document.getElementById('resenha');
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const selectedText = textarea.value.substring(start, end);
-      
-      const tags = {
-        bold: ['<b>', '</b>'],
-        italic: ['<i>', '</i>'],
-        underline: ['<u>', '</u>'],
-        strike: ['<s>', '</s>'],
-        em: ['<em>', '</em>'],
-        mark: ['<mark>', '</mark>'],
-        small: ['<small>', '</small>'],
-        p: ['<p>', '</p>'],
-        h2: ['<h2>', '</h2>'],
-        h3: ['<h3>', '</h3>'],
-        h4: ['<h4>', '</h4>'],
-        blockquote: ['<blockquote>', '</blockquote>'],
-        hr: ['<hr>', '']
-      };
-      
-      if (tag === 'hr') {
-        textarea.value = textarea.value.substring(0, start) + tags[tag][0] + textarea.value.substring(end);
-        textarea.focus();
-        textarea.setSelectionRange(start + tags[tag][0].length, start + tags[tag][0].length);
-      } else {
-        textarea.value = textarea.value.substring(0, start) + tags[tag][0] + selectedText + tags[tag][1] + textarea.value.substring(end);
-        textarea.focus();
-        textarea.setSelectionRange(start + tags[tag][0].length, end + tags[tag][0].length);
-      }
-    }
-
-    function insertLink() {
-      const textarea = document.getElementById('resenha');
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const selectedText = textarea.value.substring(start, end);
-      
-      const url = prompt('Digite a URL do link:', 'https://');
-      if (!url) return;
-      
-      const text = prompt('Digite o texto do link:', selectedText || 'Clique aqui');
-      if (!text) return;
-      
-      const html = `<a href="${url}" target="_blank">${text}</a>`;
-      
-      textarea.value = textarea.value.substring(0, start) + html + textarea.value.substring(end);
-      
-      // Mantém o foco
-      textarea.focus();
-      const newCursorPos = start + html.length;
-      textarea.setSelectionRange(newCursorPos, newCursorPos);
-    }
-
-    function setColor(color) {
-      const textarea = document.getElementById('resenha');
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      const selectedText = textarea.value.substring(start, end);
-      
-      if (!selectedText) {
-        alert("Selecione um texto para aplicar a cor");
-        return;
-      }
-      
-      const coloredText = `<span style="color:${color}">${selectedText}</span>`;
-      
-      textarea.value = textarea.value.substring(0, start) + coloredText + textarea.value.substring(end);
-      
-      // Mantém o foco
-      textarea.focus();
-      textarea.setSelectionRange(start, start + coloredText.length);
-    }
-  </script>
-  <script>
-  document.getElementById("upload-btn").addEventListener("click", function () {
-    cloudinary.openUploadWidget(
-      {
-        cloudName: "SEU_CLOUD_NAME",
-        uploadPreset: "SEU_UPLOAD_PRESET",
-        sources: ["local", "url", "camera"],
-        multiple: false,
-        folder: "resenhas",
-        cropping: false,
-        resourceType: "image"
-      },
-      function (error, result) {
-        if (!error && result && result.event === "success") {
-          const imageUrl = result.info.secure_url;
-          const preview = document.getElementById("preview");
-          const previewContainer = document.getElementById("image-preview");
-
-          preview.src = imageUrl;
-          previewContainer.classList.remove("hidden");
-
-          // (Opcional) Salvar a URL da imagem para uso posterior no Firestore
-          // Exemplo: salvar no form usando um campo oculto
-          let hiddenInput = document.getElementById("uploaded-image-url");
-          if (!hiddenInput) {
-            hiddenInput = document.createElement("input");
-            hiddenInput.type = "hidden";
-            hiddenInput.id = "uploaded-image-url";
-            hiddenInput.name = "imageUrl";
-            document.getElementById("add-location-form").appendChild(hiddenInput);
-          }
-          hiddenInput.value = imageUrl;
-        }
-      }
-    );
-  });
-</script>
-
+    <script src="admin.js" type="module"></script>
 </body>
 </html>
