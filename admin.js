@@ -1,19 +1,7 @@
 // admin.js
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
-import {
-  getFirestore,
-  collection,
-  addDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
-import {
-  getAuth,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.11.0/firebase-auth.js";
-
 const firebaseConfig = {
-  apiKey: import.meta.env.FIREBASE_API_KEY,
+  apiKey: "AIzaSyAEcQDgKssjXZQ54Bsid3vPIKiGm36l4wM",
   authDomain: "reliquiasdoxis.firebaseapp.com",
   projectId: "reliquiasdoxis",
   storageBucket: "reliquiasdoxis.appspot.com",
@@ -21,9 +9,10 @@ const firebaseConfig = {
   appId: "1:673027539850:web:c8c5fa9e5dbff158cf92ed"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
+// Inicializa Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const auth = firebase.auth();
 
 const publicarBtn = document.getElementById("publicar");
 const resenhaInput = document.getElementById("resenha");
@@ -36,7 +25,7 @@ let marker;
 let autocomplete;
 
 // Inicializa o mapa do Google
-window.initMap = function() {
+function initMap() {
   // Inicializa o mapa centralizado em Porto Alegre
   map = new google.maps.Map(document.getElementById('map'), {
     center: { lat: -30.0346, lng: -51.2177 },
