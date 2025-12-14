@@ -40,8 +40,27 @@
   <!-- Admin Script -->
   <script src="admin.js"></script>
   
-  <!-- Google Maps -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places&callback=initMap" async defer></script>
+  <!-- Google Maps com tratamento de erro -->
+  <script>
+    window.mapsLoaded = false;
+    window.mapsError = false;
+    
+    window.initMapCallback = function() {
+      window.mapsLoaded = true;
+      console.log('Google Maps carregado com sucesso!');
+      // Se initMap foi chamada antes, chamar agora
+      if (typeof initMap === 'function') {
+        initMap();
+      }
+    };
+    
+    window.gm_authFailure = function() {
+      window.mapsError = true;
+      console.error('Erro ao carregar Google Maps - verifique a API key');
+      alert('Erro ao carregar Google Maps. Verifique a chave de API.');
+    };
+  </script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places&callback=initMapCallback"></script>
 
   <style>
     :root {

@@ -19,8 +19,19 @@ function initMap() {
   // Aguarda o DOM estar pronto
   if (!document.getElementById('map')) {
     console.error('Elemento map não encontrado');
+    // Tenta novamente em 100ms
+    setTimeout(initMap, 100);
     return;
   }
+  
+  // Aguarda o Google Maps estar carregado
+  if (!window.google || !window.google.maps) {
+    console.error('Google Maps API não está carregada');
+    setTimeout(initMap, 100);
+    return;
+  }
+  
+  console.log('Inicializando mapa do admin...');
   
   // Inicializa o mapa centralizado em Porto Alegre
   map = new google.maps.Map(document.getElementById('map'), {
@@ -35,7 +46,10 @@ function initMap() {
     return;
   }
   
-  autocomplete = new google.maps.places.Autocomplete(input);
+  autocomplete = new google.maps.places.Autocomplete(input, {
+    types: ['establishment'],
+    componentRestrictions: { country: 'br' }
+  });
   autocomplete.bindTo('bounds', map);
 
   // Cria um marcador inicial (invisível)
@@ -69,6 +83,8 @@ function initMap() {
     document.getElementById('latitude').value = place.geometry.location.lat();
     document.getElementById('longitude').value = place.geometry.location.lng();
     document.getElementById('nome').value = place.name;
+    
+    console.log('Local selecionado:', place.name);
   });
 }
 
