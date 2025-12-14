@@ -4,8 +4,8 @@
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-const publicarBtn = document.getElementById("publicar");
-const resenhaInput = document.getElementById("resenha");
+let publicarBtn;
+let resenhaInput;
 let imagemUrl = [];
 let selectedNota = 0;
 let selectedSujeira = 0;
@@ -13,6 +13,11 @@ let selectedCagada = 0;
 let map;
 let marker;
 let autocomplete;
+
+// Aguarda o DOM estar pronto antes de acessar elementos
+document.addEventListener('DOMContentLoaded', function() {
+  publicarBtn = document.getElementById("publicar");
+  resenhaInput = document.getElementById("resenha");
 
 // Inicializa o mapa do Google
 function initMap() {
@@ -180,16 +185,22 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
   
+  console.log('Tentando login com:', email);
+  
   try {
     await auth.signInWithEmailAndPassword(email, password);
+    console.log('Login bem-sucedido!');
   } catch (error) {
-    document.getElementById('login-error').textContent = "E-mail ou senha incorretos";
+    console.error('Erro no login:', error.code, error.message);
+    document.getElementById('login-error').textContent = "E-mail ou senha incorretos. Erro: " + error.message;
   }
 });
 
 document.getElementById('logout').addEventListener('click', () => {
   auth.signOut();
 });
+
+}); // Fecha o DOMContentLoaded
 
 
 
