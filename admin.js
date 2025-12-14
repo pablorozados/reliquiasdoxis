@@ -12,18 +12,11 @@ let selectedSujeira = 0;
 let selectedCagada = 0;
 let map;
 let marker;
-let autocomplete;
+let placePicker;
+let currentPlace;
 
-// Inicializa o mapa do Google
+// Inicializa o mapa do Google (com novo PlaceAutocompleteElement)
 function initMap() {
-  // Aguarda o DOM estar pronto
-  if (!document.getElementById('map')) {
-    console.error('Elemento map não encontrado');
-    // Tenta novamente em 100ms
-    setTimeout(initMap, 100);
-    return;
-  }
-  
   // Aguarda o Google Maps estar carregado
   if (!window.google || !window.google.maps) {
     console.log('Google Maps API ainda não está carregada, aguardando...');
@@ -34,69 +27,96 @@ function initMap() {
   console.log('✅ Inicializando mapa do admin com Google Maps carregado');
   
   try {
-    // Inicializa o mapa centralizado em Porto Alegre
-    map = new google.maps.Map(document.getElementById('map'), {
-      center: { lat: -30.0346, lng: -51.2177 },
-      zoom: 13
-    });
-
-    // Cria um marcador vazio que será atualizado quando um lugar for selecionado
-    marker = new google.maps.Marker({
-      map: map,
-      anchorPoint: new google.maps.Point(0, -29)
-    });
-    marker.setVisible(false); // Começa invisível até selecionar um local
-
-    // Inicializa o autocomplete
-    const input = document.getElementById('locationField');
-    if (!input) {
-      console.error('Elemento locationField não encontrado');
+    // Obtém o elemento do mapa
+    const mapElement = document.querySelector('gmp-map');
+    if (!mapElement) {
+      console.error('Elemento gmp-map não encontrado');
+      setTimeout(initMap, 100);
       return;
     }
     
-    console.log('Configurando autocomplete...');
-    autocomplete = new google.maps.places.Autocomplete(input, {
-      types: ['establishment'],
-      componentRestrictions: { country: 'br' }
-    });
-    autocomplete.bindTo('bounds', map);
-
-    // Listener para quando um lugar é selecionado
-    autocomplete.addListener('place_changed', () => {
-      console.log('Place changed detectado');
+    // Obtém o place picker
+    const placePickerElement = document.querySelector('gmp-place-picker');
+    if (!placePickerElement) {
+      console.error('Elemento gmp-place-picker não encontrado');
+      return;
+    }
+    
+    // Aguarda o mapa estar inicializado
+    mapElement.addEventListener('gmp-map-loaded', () => {
+      console.log('✅ Mapa gmp-map carregado!');
+      map = mapElement.getMap();
       
-      // Verifica se marker foi inicializado
-      if (!marker) {
-        console.error('❌ Marcador não foi inicializado ainda');
-        return;
-      }
-      
+      // Cria um marcador que será atualizado quando um lugar for selecionado
+      marker = new google.maps.Marker({
+        map: map,
+        anchorPoint: new google.maps.Point(0, -29)
+      });
       marker.setVisible(false);
-      const place = autocomplete.getPlace();
-
-      if (!place || !place.geometry) {
-        console.warn('⚠️ Nenhum detalhe disponível para: ' + (place?.name || 'local desconhecido'));
-        window.alert("Nenhum detalhe disponível para: '" + (place?.name || 'local desconhecido') + "'");
+    });
+    
+    // Listener para quando um lugar é selecionado no Place Picker
+    placePickerElement.addEventListener('gmp-place-picker-place-changed', async (e) => {
+      console.log('Place changed detectado via PlaceAutocompleteElement');
+      
+      if (!placePickerElement.place) {
+        console.warn('⚠️ Nenhum lugar selecionado');
         return;
       }
-
-      // Se o lugar tem uma geometria, então apresentá-lo no mapa
-      if (place.geometry.viewport) {
-        map.fitBounds(place.geometry.viewport);
-      } else {
-        map.setCenter(place.geometry.location);
-        map.setZoom(17);
-      }
-
-      marker.setPosition(place.geometry.location);
-      marker.setVisible(true);
-
-      // Atualiza os campos de latitude e longitude
-      document.getElementById('latitude').value = place.geometry.location.lat();
-      document.getElementById('longitude').value = place.geometry.location.lng();
-      document.getElementById('nome').value = place.name;
       
-      console.log('✅ Local selecionado:', place.name);
+      const place = placePickerElement.place;
+      console.log('📍 Lugar selecionado:', place);
+      
+      // Extrai informações do lugar
+      const placeId = place.id;
+      const displayName = place.displayName;
+      
+      // Usa o Places API para obter geometry (se necessário)
+      const { PlacesService } = google.maps.places;
+      const service = new PlacesService(map);
+      
+      service.getDetails(
+        {
+          placeId: placeId,
+          fields: ['geometry', 'name', 'formatted_address']
+        },
+        (placeDetails, status) => {
+          if (status !== google.maps.places.PlacesServiceStatus.OK) {
+            console.error('Erro ao obter detalhes do lugar:', status);
+            return;
+          }
+          
+          console.log('📍 Detalhes do lugar:', placeDetails);
+          
+          if (!placeDetails.geometry) {
+            console.warn('⚠️ Lugar sem geometria (sem coordenadas)');
+            return;
+          }
+          
+          currentPlace = placeDetails;
+          
+          // Atualiza o mapa
+          if (placeDetails.geometry.viewport) {
+            map.fitBounds(placeDetails.geometry.viewport);
+          } else if (placeDetails.geometry.location) {
+            map.setCenter(placeDetails.geometry.location);
+            map.setZoom(17);
+          }
+          
+          // Atualiza o marcador
+          if (marker) {
+            marker.setPosition(placeDetails.geometry.location);
+            marker.setVisible(true);
+          }
+          
+          // Atualiza os campos do formulário
+          document.getElementById('latitude').value = placeDetails.geometry.location.lat();
+          document.getElementById('longitude').value = placeDetails.geometry.location.lng();
+          document.getElementById('nome').value = placeDetails.name || displayName;
+          
+          console.log('✅ Local selecionado:', placeDetails.name);
+        }
+      );
     });
     
     console.log('✅ Mapa inicializado com sucesso!');
@@ -240,10 +260,25 @@ firebase.auth().onAuthStateChanged(async (user) => {
   }
 });
 
-// Event listeners do formulário de login - usar DOMContentLoaded
+// Event listeners do formulário de login e inicialização
 document.addEventListener('DOMContentLoaded', function() {
   publicarBtn = document.getElementById("publicar");
   resenhaInput = document.getElementById("resenha");
+
+  // Aguarda o script do Google Maps Web Components estar pronto
+  if (!window.google) {
+    console.log('Aguardando Google Maps carregar...');
+    setTimeout(() => {
+      if (typeof initMap === 'function') {
+        initMap();
+      }
+    }, 500);
+  } else {
+    // Google Maps já está carregado
+    if (typeof initMap === 'function') {
+      initMap();
+    }
+  }
 
   const loginForm = document.getElementById('login-form');
   if (loginForm) {

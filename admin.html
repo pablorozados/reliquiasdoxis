@@ -40,38 +40,11 @@
   <!-- Admin Script -->
   <script src="admin.js"></script>
   
-  <!-- Google Maps - Load sem callback para evitar problemas -->
-  <script>
-    // Carrega o Google Maps de forma assíncrona
-    function loadGoogleMaps() {
-      const script = document.createElement('script');
-      script.src = 'https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places';
-      script.async = true;
-      script.defer = true;
-      script.onload = function() {
-        console.log('Google Maps carregado!');
-        window.mapsLoaded = true;
-        // Tenta inicializar o mapa se o DOM já está pronto
-        if (document.readyState === 'complete' || document.readyState === 'interactive') {
-          if (typeof initMap === 'function') {
-            initMap();
-          }
-        }
-      };
-      script.onerror = function() {
-        console.error('Erro ao carregar Google Maps');
-        window.mapsError = true;
-      };
-      document.head.appendChild(script);
-    }
-    
-    // Aguarda o DOM estar pronto antes de carregar
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', loadGoogleMaps);
-    } else {
-      loadGoogleMaps();
-    }
-  </script>
+  <!-- Google Maps JS API (v3) com Places Autocomplete Element -->
+  <script async src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=maps,places"></script>
+  
+  <!-- Google Maps Web Components Library -->
+  <script async src="https://unpkg.com/@googlemaps/js-api-loader@1.16.6/dist/index.global.js"></script>
 
   <style>
     :root {
@@ -157,14 +130,15 @@
       border-radius: 4px;
     }
     
-    #map {
+    #gmp-map {
       height: 400px;
       width: 100%;
       margin-bottom: 1rem;
       border-radius: 4px;
     }
 
-    #locationField {
+    gmp-place-picker {
+      width: 100%;
       margin-bottom: 1rem;
     }
     
@@ -229,14 +203,23 @@
     <div id="admin-panel" class="hidden">
       <h2>Painel Administrativo</h2>
       
-      <!-- Campo de busca do local -->
+      <!-- Place Picker - novo Web Component do Google Maps -->
       <div>
-        <label for="locationField">Buscar local:</label>
-        <input id="locationField" type="text" placeholder="Digite o nome do local ou endereço" autocomplete="off">
+        <label for="placePickerId">Buscar local:</label>
+        <gmp-place-picker 
+          id="placePickerId"
+          map="gmp-map"
+          placeholder="Digite o nome do local ou endereço">
+        </gmp-place-picker>
       </div>
 
-      <!-- Mapa -->
-      <div id="map"></div>
+      <!-- Mapa integrado ao Place Picker -->
+      <gmp-map
+        id="gmp-map"
+        center="-30.0346, -51.2177"
+        zoom="13"
+        map-id="ROADMAP">
+      </gmp-map>
 
       <!-- Campos ocultos para latitude e longitude -->
       <input type="hidden" id="latitude">
