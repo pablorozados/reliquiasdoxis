@@ -14,13 +14,14 @@ let map;
 let marker;
 let autocomplete;
 
-// Aguarda o DOM estar pronto antes de acessar elementos
-document.addEventListener('DOMContentLoaded', function() {
-  publicarBtn = document.getElementById("publicar");
-  resenhaInput = document.getElementById("resenha");
-
 // Inicializa o mapa do Google
 function initMap() {
+  // Aguarda o DOM estar pronto
+  if (!document.getElementById('map')) {
+    console.error('Elemento map não encontrado');
+    return;
+  }
+  
   // Inicializa o mapa centralizado em Porto Alegre
   map = new google.maps.Map(document.getElementById('map'), {
     center: { lat: -30.0346, lng: -51.2177 },
@@ -29,6 +30,11 @@ function initMap() {
 
   // Inicializa o autocomplete
   const input = document.getElementById('locationField');
+  if (!input) {
+    console.error('Elemento locationField não encontrado');
+    return;
+  }
+  
   autocomplete = new google.maps.places.Autocomplete(input);
   autocomplete.bindTo('bounds', map);
 
@@ -83,15 +89,20 @@ function setupRating(containerId, callback) {
   });
 }
 
-onAuthStateChanged(auth, async (user) => {
+// Listener de autenticação - executa assim que o Firebase está pronto
+firebase.auth().onAuthStateChanged(async (user) => {
   if (!user) {
-    document.getElementById('login-section').classList.remove('hidden');
-    document.getElementById('admin-panel').classList.add('hidden');
+    const loginSection = document.getElementById('login-section');
+    const adminPanel = document.getElementById('admin-panel');
+    if (loginSection) loginSection.classList.remove('hidden');
+    if (adminPanel) adminPanel.classList.add('hidden');
     return;
   }
 
-  document.getElementById('login-section').classList.add('hidden');
-  document.getElementById('admin-panel').classList.remove('hidden');
+  const loginSection = document.getElementById('login-section');
+  const adminPanel = document.getElementById('admin-panel');
+  if (loginSection) loginSection.classList.add('hidden');
+  if (adminPanel) adminPanel.classList.remove('hidden');
 
   // Inicializa os ratings
   setupRating('nota-rating', value => selectedNota = value);
@@ -105,102 +116,131 @@ onAuthStateChanged(auth, async (user) => {
   };
 
   // Upload de imagem
-  document.getElementById('upload-btn').addEventListener('click', () => {
-    window.cloudinary.createUploadWidget(cloudinaryConfig, 
-      (error, result) => {
-        if (result?.event === "success") {
-          if (!Array.isArray(imagemUrl)) {
-            imagemUrl = [];
+  const uploadBtn = document.getElementById('upload-btn');
+  if (uploadBtn) {
+    uploadBtn.addEventListener('click', () => {
+      window.cloudinary.createUploadWidget(cloudinaryConfig, 
+        (error, result) => {
+          if (result?.event === "success") {
+            if (!Array.isArray(imagemUrl)) {
+              imagemUrl = [];
+            }
+            imagemUrl.push(result.info.secure_url);
+            document.getElementById('preview').src = result.info.secure_url;
+            document.getElementById('image-preview').classList.remove('hidden');
           }
-          imagemUrl.push(result.info.secure_url);
-          document.getElementById('preview').src = result.info.secure_url;
-          document.getElementById('image-preview').classList.remove('hidden');
         }
-      }
-    ).open();
-  });
+      ).open();
+    });
+  }
 
   // Publicar resenha
-  publicarBtn.addEventListener('click', async () => {
-    const latitude = document.getElementById('latitude').value;
-    const longitude = document.getElementById('longitude').value;
-    const nome = document.getElementById('nome').value;
-    const resenha = resenhaInput.value.trim();
+  if (publicarBtn) {
+    publicarBtn.addEventListener('click', async () => {
+      const latitude = document.getElementById('latitude').value;
+      const longitude = document.getElementById('longitude').value;
+      const nome = document.getElementById('nome').value;
+      const resenha = resenhaInput.value.trim();
 
-    if (!latitude || !longitude || !nome || !resenha || !selectedNota || !selectedSujeira || !selectedCagada) {
-      alert('Por favor, preencha todos os campos obrigatórios.');
-      return;
-    }
-
-    try {
-      await addDoc(collection(db, "locais"), {
-        nome: nome,
-        latitude: parseFloat(latitude),
-        longitude: parseFloat(longitude),
-        resenha: resenha,
-        nota: selectedNota,
-        sujeira: selectedSujeira,
-        cagada: selectedCagada,
-        imagem: imagemUrl[0] || null,
-        autor: user.email,
-        timestamp: serverTimestamp()
-      });
-
-      alert('Local adicionado com sucesso!');
-      
-      // Limpa o formulário
-      resenhaInput.value = '';
-      document.getElementById('locationField').value = '';
-      document.getElementById('latitude').value = '';
-      document.getElementById('longitude').value = '';
-      document.getElementById('nome').value = '';
-      document.getElementById('preview').src = '';
-      document.getElementById('image-preview').classList.add('hidden');
-      imagemUrl = [];
-      
-      // Remove seleção dos ratings
-      ['nota-rating', 'sujeira-rating', 'cagada-rating'].forEach(id => {
-        const options = document.getElementById(id).getElementsByClassName('rating-option');
-        Array.from(options).forEach(opt => opt.classList.remove('selected'));
-      });
-      
-      selectedNota = 0;
-      selectedSujeira = 0;
-      selectedCagada = 0;
-      
-      // Remove o marcador do mapa
-      if (marker) {
-        marker.setVisible(false);
+      if (!latitude || !longitude || !nome || !resenha || !selectedNota || !selectedSujeira || !selectedCagada) {
+        alert('Por favor, preencha todos os campos obrigatórios.');
+        return;
       }
-      
-    } catch (error) {
-      console.error("Erro ao salvar local:", error);
-      alert("Erro ao salvar. Veja o console para mais detalhes.");
-    }
-  });
-});
 
-document.getElementById('login-form').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  
-  console.log('Tentando login com:', email);
-  
-  try {
-    await auth.signInWithEmailAndPassword(email, password);
-    console.log('Login bem-sucedido!');
-  } catch (error) {
-    console.error('Erro no login:', error.code, error.message);
-    document.getElementById('login-error').textContent = "E-mail ou senha incorretos. Erro: " + error.message;
+      try {
+        const { addDoc, collection, serverTimestamp } = firebase.firestore;
+        await firebase.firestore().collection("locais").add({
+          nome: nome,
+          latitude: parseFloat(latitude),
+          longitude: parseFloat(longitude),
+          resenha: resenha,
+          nota: selectedNota,
+          sujeira_comendo: selectedSujeira,
+          cagada_depois: selectedCagada,
+          imagem: imagemUrl,
+          meu_pedido: document.getElementById('pedido')?.value || '',
+          autor: user.email,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        alert('Local adicionado com sucesso!');
+        
+        // Limpa o formulário
+        if (resenhaInput) resenhaInput.value = '';
+        const locationField = document.getElementById('locationField');
+        if (locationField) locationField.value = '';
+        const latitudeField = document.getElementById('latitude');
+        if (latitudeField) latitudeField.value = '';
+        const longitudeField = document.getElementById('longitude');
+        if (longitudeField) longitudeField.value = '';
+        const nomeField = document.getElementById('nome');
+        if (nomeField) nomeField.value = '';
+        const preview = document.getElementById('preview');
+        if (preview) preview.src = '';
+        const imagePreview = document.getElementById('image-preview');
+        if (imagePreview) imagePreview.classList.add('hidden');
+        imagemUrl = [];
+        
+        // Remove seleção dos ratings
+        ['nota-rating', 'sujeira-rating', 'cagada-rating'].forEach(id => {
+          const container = document.getElementById(id);
+          if (container) {
+            const options = container.getElementsByClassName('rating-option');
+            Array.from(options).forEach(opt => opt.classList.remove('selected'));
+          }
+        });
+        
+        selectedNota = 0;
+        selectedSujeira = 0;
+        selectedCagada = 0;
+        
+        // Remove o marcador do mapa
+        if (marker) {
+          marker.setVisible(false);
+        }
+        
+      } catch (error) {
+        console.error("Erro ao salvar local:", error);
+        alert("Erro ao salvar. Veja o console para mais detalhes.");
+      }
+    });
   }
 });
 
-document.getElementById('logout').addEventListener('click', () => {
-  auth.signOut();
-});
+// Event listeners do formulário de login - usar DOMContentLoaded
+document.addEventListener('DOMContentLoaded', function() {
+  publicarBtn = document.getElementById("publicar");
+  resenhaInput = document.getElementById("resenha");
 
-}); // Fecha o DOMContentLoaded
+  const loginForm = document.getElementById('login-form');
+  if (loginForm) {
+    loginForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      
+      console.log('Tentando login com:', email);
+      
+      try {
+        await auth.signInWithEmailAndPassword(email, password);
+        console.log('Login bem-sucedido!');
+      } catch (error) {
+        console.error('Erro no login:', error.code, error.message);
+        const loginError = document.getElementById('login-error');
+        if (loginError) {
+          loginError.textContent = "E-mail ou senha incorretos. Erro: " + error.message;
+        }
+      }
+    });
+  }
+
+  const logoutBtn = document.getElementById('logout');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      auth.signOut();
+    });
+  }
+});
 
 
 
