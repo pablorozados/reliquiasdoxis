@@ -116,21 +116,90 @@
       gap: 1rem;
     }
     
+    .field-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .field-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .field-group input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+
+    .editor-toolbar {
+      display: flex;
+      gap: 3px;
+      background: #f9f9f9;
+      padding: 6px;
+      border-radius: 4px 4px 0 0;
+      border: 1px solid #ddd;
+      border-bottom: none;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .editor-btn {
+      background: white;
+      border: 1px solid #ddd;
+      color: #666;
+      padding: 6px 8px;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: all 0.2s;
+      font-size: 14px;
+      min-width: auto;
+    }
+
+    .editor-btn:hover {
+      background: #f0f0f0;
+      color: #333;
+    }
+
+    .editor-btn:active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    .editor-separator {
+      width: 1px;
+      height: 20px;
+      background: #ddd;
+      margin: 0 3px;
+    }
+
+    #resenha {
+      width: 100%;
+      min-height: 250px;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 0 0 4px 4px;
+      font-size: 16px;
+      font-family: inherit;
+      box-sizing: border-box;
+      resize: vertical;
+    }
+
     #image-preview {
-      margin: 1rem 0;
+      margin-top: 1rem;
       text-align: center;
     }
-    
+
     #preview {
       max-width: 100%;
-      max-height: 200px;
+      max-height: 250px;
       border-radius: 4px;
-    }
-    
-    #gmp-map {
-      height: 400px;
-      width: 100%;
-      margin-bottom: 1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       border-radius: 4px;
     }
 
@@ -260,66 +329,58 @@
         </div>
       </div>
 
-      <div class="action-buttons">
-        <button id="upload-btn">
-          <i class="fas fa-cloud-upload-alt"></i>
-          Upload de Imagem
-        </button>
+      <!-- Campo Pedido -->
+      <div class="field-group">
+        <label for="pedido">O que você pediu:</label>
+        <input 
+          id="pedido"
+          type="text" 
+          placeholder="Ex: X-Tudo, Pastel de Carne, Refrigerante...">
       </div>
 
-      <div id="image-preview" class="hidden">
-        <img id="preview" src="" alt="Preview">
+      <!-- Upload de Imagem -->
+      <div class="field-group">
+        <label>Foto do local:</label>
+        <button id="upload-btn" type="button">
+          <i class="fas fa-cloud-upload-alt"></i> Enviar Imagem
+        </button>
+        <div id="image-preview" class="hidden">
+          <img id="preview" src="" alt="Preview">
+        </div>
       </div>
 
-      <div class="editor-toolbar">
-        <button class="editor-btn editor-btn-bold" onclick="formatText('bold')" title="Negrito">
-          <i class="fas fa-bold"></i>
-        </button>
-        <button class="editor-btn editor-btn-italic" onclick="formatText('italic')" title="Itálico">
-          <i class="fas fa-italic"></i>
-        </button>
-        <button class="editor-btn editor-btn-underline" onclick="formatText('underline')" title="Sublinhado">
-          <i class="fas fa-underline"></i>
-        </button>
-        <button class="editor-btn editor-btn-strike" onclick="formatText('strikethrough')" title="Tachado">
-          <i class="fas fa-strikethrough"></i>
-        </button>
-        <button class="editor-btn editor-btn-link" onclick="insertLink()" title="Link">
-          <i class="fas fa-link"></i>
-        </button>
-        <button class="editor-btn editor-btn-red" onclick="formatText('color', '#ff0000')" title="Texto Vermelho">
-          <i class="fas fa-paint-brush"></i>
-        </button>
-        <button class="editor-btn editor-btn-green" onclick="formatText('color', '#00ff00')" title="Texto Verde">
-          <i class="fas fa-paint-brush"></i>
-        </button>
-        <button class="editor-btn editor-btn-blue" onclick="formatText('color', '#0000ff')" title="Texto Azul">
-          <i class="fas fa-paint-brush"></i>
-        </button>
-        <button class="editor-btn editor-btn-paragraph" onclick="formatText('paragraph')" title="Parágrafo">
-          <i class="fas fa-paragraph"></i>
-        </button>
-        <button class="editor-btn editor-btn-h2" onclick="formatText('h2')" title="Título H2">
-          <i class="fas fa-heading"></i>
-        </button>
-        <button class="editor-btn editor-btn-h3" onclick="formatText('h3')" title="Título H3">H3</button>
-        <button class="editor-btn editor-btn-h4" onclick="formatText('h4')" title="Título H4">H4</button>
-        <button class="editor-btn editor-btn-quote" onclick="formatText('quote')" title="Citação">
-          <i class="fas fa-quote-right"></i>
-        </button>
-        <button class="editor-btn editor-btn-hr" onclick="formatText('hr')" title="Linha Horizontal">
-          <i class="fas fa-minus"></i>
-        </button>
-        <button class="editor-btn editor-btn-small" onclick="formatText('small')" title="Texto Pequeno">
-          <i class="fas fa-text-height fa-flip-vertical"></i>
-        </button>
+      <!-- Editor de Resenha -->
+      <div class="field-group">
+        <label for="resenha">Sua resenha:</label>
+        <div class="editor-toolbar">
+          <button class="editor-btn" onclick="formatText('bold')" title="Negrito (Ctrl+B)" type="button">
+            <i class="fas fa-bold"></i>
+          </button>
+          <button class="editor-btn" onclick="formatText('italic')" title="Itálico (Ctrl+I)" type="button">
+            <i class="fas fa-italic"></i>
+          </button>
+          <button class="editor-btn" onclick="formatText('underline')" title="Sublinhado (Ctrl+U)" type="button">
+            <i class="fas fa-underline"></i>
+          </button>
+          <div class="editor-separator"></div>
+          <button class="editor-btn" onclick="insertLink()" title="Inserir Link" type="button">
+            <i class="fas fa-link"></i>
+          </button>
+          <button class="editor-btn" onclick="formatText('quote')" title="Citação" type="button">
+            <i class="fas fa-quote-right"></i>
+          </button>
+        </div>
+        <textarea id="resenha" placeholder="Digite sua resenha aqui..."></textarea>
       </div>
-
-      <textarea id="resenha" rows="10" placeholder="Digite sua resenha aqui..."></textarea>
       
+      <!-- Botões de Ação -->
       <div class="action-buttons">
-        <button id="publicar">Publicar</button>
-        <button id="logout">Sair</button>
+        <button id="publicar" type="button">
+          <i class="fas fa-check"></i> Publicar
+        </button>
+        <button id="logout" type="button">
+          <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
       </div>
     </div>
 
