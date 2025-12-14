@@ -12,22 +12,23 @@ const db = firebase.firestore();
 let map;
 let markers = []; // array global de marcadores (para filtro)
 
-// Cores dos marcadores por rating
-const markerColors = {
-  5: '#FFD700', // Ouro
-  4: '#C0C0C0', // Prata
-  3: '#CD7F32', // Bronze
-  2: '#FF4444', // Vermelho
-  1: '#8B4513'  // Marrom
-};
+// Função para gerar estrelas
+function renderStars(num) {
+  const stars = Array(num).fill('⭐').join('');
+  return stars || '☆';
+}
 
-// Cria marcador customizado com SVG
+// Cria marcador com emoji e estrelas
 function createMarkerIcon(nota) {
-  const color = markerColors[nota] || '#808080';
+  const stars = renderStars(nota);
   const svg = `
-    <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="16" cy="16" r="15" fill="${color}" stroke="white" stroke-width="2"/>
-      <text x="16" y="20" text-anchor="middle" font-size="14" font-weight="bold" fill="white">${nota}</text>
+    <svg width="40" height="50" viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg">
+      <!-- Pino do marcador -->
+      <path d="M 20 0 Q 35 15 35 25 Q 35 40 20 50 Q 5 40 5 25 Q 5 15 20 0" fill="#FF6B6B" stroke="white" stroke-width="2"/>
+      <!-- Fundo branco para o emoji -->
+      <circle cx="20" cy="20" r="12" fill="white"/>
+      <!-- Emoji hamburger -->
+      <text x="20" y="24" text-anchor="middle" font-size="16">🍔</text>
     </svg>
   `;
   const encoded = encodeURIComponent(svg);
@@ -67,44 +68,76 @@ function initMap() {
           title: local.nome,
           icon: {
             url: createMarkerIcon(local.nota),
-            scaledSize: new google.maps.Size(32, 32),
-            anchor: new google.maps.Point(16, 16)
+            scaledSize: new google.maps.Size(40, 50),
+            anchor: new google.maps.Point(20, 50)
           }
         });
         
         // guarda referência para filtrar depois
         markers.push({ marker, nota: local.nota });
 
-        // Cria HTML enriquecido com todos os ratings e imagem
+        // Cria HTML enriquecido com todos os ratings, pedido e galeria de fotos
+        const galeryHtml = Array.isArray(imagemUrl) && imagemUrl.length > 0
+          ? `
+            <div style="margin-top: 12px; border-top: 1px solid #eee; padding-top: 10px;">
+              <p style="font-size: 12px; font-weight: 600; color: #666; margin: 0 0 8px 0;">Fotos:</p>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                ${imagemUrl.map((img, idx) => `
+                  <img src="${img}" 
+                       alt="Foto ${idx + 1}" 
+                       style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 2px solid #eee;" 
+                       onclick="openLightbox('${img}')"
+                       crossorigin="anonymous" 
+                       referrerpolicy="no-referrer" 
+                       onerror="this.style.display='none';">
+                `).join('')}
+              </div>
+            </div>
+          `
+          : (imagemUrl && typeof imagemUrl === 'string' && imagemUrl
+            ? `
+              <div style="margin-top: 12px; border-top: 1px solid #eee; padding-top: 10px;">
+                <img src="${imagemUrl}" 
+                     alt="${local.nome}" 
+                     style="width: 100%; height: auto; border-radius: 4px; cursor: pointer;" 
+                     onclick="openLightbox('${imagemUrl}')"
+                     crossorigin="anonymous" 
+                     referrerpolicy="no-referrer" 
+                     onerror="this.style.display='none';">
+              </div>
+            `
+            : '');
+
         const infoWindowContent = `
-          <div style="font-family: 'Poppins', sans-serif; max-width: 300px; padding: 10px;">
-            <h3 style="margin: 0 0 10px 0; color: #333;">${local.nome}</h3>
+          <div style="font-family: 'Poppins', sans-serif; max-width: 320px; padding: 10px;">
+            <h3 style="margin: 0 0 12px 0; color: #333; font-size: 16px;">${local.nome}</h3>
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; text-align: center; font-size: 12px;">
-              <div>
-                <strong style="color: #FFD700;">Nota</strong><br>
-                ⭐ ${local.nota || '-'}/5
+            <!-- Ratings com tooltips -->
+            <div style="margin-bottom: 12px; line-height: 1.6; font-size: 13px;">
+              <div style="margin-bottom: 8px;">
+                <strong style="color: #FFD700;">Nota:</strong> ${renderStars(local.nota || 0)}
               </div>
-              <div>
-                <strong style="color: #FF6B6B;">Sujeira</strong><br>
-                🍔 ${local.sujeira || '-'}/5
+              <div style="margin-bottom: 8px;">
+                <strong style="color: #FF6B6B;">Me caguei comendo?</strong> 
+                <span style="cursor: help; font-weight: bold;" title="O quanto me sujei comendo esse xis">ⓘ</span>
+                ${renderStars(local.sujeira || 0)}
               </div>
-              <div>
-                <strong style="color: #8B4513;">Cagada</strong><br>
-                💩 ${local.cagada || '-'}/5
+              <div style="margin-bottom: 8px;">
+                <strong style="color: #8B4513;">Me caguei depois?</strong> 
+                <span style="cursor: help; font-weight: bold;" title="Autoexplicativo">ⓘ</span>
+                ${renderStars(local.cagada || 0)}
               </div>
+              ${local.pedido ? `
+                <div style="margin-top: 10px; padding: 8px; background: #f9f9f9; border-left: 3px solid #FF6B6B; border-radius: 2px;">
+                  <strong style="color: #555;">Pedido:</strong><br>
+                  <span style="font-style: italic; color: #666;">${local.pedido}</span>
+                </div>
+              ` : ''}
             </div>
 
             <p style="margin: 10px 0; font-size: 13px; line-height: 1.4; color: #555;">${local.resenha}</p>
             
-            ${imagemUrl ? `
-              <img src="${imagemUrl}" 
-                   alt="${local.nome}" 
-                   style="max-width: 100%; height: auto; border-radius: 4px; margin-top: 10px;" 
-                   crossorigin="anonymous" 
-                   referrerpolicy="no-referrer" 
-                   onerror="this.style.display='none'; console.warn('Imagem falhou:', this.src);">
-            ` : ''}
+            ${galeryHtml}
           </div>
         `;
 
@@ -131,6 +164,31 @@ function initMap() {
 
 // Garante que 'initMap' seja global
 window.initMap = initMap;
+
+// Função global para abrir lightbox
+window.openLightbox = function(imgSrc) {
+  let lightbox = document.getElementById('lightbox');
+  if (!lightbox) {
+    lightbox = document.createElement('div');
+    lightbox.id = 'lightbox';
+    lightbox.style.cssText = `
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.9);
+      cursor: pointer;
+    `;
+    lightbox.onclick = function() { this.style.display = 'none'; };
+    lightbox.innerHTML = '<img id="lightbox-img" style="max-width: 90%; max-height: 90%; margin: auto; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border-radius: 8px;" />';
+    document.body.appendChild(lightbox);
+  }
+  document.getElementById('lightbox-img').src = imgSrc;
+  lightbox.style.display = 'block';
+};
 
 // Função para filtrar os marcadores por nota
 function filterMarkers() {
