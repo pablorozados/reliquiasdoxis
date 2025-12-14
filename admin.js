@@ -12,10 +12,9 @@ let selectedSujeira = 0;
 let selectedCagada = 0;
 let map;
 let marker;
-let placePicker;
-let currentPlace;
+let autocomplete;
 
-// Inicializa o mapa do Google (com novo PlaceAutocompleteElement)
+// Inicializa o mapa do Google com Autocomplete
 function initMap() {
   // Aguarda o Google Maps estar carregado
   if (!window.google || !window.google.maps) {
@@ -27,109 +26,81 @@ function initMap() {
   console.log('✅ Inicializando mapa do admin com Google Maps carregado');
   
   try {
-    // Obtém o elemento do mapa
-    const mapElement = document.querySelector('gmp-map');
+    // Obtém os elementos necessários
+    const mapElement = document.getElementById('gmp-map');
+    const input = document.getElementById('placePickerInput');
+    
     if (!mapElement) {
       console.error('Elemento gmp-map não encontrado');
       setTimeout(initMap, 100);
       return;
     }
     
-    // Obtém o place picker e o input
-    const placePickerElement = document.querySelector('gmp-place-picker');
-    const placePickerInput = document.getElementById('placePickerInput');
-    
-    if (!placePickerElement) {
-      console.error('Elemento gmp-place-picker não encontrado');
-      return;
-    }
-    
-    if (!placePickerInput) {
+    if (!input) {
       console.error('Elemento placePickerInput não encontrado');
       return;
     }
     
-    // Vincula o input ao place picker para autocomplete
-    placePickerElement.addEventListener('gmp-place-picker-request', (e) => {
-      console.log('Place picker request:', e);
+    // Inicializa o mapa
+    map = new google.maps.Map(mapElement, {
+      center: { lat: -30.0346, lng: -51.2177 },
+      zoom: 13
+    });
+
+    // Cria um marcador que será atualizado quando um lugar for selecionado
+    marker = new google.maps.Marker({
+      map: map,
+      anchorPoint: new google.maps.Point(0, -29)
+    });
+    marker.setVisible(false);
+
+    // Configura o Autocomplete com as opções corretas
+    console.log('Configurando autocomplete...');
+    autocomplete = new google.maps.places.Autocomplete(input, {
+      types: ['establishment'],
+      componentRestrictions: { country: 'br' },
+      fields: ['geometry', 'name', 'formatted_address']
     });
     
-    // Aguarda o mapa estar inicializado
-    mapElement.addEventListener('gmp-map-loaded', () => {
-      console.log('✅ Mapa gmp-map carregado!');
-      map = mapElement.getMap();
+    // Vincula os bounds do autocomplete ao mapa
+    autocomplete.bindTo('bounds', map);
+
+    // Listener para quando um lugar é selecionado
+    autocomplete.addListener('place_changed', () => {
+      console.log('✅ Place changed detectado');
       
-      // Cria um marcador que será atualizado quando um lugar for selecionado
-      marker = new google.maps.Marker({
-        map: map,
-        anchorPoint: new google.maps.Point(0, -29)
-      });
       marker.setVisible(false);
-    });
-    
-    // Listener para quando um lugar é selecionado no Place Picker
-    placePickerElement.addEventListener('gmp-place-picker-place-changed', async (e) => {
-      console.log('Place changed detectado via PlaceAutocompleteElement');
-      
-      if (!placePickerElement.place) {
+      const place = autocomplete.getPlace();
+
+      if (!place) {
         console.warn('⚠️ Nenhum lugar selecionado');
         return;
       }
+
+      if (!place.geometry) {
+        console.warn('⚠️ Lugar sem geometria (coordenadas):', place.name);
+        window.alert("Nenhum detalhe de localização disponível para: '" + (place.name || 'local') + "'");
+        return;
+      }
+
+      // Atualiza o mapa com a localização
+      if (place.geometry.viewport) {
+        map.fitBounds(place.geometry.viewport);
+      } else {
+        map.setCenter(place.geometry.location);
+        map.setZoom(17);
+      }
+
+      // Atualiza o marcador
+      marker.setPosition(place.geometry.location);
+      marker.setVisible(true);
+
+      // Atualiza os campos do formulário
+      document.getElementById('latitude').value = place.geometry.location.lat();
+      document.getElementById('longitude').value = place.geometry.location.lng();
+      document.getElementById('nome').value = place.name || '';
       
-      const place = placePickerElement.place;
-      console.log('📍 Lugar selecionado:', place);
-      
-      // Extrai informações do lugar
-      const placeId = place.id;
-      const displayName = place.displayName;
-      
-      // Usa o Places API para obter geometry (se necessário)
-      const { PlacesService } = google.maps.places;
-      const service = new PlacesService(map);
-      
-      service.getDetails(
-        {
-          placeId: placeId,
-          fields: ['geometry', 'name', 'formatted_address']
-        },
-        (placeDetails, status) => {
-          if (status !== google.maps.places.PlacesServiceStatus.OK) {
-            console.error('Erro ao obter detalhes do lugar:', status);
-            return;
-          }
-          
-          console.log('📍 Detalhes do lugar:', placeDetails);
-          
-          if (!placeDetails.geometry) {
-            console.warn('⚠️ Lugar sem geometria (sem coordenadas)');
-            return;
-          }
-          
-          currentPlace = placeDetails;
-          
-          // Atualiza o mapa
-          if (placeDetails.geometry.viewport) {
-            map.fitBounds(placeDetails.geometry.viewport);
-          } else if (placeDetails.geometry.location) {
-            map.setCenter(placeDetails.geometry.location);
-            map.setZoom(17);
-          }
-          
-          // Atualiza o marcador
-          if (marker) {
-            marker.setPosition(placeDetails.geometry.location);
-            marker.setVisible(true);
-          }
-          
-          // Atualiza os campos do formulário
-          document.getElementById('latitude').value = placeDetails.geometry.location.lat();
-          document.getElementById('longitude').value = placeDetails.geometry.location.lng();
-          document.getElementById('nome').value = placeDetails.name || displayName;
-          placePickerInput.value = placeDetails.name || displayName;
-          
-          console.log('✅ Local selecionado:', placeDetails.name);
-        }
-      );
+      console.log('✅ Local selecionado:', place.name, place.geometry.location);
     });
     
     console.log('✅ Mapa inicializado com sucesso!');
@@ -278,7 +249,7 @@ document.addEventListener('DOMContentLoaded', function() {
   publicarBtn = document.getElementById("publicar");
   resenhaInput = document.getElementById("resenha");
 
-  // Aguarda o script do Google Maps Web Components estar pronto
+  // Inicializa o mapa quando o Google Maps estiver pronto
   if (!window.google) {
     console.log('Aguardando Google Maps carregar...');
     setTimeout(() => {
