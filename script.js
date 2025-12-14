@@ -54,6 +54,9 @@ function initMap() {
         // Verifica se tem coordenadas válidas
         if (!local.latitude || !local.longitude) return;
         
+        // DEBUG: Log pra ver a estrutura
+        console.log('Local:', local.nome, 'Imagem:', local.imagem, 'Tipo:', Array.isArray(local.imagem) ? 'ARRAY' : typeof local.imagem);
+        
         // Obtém a primeira imagem (pode ser string ou array)
         let imagemUrl = null;
         if (local.imagem) {
@@ -83,23 +86,28 @@ function initMap() {
         let galeryHtml = '';
         
         if (Array.isArray(imagemUrl) && imagemUrl.length > 0) {
+          console.log('Montando galeria com', imagemUrl.length, 'fotos');
           galeryHtml = `
             <div style="margin-top: 12px; border-top: 1px solid #eee; padding-top: 10px;">
-              <p style="font-size: 12px; font-weight: 600; color: #666; margin: 0 0 8px 0;">Fotos:</p>
+              <p style="font-size: 12px; font-weight: 600; color: #666; margin: 0 0 8px 0;">Fotos (${imagemUrl.length}):</p>
               <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                ${imagemUrl.map((img, idx) => `
-                  <img src="${img}" 
-                       alt="Foto ${idx + 1}" 
-                       style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 2px solid #eee;" 
-                       onclick="openLightbox('${img}')"
-                       crossorigin="anonymous" 
-                       referrerpolicy="no-referrer" 
-                       onerror="console.warn('Imagem não carregou:', '${img}'); this.style.display='none';">
-                `).join('')}
+                ${imagemUrl.map((img, idx) => {
+                  console.log('Foto', idx + 1, ':', img);
+                  return `
+                    <img src="${img}" 
+                         alt="Foto ${idx + 1}" 
+                         style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 2px solid #eee;" 
+                         onclick="openLightbox('${img}')"
+                         crossorigin="anonymous" 
+                         referrerpolicy="no-referrer" 
+                         onerror="console.warn('Imagem não carregou:', '${img}'); this.style.display='none';">
+                  `;
+                }).join('')}
               </div>
             </div>
           `;
         } else if (imagemUrl && typeof imagemUrl === 'string') {
+          console.log('Montando foto única');
           galeryHtml = `
             <div style="margin-top: 12px; border-top: 1px solid #eee; padding-top: 10px;">
               <img src="${imagemUrl}" 
@@ -111,6 +119,8 @@ function initMap() {
                    onerror="console.warn('Imagem não carregou:', '${imagemUrl}'); this.style.display='none';">
             </div>
           `;
+        } else {
+          console.log('Nenhuma imagem encontrada');
         }
 
         const infoWindowContent = `
