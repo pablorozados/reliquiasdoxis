@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🥇Relíquias do Xis 🍔</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Estilos genéricos para o conteúdo da info window */
+    .info-window-content {
+      word-break: break-word;
+      width: 100%;
+      font-family: 'Poppins', sans-serif;
+    }
+    @media (max-width: 500px) {
+      .info-window-content { max-width: 95vw; }
+    }
+    /* pequenas classes usadas no mapa */
+    .loading-message { text-align: center; padding: 40px 0; color: #777; }
+    .thumbnail { max-width: 100px; cursor: pointer; margin: 6px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Relíquias do Xis</h1>
+  </header>
+  
+  <main>
+    <div id="filter-container" style="margin: 10px; padding: 0 10px;">
+      <label for="filter-rating">Filtrar por nota:</label>
+      <select id="filter-rating" onchange="filterMarkers()">
+        <option value="all">Todos</option>
+        <option value="5">5 estrelas (🥇)</option>
+        <option value="4">4 estrelas (🥈)</option>
+        <option value="3">3 estrelas (🥉)</option>
+        <option value="2">2 estrelas (🍔)</option>
+        <option value="1">1 estrela (💩)</option>
+      </select>
+    </div>
+    <div id="map" style="height: calc(100vh - 250px); width: 100%; border-radius: 12px; margin-bottom: 0;">
+      <div class="loading-message">
+        <i class="fas fa-hamburger fa-spin"></i>
+        <p>Carregando mapa...</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore-compat.js"></script>
+
+  <!-- Nosso script principal que contém initMap e filterMarkers -->
+  <script src="./script.js"></script>
+
+  <!-- Google Maps: a chave será injetada no deploy (placeholder abaixo) -->
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBjfkEwQ_gpYGjRlY9deWCoddEmrBNOQDc&callback=initMap"></script>
+
+  <!-- Lightbox para imagens -->
+  <div id="lightbox" onclick="this.style.display='none'">
+    <img id="lightbox-img" src="" alt="Imagem ampliada">
+  </div>
+
+  <script>
+    // Lightbox
+    function openLightbox(imgSrc) {
+      document.getElementById('lightbox-img').src = imgSrc;
+      document.getElementById('lightbox').style.display = 'block';
+    }
+  </script>
+
+  <div style="
+      background: #fff9f9;
+      padding: 12px 5px;
+      text-align: center;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.85rem;
+      color: #666;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+  ">
+    <p id="frase-rotativa" style="margin: 0; font-weight: 300;">
+      <!-- Frase inicial será colocada pelo JS -->
+    </p>
+    <div>
+      <a href="sobre.html" style="color: #ff6b6b; text-decoration: none; margin: 0 5px;">Sobre</a> |
+      <a href="mailto:contato@reliquiasdoxis.com?subject=Contato%20Relíquias%20do%20Xis" style="color: #ff6b6b; text-decoration: none; margin: 0 5px;">Contato</a>
+    </div>
+  </div>
+
+  <script>
+    const frases = [
+      "Saudades do Agápio lanches e do xis com alcaparras. 👏",
+      "Xis salada leva carne: sim!🥩",
+      "Maionese caseira não é diferencial: é obrigatório! 🫙",
+      "Desde quando pagar praticamente R$ 40 num xis qualquer virou padrão? Tão loucos? 🤬",
+      "⚠️ Por uma questão de ética, não avaliamos o 'Ô Xiss' - ele é tudo, menos um xis!",
+      "❤️Amor eterno ao xis coração! ❤️️"
+    ];
+
+    let fraseAtual = 0;
+    const fraseEl = document.getElementById("frase-rotativa");
+
+    function trocarFrase() {
+      fraseEl.textContent = frases[fraseAtual];
+      fraseAtual = (fraseAtual + 1) % frases.length;
+    }
+
+    trocarFrase(); // mostra a primeira frase
+    setInterval(trocarFrase, 10000); // troca a cada 10 segundos
+  </script>
+</body>
+</html>

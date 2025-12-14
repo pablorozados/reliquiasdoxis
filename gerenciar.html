@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciar Resenhas - Xis POA</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    .editor-toolbar {
+    display: flex;
+    gap: 6px;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 6px 6px 0 0;
+    border: 1px solid #dee2e6;
+    border-bottom: none;
+    margin-bottom: 0;
+    flex-wrap: wrap;
+}
+
+.editor-btn {
+    padding: 0;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    transition: all 0.2s;
+}
+
+.editor-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Cores dos botões */
+.editor-btn-bold { background: #495057; color: white; }
+.editor-btn-italic { background: #6c757d; color: white; }
+.editor-btn-underline { background: #868e96; color: white; }
+.editor-btn-strike { background: #adb5bd; color: white; }
+.editor-btn-link { background: #1971c2; color: white; }
+.editor-btn-red { background: #e03131 !important; color: white !important; }
+.editor-btn-green { background: #2b8a3e !important; color: white !important; }
+.editor-btn-blue { background: #1971c2 !important; color: white !important; }
+.editor-btn-paragraph { background: #17a2b8; color: white; }
+.editor-btn-h2 { background: #28a745; color: white; }
+.editor-btn-h3 { background: #20c997; color: white; }
+.editor-btn-h4 { background: #6f42c1; color: white; }
+.editor-btn-quote { background: #6c757d; color: white; }
+.editor-btn-hr { background: #343a40; color: white; }
+.editor-btn-small { background: #6c757d; color: white; }
+.editor-btn-mark { background: #ffc107; color: black; }
+.editor-btn-em { background: #007bff; color: white; }
+.editor-btn-yellow { background: #ffc107 !important; color: black !important; }
+
+    /* Estilos do Modal de Edição */
+    .edit-modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+    }
+    
+    .edit-modal-content {
+      background-color: #fefefe;
+      margin: 10% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 80%;
+      max-width: 600px;
+      border-radius: 8px;
+    }
+    
+    .close-edit {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    
+    .close-edit:hover {
+      color: black;
+    }
+    
+    .edit-form input,
+    .edit-form textarea,
+    .edit-form select {
+      width: 100%;
+      padding: 8px;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    
+    .edit-form button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+  
+  <!-- Firebase 9 (modular) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
+    import { getFirestore, collection, getDocs, doc, deleteDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "REDACTED_API_KEY",
+      authDomain: "reliquias-do-xis.firebaseapp.com",
+      projectId: "reliquias-do-xis",
+      storageBucket: "reliquias-do-xis.appspot.com",
+      messagingSenderId: "936551505510",
+      appId: "1:936551505510:web:22de1482a8f8d9720257a7"
+    };
+
+    // Inicialização
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // Elementos da UI
+    const resenhasContainer = document.getElementById("resenhas-container");
+    const loginMessage = document.getElementById("login-message");
+    const loadingElement = document.getElementById("loading");
+
+    // Modal de Edição
+    const editModal = document.createElement('div');
+    editModal.className = 'edit-modal';
+    editModal.innerHTML = `
+      <div class="edit-modal-content">
+        <span class="close-edit">&times;</span>
+        <h2>Editar Resenha</h2>
+        <form class="edit-form" id="editForm">
+          <input type="hidden" id="editId">
+          <input type="text" id="editNome" placeholder="Nome do Local" required>
+          <input type="text" id="editPedido" placeholder="Seu pedido" required>
+          <div class="editor-toolbar">
+    <!-- Botões básicos de formatação -->
+    <button type="button" class="editor-btn editor-btn-bold" onclick="formatText('bold')" title="Negrito"><b>B</b></button>
+    <button type="button" class="editor-btn editor-btn-italic" onclick="formatText('italic')" title="Itálico"><i>I</i></button>
+    <button type="button" class="editor-btn editor-btn-underline" onclick="formatText('underline')" title="Sublinhado"><u>S</u></button>
+    <button type="button" class="editor-btn editor-btn-strike" onclick="formatText('strike')" title="Riscado"><s>R</s></button>
+    
+    <!-- Novos botões de formatação -->
+    <button type="button" class="editor-btn editor-btn-em" onclick="formatText('em')" title="Ênfase"><em>E</em></button>
+    <button type="button" class="editor-btn editor-btn-mark" onclick="formatText('mark')" title="Marcado"><mark>M</mark></button>
+    <button type="button" class="editor-btn editor-btn-small" onclick="formatText('small')" title="Pequeno"><small>Pq</small></button>
+    
+    <!-- Estrutura de texto -->
+    <button type="button" class="editor-btn editor-btn-paragraph" onclick="formatText('p')" title="Parágrafo">[P]</button>
+    <button type="button" class="editor-btn editor-btn-h2" onclick="formatText('h2')" title="Título 2">[2]</button>
+    <button type="button" class="editor-btn editor-btn-h3" onclick="formatText('h3')" title="Título 3">[3]</button>
+    <button type="button" class="editor-btn editor-btn-h4" onclick="formatText('h4')" title="Título 4">[4]</button>
+    <button type="button" class="editor-btn editor-btn-quote" onclick="formatText('blockquote')" title="Citação">Cit.</button>
+    <button type="button" class="editor-btn editor-btn-hr" onclick="formatText('hr')" title="Linha horizontal">HR</button>
+    
+    <!-- Cores -->
+    <button type="button" class="editor-btn editor-btn-red" onclick="setColor('red')" title="Vermelho">R</button>
+    <button type="button" class="editor-btn editor-btn-green" onclick="setColor('green')" title="Verde">G</button>
+    <button type="button" class="editor-btn editor-btn-blue" onclick="setColor('blue')" title="Azul">B</button>
+    <button type="button" class="editor-btn editor-btn-yellow" onclick="setColor('yellow')" title="Amarelo">Y</button>
+    
+    <!-- Link -->
+    <button type="button" class="editor-btn editor-btn-link" onclick="insertLink()" title="Inserir Link"><i class="fas fa-link"></i></button>
+</div>
+          <textarea id="editResenha" placeholder="Sua resenha" required rows="5"></textarea>
+          <select id="editNota" required>
+            <option value="">Selecione a nota</option>
+            <option value="1">1 ⭐</option>
+            <option value="2">2 ⭐⭐</option>
+            <option value="3">3 ⭐⭐⭐</option>
+            <option value="4">4 ⭐⭐⭐⭐</option>
+            <option value="5">5 ⭐⭐⭐⭐⭐</option>
+          </select>
+          <button type="submit">Salvar Alterações</button>
+        </form>
+      </div>
+    `;
+    document.body.appendChild(editModal);
+
+    // Fechar modal
+    document.querySelector('.close-edit').onclick = () => {
+      editModal.style.display = 'none';
+    };
+
+    // Função para mostrar mensagem de não autenticado
+    function showLoginMessage() {
+      resenhasContainer.style.display = "none";
+      loginMessage.style.display = "block";
+      loadingElement.style.display = "none";
+    }
+
+    // Função para carregar TODAS as resenhas
+    async function loadResenhas() {
+      try {
+        loadingElement.textContent = "Carregando resenhas...";
+        
+        const querySnapshot = await getDocs(collection(db, "locais"));
+
+        resenhasContainer.innerHTML = '';
+
+        if (querySnapshot.empty) {
+          resenhasContainer.innerHTML = '<p>Nenhuma resenha encontrada.</p>';
+          return;
+        }
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          const card = document.createElement('div');
+          card.className = 'resenha-card';
+          
+          // Formata data
+          const dataFormatada = data.timestamp?.toDate()?.toLocaleString('pt-BR') || 'Data desconhecida';
+          
+          // Trata imagens (single ou array)
+          let imagensHTML = '';
+          if (data.imagem) {
+            if (Array.isArray(data.imagem)) {
+              imagensHTML = data.imagem.map(img => 
+                `<img src="${img}" style="max-width: 200px; margin: 5px; border-radius: 4px;">`
+              ).join('');
+            } else {
+              imagensHTML = `<img src="${data.imagem}" style="max-width: 200px; border-radius: 4px;">`;
+            }
+          }
+
+          card.innerHTML = `
+            <h3>${data.nome || 'Sem nome'}</h3>
+            <p><strong>Data:</strong> ${dataFormatada}</p>
+            <p><strong>Pedido:</strong> ${data.meu_pedido || 'Não informado'}</p>
+            <p><strong>Nota:</strong> ${'⭐'.repeat(data.nota) || 'Sem nota'}</p>
+            <div style="background: #f5f5f5; padding: 10px; border-radius: 4px; margin: 10px 0;">
+              ${data.resenha || 'Sem resenha'}
+            </div>
+            ${imagensHTML ? `<div style="margin-top: 10px;">${imagensHTML}</div>` : ''}
+            <div class="resenha-actions">
+              <button onclick="editarResenha('${doc.id}')" style="background: #4CAF50; margin-right: 10px;">
+                <i class="fas fa-edit"></i> Editar
+              </button>
+              <button onclick="deleteResenha('${doc.id}')" style="background: #f44336;">
+                <i class="fas fa-trash"></i> Deletar
+              </button>
+            </div>
+            <hr style="margin: 15px 0; border-color: #eee;">
+          `;
+          resenhasContainer.appendChild(card);
+        });
+
+      } catch (error) {
+        console.error("Erro ao carregar:", error);
+        loadingElement.innerHTML = `
+          <div style="color: red; background: #ffeeee; padding: 15px; border-radius: 8px;">
+            <p><strong>Erro ao carregar resenhas:</strong></p>
+            <p>${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    // Função para editar resenha
+    window.editarResenha = async (id) => {
+      if (!auth.currentUser) {
+        alert("⚠️ Sua sessão expirou. Faça login novamente.");
+        showLoginMessage();
+        return;
+      }
+
+      try {
+        const docRef = doc(db, "locais", id);
+        const docSnap = await getDoc(docRef);
+        
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          
+          // Preenche o formulário de edição
+          document.getElementById('editId').value = id;
+          document.getElementById('editNome').value = data.nome || '';
+          document.getElementById('editPedido').value = data.meu_pedido || '';
+          document.getElementById('editResenha').value = data.resenha || '';
+          document.getElementById('editNota').value = data.nota || '';
+          
+          // Mostra o modal
+          editModal.style.display = 'block';
+        } else {
+          alert('Resenha não encontrada!');
+        }
+      } catch (error) {
+        alert(`❌ Erro ao carregar: ${error.message}`);
+      }
+    };
+
+    // Formulário de edição
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const id = document.getElementById('editId').value;
+      const updatedData = {
+        nome: document.getElementById('editNome').value,
+        meu_pedido: document.getElementById('editPedido').value,
+        resenha: document.getElementById('editResenha').value,
+        nota: parseInt(document.getElementById('editNota').value),
+        updatedAt: new Date()
+      };
+
+      try {
+        await updateDoc(doc(db, "locais", id), updatedData);
+        alert('✅ Resenha atualizada com sucesso!');
+        editModal.style.display = 'none';
+        loadResenhas();
+      } catch (error) {
+        alert(`❌ Erro ao atualizar: ${error.message}`);
+      }
+    });
+
+    // Função global para deletar
+    window.deleteResenha = async (id) => {
+      if (!auth.currentUser) {
+        alert("⚠️ Sua sessão expirou. Faça login novamente.");
+        showLoginMessage();
+        return;
+      }
+
+      if (!confirm('Tem certeza que deseja deletar esta resenha?\n\nEsta ação não pode ser desfeita!')) return;
+      
+      try {
+        await deleteDoc(doc(db, "locais", id));
+        alert('✅ Resenha deletada com sucesso!');
+        loadResenhas();
+      } catch (error) {
+        alert(`❌ Erro ao deletar: ${error.message}`);
+      }
+    };
+
+    // Monitora estado de autenticação
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        loadResenhas();
+      } else {
+        showLoginMessage();
+      }
+    });
+
+    window.formatText = function formatText(tag) {
+        const textarea = document.getElementById('editResenha');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = textarea.value.substring(start, end);
+        
+        const tags = {
+            bold: ['<b>', '</b>'],
+            italic: ['<i>', '</i>'],
+            underline: ['<u>', '</u>'],
+            strike: ['<s>', '</s>'],
+            em: ['<em>', '</em>'],
+            mark: ['<mark>', '</mark>'],
+            small: ['<small>', '</small>'],
+            p: ['<p>', '</p>'],
+            h2: ['<h2>', '</h2>'],
+            h3: ['<h3>', '</h3>'],
+            h4: ['<h4>', '</h4>'],
+            blockquote: ['<blockquote>', '</blockquote>'],
+            hr: ['<hr>', '']
+        };
+        
+        if (tag === 'hr') {
+            textarea.value = textarea.value.substring(0, start) + tags[tag][0] + textarea.value.substring(end);
+            textarea.focus();
+            textarea.setSelectionRange(start + tags[tag][0].length, start + tags[tag][0].length);
+        } else {
+            textarea.value = textarea.value.substring(0, start) + tags[tag][0] + selectedText + tags[tag][1] + textarea.value.substring(end);
+            textarea.focus();
+            textarea.setSelectionRange(start + tags[tag][0].length, end + tags[tag][0].length);
+        }
+    };
+
+    window.insertLink = function insertLink() {
+        const textarea = document.getElementById('editResenha');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = textarea.value.substring(start, end);
+        
+        const url = prompt('Digite a URL do link:', 'https://');
+        if (!url) return;
+        
+        const text = prompt('Digite o texto do link:', selectedText || 'Clique aqui');
+        if (!text) return;
+        
+        const html = `<a href="${url}" target="_blank">${text}</a>`;
+        
+        textarea.value = textarea.value.substring(0, start) + html + textarea.value.substring(end);
+        
+        textarea.focus();
+        const newCursorPos = start + html.length;
+        textarea.setSelectionRange(newCursorPos, newCursorPos);
+    };
+
+    window.setColor = function setColor(color) {
+        const textarea = document.getElementById('editResenha');
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const selectedText = textarea.value.substring(start, end);
+        
+        if (!selectedText) {
+            alert("Selecione um texto para aplicar a cor");
+            return;
+        }
+        
+        const coloredText = `<span style="color:${color}">${selectedText}</span>`;
+        
+        textarea.value = textarea.value.substring(0, start) + coloredText + textarea.value.substring(end);
+        
+        textarea.focus();
+        textarea.setSelectionRange(start, start + coloredText.length);
+    };
+  </script>
+</head>
+<body>
+  <h1 style="text-align: center; margin: 20px 0;">Gerenciar Resenhas</h1>
+  
+  <div id="resenhas-container" style="max-width: 800px; margin: 0 auto;">
+    <p id="loading" style="text-align: center; padding: 20px;">Carregando suas resenhas...</p>
+  </div>
+
+  <div id="login-message" style="display: none; max-width: 500px; margin: 50px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center;">
+    <h2>Acesso Restrito</h2>
+    <p>Você precisa estar logado para acessar esta página.</p>
+    <p>Por favor, faça login na <a href="admin.html" style="color: #ff6b6b; text-decoration: none; font-weight: bold;">Área do Dono</a> primeiro.</p>
+  </div>
+</body>
+</html>
+

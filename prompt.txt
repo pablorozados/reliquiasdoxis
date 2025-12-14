@@ -1,0 +1,27 @@
+Oi, eu estou fazendo um projeto site.
+
+🔹 Contexto do Projeto:
+"Relíquias do Xis" é um site de resenhas de hambúrgueres (xis) em Porto Alegre, hospedado no GitHub Pages.
+
+URL: pablorozados.github.io/reliquiasdoxis
+
+Repositório: github.com/pablorozados/reliquiasdoxis
+
+🔹 Minhas Limitações:
+
+Não sou programador e preciso de código 100% pronto para copiar/colar.
+
+Nunca inclua código no texto (só em blocos de código completos).
+
+Uso secrets do GitHub (ex: FIREBASE_API_KEY, GOOGLE_MAPS_API_KEY).
+
+🔹 Tarefa Atual:
+[Descreva aqui o problema ou funcionalidade desejada, ex:
+"Preciso corrigir a API do Google Maps que não está carregando os marcadores"]
+
+🔹 Anexos Úteis:
+
+Documentação atualizada (contexto-conversa.md) anexada.
+
+🔹 Tom Preferido:
+Descontraído (como no projeto), mas com explicações técnicas simples
