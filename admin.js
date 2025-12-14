@@ -40,6 +40,13 @@ function initMap() {
       zoom: 13
     });
 
+    // Cria um marcador vazio que será atualizado quando um lugar for selecionado
+    marker = new google.maps.Marker({
+      map: map,
+      anchorPoint: new google.maps.Point(0, -29)
+    });
+    marker.setVisible(false); // Começa invisível até selecionar um local
+
     // Inicializa o autocomplete
     const input = document.getElementById('locationField');
     if (!input) {
@@ -57,11 +64,19 @@ function initMap() {
     // Listener para quando um lugar é selecionado
     autocomplete.addListener('place_changed', () => {
       console.log('Place changed detectado');
+      
+      // Verifica se marker foi inicializado
+      if (!marker) {
+        console.error('❌ Marcador não foi inicializado ainda');
+        return;
+      }
+      
       marker.setVisible(false);
       const place = autocomplete.getPlace();
 
-      if (!place.geometry) {
-        window.alert("Nenhum detalhe disponível para: '" + place.name + "'");
+      if (!place || !place.geometry) {
+        console.warn('⚠️ Nenhum detalhe disponível para: ' + (place?.name || 'local desconhecido'));
+        window.alert("Nenhum detalhe disponível para: '" + (place?.name || 'local desconhecido') + "'");
         return;
       }
 
