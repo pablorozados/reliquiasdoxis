@@ -40,27 +40,38 @@
   <!-- Admin Script -->
   <script src="admin.js"></script>
   
-  <!-- Google Maps com tratamento de erro -->
+  <!-- Google Maps - Load sem callback para evitar problemas -->
   <script>
-    window.mapsLoaded = false;
-    window.mapsError = false;
+    // Carrega o Google Maps de forma assíncrona
+    function loadGoogleMaps() {
+      const script = document.createElement('script');
+      script.src = 'https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places';
+      script.async = true;
+      script.defer = true;
+      script.onload = function() {
+        console.log('Google Maps carregado!');
+        window.mapsLoaded = true;
+        // Tenta inicializar o mapa se o DOM já está pronto
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+          if (typeof initMap === 'function') {
+            initMap();
+          }
+        }
+      };
+      script.onerror = function() {
+        console.error('Erro ao carregar Google Maps');
+        window.mapsError = true;
+      };
+      document.head.appendChild(script);
+    }
     
-    window.initMapCallback = function() {
-      window.mapsLoaded = true;
-      console.log('Google Maps carregado com sucesso!');
-      // Se initMap foi chamada antes, chamar agora
-      if (typeof initMap === 'function') {
-        initMap();
-      }
-    };
-    
-    window.gm_authFailure = function() {
-      window.mapsError = true;
-      console.error('Erro ao carregar Google Maps - verifique a API key');
-      alert('Erro ao carregar Google Maps. Verifique a chave de API.');
-    };
+    // Aguarda o DOM estar pronto antes de carregar
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadGoogleMaps);
+    } else {
+      loadGoogleMaps();
+    }
   </script>
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=places&callback=initMapCallback"></script>
 
   <style>
     :root {
@@ -221,7 +232,7 @@
       <!-- Campo de busca do local -->
       <div>
         <label for="locationField">Buscar local:</label>
-        <input id="locationField" type="text" placeholder="Digite o nome do local ou endereço">
+        <input id="locationField" type="text" placeholder="Digite o nome do local ou endereço" autocomplete="off">
       </div>
 
       <!-- Mapa -->

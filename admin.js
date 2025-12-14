@@ -26,66 +26,68 @@ function initMap() {
   
   // Aguarda o Google Maps estar carregado
   if (!window.google || !window.google.maps) {
-    console.error('Google Maps API não está carregada');
-    setTimeout(initMap, 100);
+    console.log('Google Maps API ainda não está carregada, aguardando...');
+    setTimeout(initMap, 200);
     return;
   }
   
-  console.log('Inicializando mapa do admin...');
+  console.log('✅ Inicializando mapa do admin com Google Maps carregado');
   
-  // Inicializa o mapa centralizado em Porto Alegre
-  map = new google.maps.Map(document.getElementById('map'), {
-    center: { lat: -30.0346, lng: -51.2177 },
-    zoom: 13
-  });
+  try {
+    // Inicializa o mapa centralizado em Porto Alegre
+    map = new google.maps.Map(document.getElementById('map'), {
+      center: { lat: -30.0346, lng: -51.2177 },
+      zoom: 13
+    });
 
-  // Inicializa o autocomplete
-  const input = document.getElementById('locationField');
-  if (!input) {
-    console.error('Elemento locationField não encontrado');
-    return;
-  }
-  
-  autocomplete = new google.maps.places.Autocomplete(input, {
-    types: ['establishment'],
-    componentRestrictions: { country: 'br' }
-  });
-  autocomplete.bindTo('bounds', map);
-
-  // Cria um marcador inicial (invisível)
-  marker = new google.maps.Marker({
-    map: map,
-    anchorPoint: new google.maps.Point(0, -29)
-  });
-
-  // Listener para quando um lugar é selecionado
-  autocomplete.addListener('place_changed', () => {
-    marker.setVisible(false);
-    const place = autocomplete.getPlace();
-
-    if (!place.geometry) {
-      window.alert("Nenhum detalhe disponível para: '" + place.name + "'");
+    // Inicializa o autocomplete
+    const input = document.getElementById('locationField');
+    if (!input) {
+      console.error('Elemento locationField não encontrado');
       return;
     }
-
-    // Se o lugar tem uma geometria, então apresentá-lo no mapa
-    if (place.geometry.viewport) {
-      map.fitBounds(place.geometry.viewport);
-    } else {
-      map.setCenter(place.geometry.location);
-      map.setZoom(17);
-    }
-
-    marker.setPosition(place.geometry.location);
-    marker.setVisible(true);
-
-    // Atualiza os campos de latitude e longitude
-    document.getElementById('latitude').value = place.geometry.location.lat();
-    document.getElementById('longitude').value = place.geometry.location.lng();
-    document.getElementById('nome').value = place.name;
     
-    console.log('Local selecionado:', place.name);
-  });
+    console.log('Configurando autocomplete...');
+    autocomplete = new google.maps.places.Autocomplete(input, {
+      types: ['establishment'],
+      componentRestrictions: { country: 'br' }
+    });
+    autocomplete.bindTo('bounds', map);
+
+    // Listener para quando um lugar é selecionado
+    autocomplete.addListener('place_changed', () => {
+      console.log('Place changed detectado');
+      marker.setVisible(false);
+      const place = autocomplete.getPlace();
+
+      if (!place.geometry) {
+        window.alert("Nenhum detalhe disponível para: '" + place.name + "'");
+        return;
+      }
+
+      // Se o lugar tem uma geometria, então apresentá-lo no mapa
+      if (place.geometry.viewport) {
+        map.fitBounds(place.geometry.viewport);
+      } else {
+        map.setCenter(place.geometry.location);
+        map.setZoom(17);
+      }
+
+      marker.setPosition(place.geometry.location);
+      marker.setVisible(true);
+
+      // Atualiza os campos de latitude e longitude
+      document.getElementById('latitude').value = place.geometry.location.lat();
+      document.getElementById('longitude').value = place.geometry.location.lng();
+      document.getElementById('nome').value = place.name;
+      
+      console.log('✅ Local selecionado:', place.name);
+    });
+    
+    console.log('✅ Mapa inicializado com sucesso!');
+  } catch (error) {
+    console.error('❌ Erro ao inicializar mapa:', error);
+  }
 }
 
 // Função para configurar os ratings
