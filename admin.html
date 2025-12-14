@@ -15,6 +15,9 @@
   <!-- Cloudinary -->
   <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
   
+  <!-- Quill Rich Text Editor -->
+  <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
+  
   <!-- Config Local (apenas desenvolvimento) -->
   <script>
     if (window.location.hostname === 'localhost') {
@@ -39,6 +42,9 @@
   
   <!-- Admin Script -->
   <script src="admin.js"></script>
+  
+  <!-- Quill Script -->
+  <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.js"></script>
   
   <!-- Google Maps JS API (v3) com Places -->
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=GOOGLE_MAPS_API_KEY&libraries=maps,places"></script>
@@ -200,7 +206,44 @@
       max-height: 250px;
       border-radius: 4px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      border-radius: 4px;
+    }
+
+    /* Quill Editor Styles */
+    #resenha-toolbar {
+      border: 1px solid #ccc !important;
+      border-bottom: none !important;
+      border-radius: 4px 4px 0 0 !important;
+      background: #f9f9f9 !important;
+    }
+
+    #resenha {
+      border: 1px solid #ccc !important;
+      border-top: none !important;
+      border-radius: 0 0 4px 4px !important;
+      min-height: 300px !important;
+      font-size: 16px !important;
+      font-family: inherit !important;
+    }
+
+    .ql-toolbar button:hover,
+    .ql-toolbar button:focus,
+    .ql-toolbar button.ql-active,
+    .ql-toolbar.ql-snow button:hover,
+    .ql-toolbar.ql-snow button:focus,
+    .ql-toolbar.ql-snow button.ql-active {
+      color: var(--primary) !important;
+    }
+
+    .ql-toolbar.ql-snow .ql-stroke {
+      stroke: #666 !important;
+    }
+
+    .ql-toolbar.ql-snow button:hover .ql-stroke {
+      stroke: var(--primary) !important;
+    }
+
+    .ql-toolbar.ql-snow button.ql-active .ql-stroke {
+      stroke: var(--primary) !important;
     }
 
     #placePickerInput {
@@ -349,28 +392,11 @@
         </div>
       </div>
 
-      <!-- Editor de Resenha -->
+      <!-- Editor de Resenha com Quill -->
       <div class="field-group">
         <label for="resenha">Sua resenha:</label>
-        <div class="editor-toolbar">
-          <button class="editor-btn" onclick="formatText('bold')" title="Negrito (Ctrl+B)" type="button">
-            <i class="fas fa-bold"></i>
-          </button>
-          <button class="editor-btn" onclick="formatText('italic')" title="Itálico (Ctrl+I)" type="button">
-            <i class="fas fa-italic"></i>
-          </button>
-          <button class="editor-btn" onclick="formatText('underline')" title="Sublinhado (Ctrl+U)" type="button">
-            <i class="fas fa-underline"></i>
-          </button>
-          <div class="editor-separator"></div>
-          <button class="editor-btn" onclick="insertLink()" title="Inserir Link" type="button">
-            <i class="fas fa-link"></i>
-          </button>
-          <button class="editor-btn" onclick="formatText('quote')" title="Citação" type="button">
-            <i class="fas fa-quote-right"></i>
-          </button>
-        </div>
-        <textarea id="resenha" placeholder="Digite sua resenha aqui..."></textarea>
+        <div id="resenha-toolbar" class="ql-toolbar"></div>
+        <div id="resenha" class="ql-container ql-editor"></div>
       </div>
       
       <!-- Botões de Ação -->

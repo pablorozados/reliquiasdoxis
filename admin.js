@@ -13,6 +13,7 @@ let selectedCagada = 0;
 let map;
 let marker;
 let autocomplete;
+let quill; // Quill editor instance
 
 // Inicializa o mapa do Google com Autocomplete
 function initMap() {
@@ -177,7 +178,14 @@ firebase.auth().onAuthStateChanged(async (user) => {
       const latitude = document.getElementById('latitude').value;
       const longitude = document.getElementById('longitude').value;
       const nome = document.getElementById('nome').value;
-      const resenha = resenhaInput.value.trim();
+      
+      // Obtém o conteúdo do Quill ou do textarea fallback
+      let resenha = '';
+      if (quill) {
+        resenha = quill.root.innerHTML; // HTML completo do Quill
+      } else if (resenhaInput) {
+        resenha = resenhaInput.value.trim();
+      }
 
       if (!latitude || !longitude || !nome || !resenha || !selectedNota || !selectedSujeira || !selectedCagada) {
         alert('Por favor, preencha todos os campos obrigatórios.');
@@ -203,7 +211,11 @@ firebase.auth().onAuthStateChanged(async (user) => {
         alert('Local adicionado com sucesso!');
         
         // Limpa o formulário
-        if (resenhaInput) resenhaInput.value = '';
+        if (quill) {
+          quill.setContents([]);  // Limpa o Quill
+        } else if (resenhaInput) {
+          resenhaInput.value = '';
+        }
         const locationField = document.getElementById('locationField');
         if (locationField) locationField.value = '';
         const latitudeField = document.getElementById('latitude');
@@ -249,7 +261,21 @@ firebase.auth().onAuthStateChanged(async (user) => {
 // Event listeners do formulário de login e inicialização
 document.addEventListener('DOMContentLoaded', function() {
   publicarBtn = document.getElementById("publicar");
-  resenhaInput = document.getElementById("resenha");
+  
+  // Inicializa o Quill editor
+  if (typeof Quill !== 'undefined') {
+    quill = new Quill('#resenha', {
+      theme: 'snow',
+      modules: {
+        toolbar: '#resenha-toolbar'
+      },
+      placeholder: 'Digite sua resenha aqui...'
+    });
+  } else {
+    console.error('Quill não foi carregado');
+    // Fallback para textarea
+    resenhaInput = document.getElementById("resenha");
+  }
 
   // Inicializa o mapa quando o Google Maps estiver pronto
   if (!window.google) {
