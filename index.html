@@ -28,18 +28,18 @@
   </header>
   
   <main>
-    <div id="filter-container" style="margin: 10px;">
+    <div id="filter-container" style="margin: 10px; padding: 0 10px;">
       <label for="filter-rating">Filtrar por nota:</label>
       <select id="filter-rating" onchange="filterMarkers()">
         <option value="all">Todos</option>
-        <option value="5">5 estrelas</option>
-        <option value="4">4 estrelas</option>
-        <option value="3">3 estrelas</option>
-        <option value="2">2 estrelas</option>
-        <option value="1">1 estrela</option>
+        <option value="5">5 estrelas (🥇)</option>
+        <option value="4">4 estrelas (🥈)</option>
+        <option value="3">3 estrelas (🥉)</option>
+        <option value="2">2 estrelas (🍔)</option>
+        <option value="1">1 estrela (💩)</option>
       </select>
     </div>
-    <div id="map" style="height: 500px; width: 100%; border-radius: 12px; margin-bottom: 20px;">
+    <div id="map" style="height: calc(100vh - 250px); width: 100%; border-radius: 12px; margin-bottom: 0;">
       <div class="loading-message">
         <i class="fas fa-hamburger fa-spin"></i>
         <p>Carregando mapa...</p>

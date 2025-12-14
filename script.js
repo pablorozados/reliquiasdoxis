@@ -21,17 +21,22 @@ function renderStars(num) {
   return stars + empty;
 }
 
-// Cria marcador com emoji e estrelas
+// Cria marcador com emojis por nota
 function createMarkerIcon(nota) {
-  const stars = renderStars(nota);
+  const emojiMap = {
+    5: '🥇', // Ouro
+    4: '🥈', // Prata
+    3: '🥉', // Bronze
+    2: '🍔', // Hamburguer
+    1: '💩'  // Cocô
+  };
+  const emoji = emojiMap[nota] || '🍔';
   const svg = `
     <svg width="40" height="50" viewBox="0 0 40 50" xmlns="http://www.w3.org/2000/svg">
-      <!-- Pino do marcador -->
-      <path d="M 20 0 Q 35 15 35 25 Q 35 40 20 50 Q 5 40 5 25 Q 5 15 20 0" fill="#FF6B6B" stroke="white" stroke-width="2"/>
-      <!-- Fundo branco para o emoji -->
-      <circle cx="20" cy="20" r="12" fill="white"/>
-      <!-- Emoji hamburger -->
-      <text x="20" y="24" text-anchor="middle" font-size="16">🍔</text>
+      <!-- Fundo com sombra -->
+      <circle cx="20" cy="18" r="16" fill="white" stroke="#333" stroke-width="2" opacity="0.95"/>
+      <!-- Emoji do marcador -->
+      <text x="20" y="25" text-anchor="middle" font-size="24">${emoji}</text>
     </svg>
   `;
   const encoded = encodeURIComponent(svg);
