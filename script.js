@@ -120,17 +120,17 @@ function initMap() {
               <div style="margin-bottom: 8px;">
                 <strong style="color: #FF6B6B;">Me caguei comendo?</strong> 
                 <span style="cursor: help; font-weight: bold;" title="O quanto me sujei comendo esse xis">ⓘ</span>
-                ${renderStars(local.sujeira || 0)}
+                ${renderStars(local.sujeira_comendo || 0)}
               </div>
               <div style="margin-bottom: 8px;">
                 <strong style="color: #8B4513;">Me caguei depois?</strong> 
                 <span style="cursor: help; font-weight: bold;" title="Autoexplicativo">ⓘ</span>
-                ${renderStars(local.cagada || 0)}
+                ${renderStars(local.cagada_depois || 0)}
               </div>
-              ${local.pedido ? `
+              ${local.meu_pedido ? `
                 <div style="margin-top: 10px; padding: 8px; background: #f9f9f9; border-left: 3px solid #FF6B6B; border-radius: 2px;">
                   <strong style="color: #555;">Pedido:</strong><br>
-                  <span style="font-style: italic; color: #666;">${local.pedido}</span>
+                  <span style="font-style: italic; color: #666;">${local.meu_pedido}</span>
                 </div>
               ` : ''}
             </div>
