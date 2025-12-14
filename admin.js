@@ -35,12 +35,24 @@ function initMap() {
       return;
     }
     
-    // Obtém o place picker
+    // Obtém o place picker e o input
     const placePickerElement = document.querySelector('gmp-place-picker');
+    const placePickerInput = document.getElementById('placePickerInput');
+    
     if (!placePickerElement) {
       console.error('Elemento gmp-place-picker não encontrado');
       return;
     }
+    
+    if (!placePickerInput) {
+      console.error('Elemento placePickerInput não encontrado');
+      return;
+    }
+    
+    // Vincula o input ao place picker para autocomplete
+    placePickerElement.addEventListener('gmp-place-picker-request', (e) => {
+      console.log('Place picker request:', e);
+    });
     
     // Aguarda o mapa estar inicializado
     mapElement.addEventListener('gmp-map-loaded', () => {
@@ -113,6 +125,7 @@ function initMap() {
           document.getElementById('latitude').value = placeDetails.geometry.location.lat();
           document.getElementById('longitude').value = placeDetails.geometry.location.lng();
           document.getElementById('nome').value = placeDetails.name || displayName;
+          placePickerInput.value = placeDetails.name || displayName;
           
           console.log('✅ Local selecionado:', placeDetails.name);
         }

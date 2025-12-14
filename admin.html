@@ -140,6 +140,27 @@
     gmp-place-picker {
       width: 100%;
       margin-bottom: 1rem;
+      display: block !important;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 0;
+    }
+    
+    gmp-place-picker::part(input) {
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+    }
+    
+    #placePickerInput {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
     }
     
     .rating-container {
@@ -205,11 +226,14 @@
       
       <!-- Place Picker - novo Web Component do Google Maps -->
       <div>
-        <label for="placePickerId">Buscar local:</label>
+        <label for="placePickerInput">Buscar local:</label>
+        <input 
+          id="placePickerInput"
+          type="text" 
+          placeholder="Digite o nome do local ou endereço">
         <gmp-place-picker 
           id="placePickerId"
-          map="gmp-map"
-          placeholder="Digite o nome do local ou endereço">
+          map="gmp-map">
         </gmp-place-picker>
       </div>
 
