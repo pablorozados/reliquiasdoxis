@@ -46,9 +46,39 @@ function createMarkerIcon(nota) {
 // Inicializa o mapa com tratamento de erros
 function initMap() {
   try {
+    // Estilos do mapa para remover POI comerciais inúteis
+    const mapStyles = [
+      {
+        featureType: 'poi.business',
+        stylers: [{ visibility: 'off' }]
+      },
+      {
+        featureType: 'poi.attraction',
+        stylers: [{ visibility: 'off' }]
+      },
+      {
+        featureType: 'poi.sports_complex',
+        stylers: [{ visibility: 'off' }]
+      },
+      // Manter parques, igrejas, hospitais visíveis
+      {
+        featureType: 'poi.park',
+        stylers: [{ visibility: 'on' }]
+      },
+      {
+        featureType: 'poi.place_of_worship',
+        stylers: [{ visibility: 'on' }]
+      },
+      {
+        featureType: 'poi.medical',
+        stylers: [{ visibility: 'on' }]
+      }
+    ];
+
     map = new google.maps.Map(document.getElementById("map"), {
       center: { lat: -30.0346, lng: -51.2177 },
-      zoom: 14
+      zoom: 14,
+      styles: mapStyles
     });
 
     // Carrega marcadores existentes
