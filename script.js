@@ -14,8 +14,11 @@ let markers = []; // array global de marcadores (para filtro)
 
 // Função para gerar estrelas
 function renderStars(num) {
-  const stars = Array(num).fill('⭐').join('');
-  return stars || '☆';
+  const count = parseInt(num) || 0;
+  if (count === 0) return '☆☆☆☆☆'; // 5 estrelas vazias se for 0
+  const stars = Array(count).fill('⭐').join('');
+  const empty = Array(5 - count).fill('☆').join('');
+  return stars + empty;
 }
 
 // Cria marcador com emoji e estrelas
@@ -55,7 +58,7 @@ function initMap() {
         let imagemUrl = null;
         if (local.imagem) {
           if (Array.isArray(local.imagem)) {
-            imagemUrl = local.imagem[0];
+            imagemUrl = local.imagem;
           } else {
             imagemUrl = local.imagem;
           }
@@ -77,8 +80,10 @@ function initMap() {
         markers.push({ marker, nota: local.nota });
 
         // Cria HTML enriquecido com todos os ratings, pedido e galeria de fotos
-        const galeryHtml = Array.isArray(imagemUrl) && imagemUrl.length > 0
-          ? `
+        let galeryHtml = '';
+        
+        if (Array.isArray(imagemUrl) && imagemUrl.length > 0) {
+          galeryHtml = `
             <div style="margin-top: 12px; border-top: 1px solid #eee; padding-top: 10px;">
               <p style="font-size: 12px; font-weight: 600; color: #666; margin: 0 0 8px 0;">Fotos:</p>
               <div style="display: flex; gap: 6px; flex-wrap: wrap;">
@@ -89,24 +94,24 @@ function initMap() {
                        onclick="openLightbox('${img}')"
                        crossorigin="anonymous" 
                        referrerpolicy="no-referrer" 
-                       onerror="this.style.display='none';">
+                       onerror="console.warn('Imagem não carregou:', '${img}'); this.style.display='none';">
                 `).join('')}
               </div>
             </div>
-          `
-          : (imagemUrl && typeof imagemUrl === 'string' && imagemUrl
-            ? `
-              <div style="margin-top: 12px; border-top: 1px solid #eee; padding-top: 10px;">
-                <img src="${imagemUrl}" 
-                     alt="${local.nome}" 
-                     style="width: 100%; height: auto; border-radius: 4px; cursor: pointer;" 
-                     onclick="openLightbox('${imagemUrl}')"
-                     crossorigin="anonymous" 
-                     referrerpolicy="no-referrer" 
-                     onerror="this.style.display='none';">
-              </div>
-            `
-            : '');
+          `;
+        } else if (imagemUrl && typeof imagemUrl === 'string') {
+          galeryHtml = `
+            <div style="margin-top: 12px; border-top: 1px solid #eee; padding-top: 10px;">
+              <img src="${imagemUrl}" 
+                   alt="${local.nome}" 
+                   style="width: 100%; height: auto; border-radius: 4px; cursor: pointer;" 
+                   onclick="openLightbox('${imagemUrl}')"
+                   crossorigin="anonymous" 
+                   referrerpolicy="no-referrer" 
+                   onerror="console.warn('Imagem não carregou:', '${imagemUrl}'); this.style.display='none';">
+            </div>
+          `;
+        }
 
         const infoWindowContent = `
           <div style="font-family: 'Poppins', sans-serif; max-width: 320px; padding: 10px;">
