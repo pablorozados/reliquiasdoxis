@@ -5,6 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gerenciar Resenhas - Xis POA</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- Firebase Compat (mesmo do admin.html) -->
+  <script src="https://www.gstatic.com/firebasejs/10.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.6.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore-compat.js"></script>
+
+  <!-- Config Local (apenas desenvolvimento) -->
+  <script>
+    if (window.location.hostname === 'localhost') {
+      const configScript = document.createElement('script');
+      configScript.src = 'secrets.js';
+      document.head.appendChild(configScript);
+    }
+  </script>
+
+  <!-- Firebase Config -->
+  <script>
+    const firebaseConfig = {
+      apiKey: 'FIREBASE_API_KEY',
+      authDomain: 'FIREBASE_PROJECT_ID.firebaseapp.com',
+      projectId: 'FIREBASE_PROJECT_ID',
+      storageBucket: 'FIREBASE_PROJECT_ID.appspot.com',
+      messagingSenderId: 'SEU_MESSAGING_SENDER_ID',
+      appId: 'SEU_APP_ID'
+    };
+    firebase.initializeApp(firebaseConfig);
+  </script>
+
   <style>
     .editor-toolbar {
     display: flex;
@@ -111,25 +139,11 @@
     }
   </style>
   
-  <!-- Firebase 9 (modular) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-auth.js";
-    import { getFirestore, collection, getDocs, doc, deleteDoc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/9.21.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "REDACTED_API_KEY",
-      authDomain: "reliquias-do-xis.firebaseapp.com",
-      projectId: "reliquias-do-xis",
-      storageBucket: "reliquias-do-xis.appspot.com",
-      messagingSenderId: "936551505510",
-      appId: "1:936551505510:web:22de1482a8f8d9720257a7"
-    };
-
-    // Inicialização
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  <!-- Firebase Compat JS -->
+  <script>
+    // Firebase já foi inicializado no head
+    const db = firebase.firestore();
+    const auth = firebase.auth();
 
     // Elementos da UI
     const resenhasContainer = document.getElementById("resenhas-container");
@@ -148,18 +162,15 @@
           <input type="text" id="editNome" placeholder="Nome do Local" required>
           <input type="text" id="editPedido" placeholder="Seu pedido" required>
           <div class="editor-toolbar">
-    <!-- Botões básicos de formatação -->
     <button type="button" class="editor-btn editor-btn-bold" onclick="formatText('bold')" title="Negrito"><b>B</b></button>
     <button type="button" class="editor-btn editor-btn-italic" onclick="formatText('italic')" title="Itálico"><i>I</i></button>
     <button type="button" class="editor-btn editor-btn-underline" onclick="formatText('underline')" title="Sublinhado"><u>S</u></button>
     <button type="button" class="editor-btn editor-btn-strike" onclick="formatText('strike')" title="Riscado"><s>R</s></button>
     
-    <!-- Novos botões de formatação -->
     <button type="button" class="editor-btn editor-btn-em" onclick="formatText('em')" title="Ênfase"><em>E</em></button>
     <button type="button" class="editor-btn editor-btn-mark" onclick="formatText('mark')" title="Marcado"><mark>M</mark></button>
     <button type="button" class="editor-btn editor-btn-small" onclick="formatText('small')" title="Pequeno"><small>Pq</small></button>
     
-    <!-- Estrutura de texto -->
     <button type="button" class="editor-btn editor-btn-paragraph" onclick="formatText('p')" title="Parágrafo">[P]</button>
     <button type="button" class="editor-btn editor-btn-h2" onclick="formatText('h2')" title="Título 2">[2]</button>
     <button type="button" class="editor-btn editor-btn-h3" onclick="formatText('h3')" title="Título 3">[3]</button>
@@ -167,13 +178,11 @@
     <button type="button" class="editor-btn editor-btn-quote" onclick="formatText('blockquote')" title="Citação">Cit.</button>
     <button type="button" class="editor-btn editor-btn-hr" onclick="formatText('hr')" title="Linha horizontal">HR</button>
     
-    <!-- Cores -->
     <button type="button" class="editor-btn editor-btn-red" onclick="setColor('red')" title="Vermelho">R</button>
     <button type="button" class="editor-btn editor-btn-green" onclick="setColor('green')" title="Verde">G</button>
     <button type="button" class="editor-btn editor-btn-blue" onclick="setColor('blue')" title="Azul">B</button>
     <button type="button" class="editor-btn editor-btn-yellow" onclick="setColor('yellow')" title="Amarelo">Y</button>
     
-    <!-- Link -->
     <button type="button" class="editor-btn editor-btn-link" onclick="insertLink()" title="Inserir Link"><i class="fas fa-link"></i></button>
 </div>
           <textarea id="editResenha" placeholder="Sua resenha" required rows="5"></textarea>
@@ -208,7 +217,7 @@
       try {
         loadingElement.textContent = "Carregando resenhas...";
         
-        const querySnapshot = await getDocs(collection(db, "locais"));
+        const querySnapshot = await db.collection("locais").orderBy("timestamp", "desc").get();
 
         resenhasContainer.innerHTML = '';
 
@@ -223,17 +232,17 @@
           card.className = 'resenha-card';
           
           // Formata data
-          const dataFormatada = data.timestamp?.toDate()?.toLocaleString('pt-BR') || 'Data desconhecida';
+          const dataFormatada = data.timestamp?.toDate?.()?.toLocaleString('pt-BR') || 'Data desconhecida';
           
           // Trata imagens (single ou array)
           let imagensHTML = '';
           if (data.imagem) {
             if (Array.isArray(data.imagem)) {
               imagensHTML = data.imagem.map(img => 
-                `<img src="${img}" style="max-width: 200px; margin: 5px; border-radius: 4px;">`
+                `<img src="${img}" style="max-width: 200px; margin: 5px; border-radius: 4px;" onerror="this.style.display='none'">`
               ).join('');
             } else {
-              imagensHTML = `<img src="${data.imagem}" style="max-width: 200px; border-radius: 4px;">`;
+              imagensHTML = `<img src="${data.imagem}" style="max-width: 200px; border-radius: 4px;" onerror="this.style.display='none'">`;
             }
           }
 
@@ -279,11 +288,10 @@
       }
 
       try {
-        const docRef = doc(db, "locais", id);
-        const docSnap = await getDoc(docRef);
+        const doc = await db.collection("locais").doc(id).get();
         
-        if (docSnap.exists()) {
-          const data = docSnap.data();
+        if (doc.exists) {
+          const data = doc.data();
           
           // Preenche o formulário de edição
           document.getElementById('editId').value = id;
@@ -312,11 +320,11 @@
         meu_pedido: document.getElementById('editPedido').value,
         resenha: document.getElementById('editResenha').value,
         nota: parseInt(document.getElementById('editNota').value),
-        updatedAt: new Date()
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
       };
 
       try {
-        await updateDoc(doc(db, "locais", id), updatedData);
+        await db.collection("locais").doc(id).update(updatedData);
         alert('✅ Resenha atualizada com sucesso!');
         editModal.style.display = 'none';
         loadResenhas();
@@ -336,7 +344,7 @@
       if (!confirm('Tem certeza que deseja deletar esta resenha?\n\nEsta ação não pode ser desfeita!')) return;
       
       try {
-        await deleteDoc(doc(db, "locais", id));
+        await db.collection("locais").doc(id).delete();
         alert('✅ Resenha deletada com sucesso!');
         loadResenhas();
       } catch (error) {
@@ -345,7 +353,7 @@
     };
 
     // Monitora estado de autenticação
-    onAuthStateChanged(auth, (user) => {
+    firebase.auth().onAuthStateChanged((user) => {
       if (user) {
         loadResenhas();
       } else {
