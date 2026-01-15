@@ -32,7 +32,10 @@
     };
     // Inicializa Firebase apenas se não estiver já inicializado
     if (!firebase.apps.length) {
+      console.log('🔧 Inicializando Firebase com config...');
       firebase.initializeApp(firebaseConfig);
+    } else {
+      console.log('♻️ Firebase já estava inicializado, usando app existente');
     }
   </script>
 
@@ -149,11 +152,17 @@
     // Aguarda o DOM estar completamente carregado
     document.addEventListener('DOMContentLoaded', function() {
       console.log('🔄 DOMContentLoaded iniciado');
+      console.log('📦 Apps Firebase disponíveis:', firebase.apps.length);
       
-      // Inicializa Firebase Compat agora
-      db = firebase.firestore();
-      auth = firebase.auth();
-      console.log('✅ Firebase inicializado');
+      // Obtém a app Firebase já inicializada (compartilhada com admin.html)
+      try {
+        db = firebase.firestore();
+        auth = firebase.auth();
+        console.log('✅ Firebase inicializado - DB e Auth obtidos');
+        console.log('🔐 Usuário atual:', auth.currentUser?.email || 'sem usuário ainda');
+      } catch (e) {
+        console.error('❌ Erro ao obter Firebase:', e);
+      }
       
       // Elementos da UI
       resenhasContainer = document.getElementById("resenhas-container");
@@ -165,10 +174,6 @@
         loginMessage: !!loginMessage,
         loadingElement: !!loadingElement
       });
-      // Elementos da UI
-      resenhasContainer = document.getElementById("resenhas-container");
-      loginMessage = document.getElementById("login-message");
-      loadingElement = document.getElementById("loading");
 
       // Modal de Edição
       editModal = document.createElement('div');
