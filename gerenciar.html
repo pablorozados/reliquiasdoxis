@@ -148,24 +148,17 @@
       console.log('🔄 DOMContentLoaded iniciado');
       console.log('📦 Apps Firebase disponíveis:', firebase.apps.length);
       
-      // Verifica se Firebase foi inicializado
-      if (firebase.apps.length === 0) {
-        console.error('❌ ERRO CRÍTICO: Firebase não foi inicializado!');
-        console.error('Você precisa estar vindo de admin.html ou ter inicializado Firebase em outra página');
-        document.getElementById("login-message").style.display = "block";
-        document.getElementById("resenhas-container").style.display = "none";
-        document.getElementById("loading").style.display = "none";
-        return;
-      }
-      
-      // Obtém a app Firebase já inicializada (compartilhada com admin.html)
+      // Tenta obter Firebase
       try {
         db = firebase.firestore();
         auth = firebase.auth();
         console.log('✅ Firebase inicializado - DB e Auth obtidos');
-        console.log('🔐 Usuário atual:', auth.currentUser?.email || 'sem usuário ainda');
       } catch (e) {
         console.error('❌ Erro ao obter Firebase:', e);
+        document.getElementById("login-message").style.display = "block";
+        document.getElementById("resenhas-container").style.display = "none";
+        document.getElementById("loading").style.display = "none";
+        return;
       }
       
       // Elementos da UI
@@ -178,6 +171,27 @@
         loginMessage: !!loginMessage,
         loadingElement: !!loadingElement
       });
+
+      // Handler do formulário de login
+      const loginForm = document.getElementById('login-form');
+      if (loginForm) {
+        loginForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const email = document.getElementById('login-email').value;
+          const password = document.getElementById('login-password').value;
+          const errorDiv = document.getElementById('login-error');
+          
+          try {
+            errorDiv.style.display = 'none';
+            const result = await auth.signInWithEmailAndPassword(email, password);
+            console.log('✅ Login bem-sucedido:', result.user.email);
+          } catch (error) {
+            console.error('❌ Erro no login:', error.message);
+            errorDiv.textContent = '❌ ' + error.message;
+            errorDiv.style.display = 'block';
+          }
+        });
+      }
 
       // Modal de Edição
       editModal = document.createElement('div');
@@ -479,10 +493,14 @@
     <p id="loading" style="text-align: center; padding: 20px;">Carregando suas resenhas...</p>
   </div>
 
-  <div id="login-message" style="display: none; max-width: 500px; margin: 50px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); text-align: center;">
-    <h2>Acesso Restrito</h2>
-    <p>Você precisa estar logado para acessar esta página.</p>
-    <p>Por favor, faça login na <a href="admin.html" style="color: #ff6b6b; text-decoration: none; font-weight: bold;">Área do Dono</a> primeiro.</p>
+  <div id="login-message" style="display: none; max-width: 500px; margin: 50px auto; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h2 style="text-align: center;">Faça Login</h2>
+    <form id="login-form" style="display: flex; flex-direction: column; gap: 10px;">
+      <input type="email" id="login-email" placeholder="Email" required style="padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+      <input type="password" id="login-password" placeholder="Senha" required style="padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+      <button type="submit" style="padding: 10px; background: #ff6b6b; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">Login</button>
+      <div id="login-error" style="color: red; font-size: 12px; display: none;"></div>
+    </form>
   </div>
 </body>
 </html>
