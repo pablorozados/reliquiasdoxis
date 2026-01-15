@@ -145,65 +145,102 @@
     const db = firebase.firestore();
     const auth = firebase.auth();
 
-    // Elementos da UI
-    const resenhasContainer = document.getElementById("resenhas-container");
-    const loginMessage = document.getElementById("login-message");
-    const loadingElement = document.getElementById("loading");
+    let resenhasContainer, loginMessage, loadingElement, editModal;
 
-    // Modal de Edição
-    const editModal = document.createElement('div');
-    editModal.className = 'edit-modal';
-    editModal.innerHTML = `
-      <div class="edit-modal-content">
-        <span class="close-edit">&times;</span>
-        <h2>Editar Resenha</h2>
-        <form class="edit-form" id="editForm">
-          <input type="hidden" id="editId">
-          <input type="text" id="editNome" placeholder="Nome do Local" required>
-          <input type="text" id="editPedido" placeholder="Seu pedido" required>
-          <div class="editor-toolbar">
-    <button type="button" class="editor-btn editor-btn-bold" onclick="formatText('bold')" title="Negrito"><b>B</b></button>
-    <button type="button" class="editor-btn editor-btn-italic" onclick="formatText('italic')" title="Itálico"><i>I</i></button>
-    <button type="button" class="editor-btn editor-btn-underline" onclick="formatText('underline')" title="Sublinhado"><u>S</u></button>
-    <button type="button" class="editor-btn editor-btn-strike" onclick="formatText('strike')" title="Riscado"><s>R</s></button>
-    
-    <button type="button" class="editor-btn editor-btn-em" onclick="formatText('em')" title="Ênfase"><em>E</em></button>
-    <button type="button" class="editor-btn editor-btn-mark" onclick="formatText('mark')" title="Marcado"><mark>M</mark></button>
-    <button type="button" class="editor-btn editor-btn-small" onclick="formatText('small')" title="Pequeno"><small>Pq</small></button>
-    
-    <button type="button" class="editor-btn editor-btn-paragraph" onclick="formatText('p')" title="Parágrafo">[P]</button>
-    <button type="button" class="editor-btn editor-btn-h2" onclick="formatText('h2')" title="Título 2">[2]</button>
-    <button type="button" class="editor-btn editor-btn-h3" onclick="formatText('h3')" title="Título 3">[3]</button>
-    <button type="button" class="editor-btn editor-btn-h4" onclick="formatText('h4')" title="Título 4">[4]</button>
-    <button type="button" class="editor-btn editor-btn-quote" onclick="formatText('blockquote')" title="Citação">Cit.</button>
-    <button type="button" class="editor-btn editor-btn-hr" onclick="formatText('hr')" title="Linha horizontal">HR</button>
-    
-    <button type="button" class="editor-btn editor-btn-red" onclick="setColor('red')" title="Vermelho">R</button>
-    <button type="button" class="editor-btn editor-btn-green" onclick="setColor('green')" title="Verde">G</button>
-    <button type="button" class="editor-btn editor-btn-blue" onclick="setColor('blue')" title="Azul">B</button>
-    <button type="button" class="editor-btn editor-btn-yellow" onclick="setColor('yellow')" title="Amarelo">Y</button>
-    
-    <button type="button" class="editor-btn editor-btn-link" onclick="insertLink()" title="Inserir Link"><i class="fas fa-link"></i></button>
-</div>
-          <textarea id="editResenha" placeholder="Sua resenha" required rows="5"></textarea>
-          <select id="editNota" required>
-            <option value="">Selecione a nota</option>
-            <option value="1">1 ⭐</option>
-            <option value="2">2 ⭐⭐</option>
-            <option value="3">3 ⭐⭐⭐</option>
-            <option value="4">4 ⭐⭐⭐⭐</option>
-            <option value="5">5 ⭐⭐⭐⭐⭐</option>
-          </select>
-          <button type="submit">Salvar Alterações</button>
-        </form>
-      </div>
-    `;
-    document.body.appendChild(editModal);
+    // Aguarda o DOM estar completamente carregado
+    document.addEventListener('DOMContentLoaded', function() {
+      // Elementos da UI
+      resenhasContainer = document.getElementById("resenhas-container");
+      loginMessage = document.getElementById("login-message");
+      loadingElement = document.getElementById("loading");
 
-    // Fechar modal
-    document.querySelector('.close-edit').onclick = () => {
-      editModal.style.display = 'none';
-    };
+      // Modal de Edição
+      editModal = document.createElement('div');
+      editModal.className = 'edit-modal';
+      editModal.innerHTML = `
+        <div class="edit-modal-content">
+          <span class="close-edit">&times;</span>
+          <h2>Editar Resenha</h2>
+          <form class="edit-form" id="editForm">
+            <input type="hidden" id="editId">
+            <input type="text" id="editNome" placeholder="Nome do Local" required>
+            <input type="text" id="editPedido" placeholder="Seu pedido" required>
+            <div class="editor-toolbar">
+      <button type="button" class="editor-btn editor-btn-bold" onclick="formatText('bold')" title="Negrito"><b>B</b></button>
+      <button type="button" class="editor-btn editor-btn-italic" onclick="formatText('italic')" title="Itálico"><i>I</i></button>
+      <button type="button" class="editor-btn editor-btn-underline" onclick="formatText('underline')" title="Sublinhado"><u>S</u></button>
+      <button type="button" class="editor-btn editor-btn-strike" onclick="formatText('strike')" title="Riscado"><s>R</s></button>
+      
+      <button type="button" class="editor-btn editor-btn-em" onclick="formatText('em')" title="Ênfase"><em>E</em></button>
+      <button type="button" class="editor-btn editor-btn-mark" onclick="formatText('mark')" title="Marcado"><mark>M</mark></button>
+      <button type="button" class="editor-btn editor-btn-small" onclick="formatText('small')" title="Pequeno"><small>Pq</small></button>
+      
+      <button type="button" class="editor-btn editor-btn-paragraph" onclick="formatText('p')" title="Parágrafo">[P]</button>
+      <button type="button" class="editor-btn editor-btn-h2" onclick="formatText('h2')" title="Título 2">[2]</button>
+      <button type="button" class="editor-btn editor-btn-h3" onclick="formatText('h3')" title="Título 3">[3]</button>
+      <button type="button" class="editor-btn editor-btn-h4" onclick="formatText('h4')" title="Título 4">[4]</button>
+      <button type="button" class="editor-btn editor-btn-quote" onclick="formatText('blockquote')" title="Citação">Cit.</button>
+      <button type="button" class="editor-btn editor-btn-hr" onclick="formatText('hr')" title="Linha horizontal">HR</button>
+      
+      <button type="button" class="editor-btn editor-btn-red" onclick="setColor('red')" title="Vermelho">R</button>
+      <button type="button" class="editor-btn editor-btn-green" onclick="setColor('green')" title="Verde">G</button>
+      <button type="button" class="editor-btn editor-btn-blue" onclick="setColor('blue')" title="Azul">B</button>
+      <button type="button" class="editor-btn editor-btn-yellow" onclick="setColor('yellow')" title="Amarelo">Y</button>
+      
+      <button type="button" class="editor-btn editor-btn-link" onclick="insertLink()" title="Inserir Link"><i class="fas fa-link"></i></button>
+  </div>
+            <textarea id="editResenha" placeholder="Sua resenha" required rows="5"></textarea>
+            <select id="editNota" required>
+              <option value="">Selecione a nota</option>
+              <option value="1">1 ⭐</option>
+              <option value="2">2 ⭐⭐</option>
+              <option value="3">3 ⭐⭐⭐</option>
+              <option value="4">4 ⭐⭐⭐⭐</option>
+              <option value="5">5 ⭐⭐⭐⭐⭐</option>
+            </select>
+            <button type="submit">Salvar Alterações</button>
+          </form>
+        </div>
+      `;
+      document.body.appendChild(editModal);
+
+      // Fechar modal
+      document.querySelector('.close-edit').onclick = () => {
+        editModal.style.display = 'none';
+      };
+
+      // Monitora estado de autenticação
+      firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+          loadResenhas();
+        } else {
+          showLoginMessage();
+        }
+      });
+
+      // Formulário de edição
+      document.getElementById('editForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const id = document.getElementById('editId').value;
+        const updatedData = {
+          nome: document.getElementById('editNome').value,
+          meu_pedido: document.getElementById('editPedido').value,
+          resenha: document.getElementById('editResenha').value,
+          nota: parseInt(document.getElementById('editNota').value),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        };
+
+        try {
+          await db.collection("locais").doc(id).update(updatedData);
+          alert('✅ Resenha atualizada com sucesso!');
+          editModal.style.display = 'none';
+          loadResenhas();
+        } catch (error) {
+          alert(`❌ Erro ao atualizar: ${error.message}`);
+        }
+      });
+    });
 
     // Função para mostrar mensagem de não autenticado
     function showLoginMessage() {
@@ -267,6 +304,9 @@
           `;
           resenhasContainer.appendChild(card);
         });
+        
+        loadingElement.style.display = "none";
+        resenhasContainer.style.display = "block";
 
       } catch (error) {
         console.error("Erro ao carregar:", error);
@@ -310,29 +350,6 @@
       }
     };
 
-    // Formulário de edição
-    document.getElementById('editForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const id = document.getElementById('editId').value;
-      const updatedData = {
-        nome: document.getElementById('editNome').value,
-        meu_pedido: document.getElementById('editPedido').value,
-        resenha: document.getElementById('editResenha').value,
-        nota: parseInt(document.getElementById('editNota').value),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      };
-
-      try {
-        await db.collection("locais").doc(id).update(updatedData);
-        alert('✅ Resenha atualizada com sucesso!');
-        editModal.style.display = 'none';
-        loadResenhas();
-      } catch (error) {
-        alert(`❌ Erro ao atualizar: ${error.message}`);
-      }
-    });
-
     // Função global para deletar
     window.deleteResenha = async (id) => {
       if (!auth.currentUser) {
@@ -351,15 +368,6 @@
         alert(`❌ Erro ao deletar: ${error.message}`);
       }
     };
-
-    // Monitora estado de autenticação
-    firebase.auth().onAuthStateChanged((user) => {
-      if (user) {
-        loadResenhas();
-      } else {
-        showLoginMessage();
-      }
-    });
 
     window.formatText = function formatText(tag) {
         const textarea = document.getElementById('editResenha');
