@@ -267,7 +267,16 @@ document.addEventListener('DOMContentLoaded', function() {
     quill = new Quill('#resenha', {
       theme: 'snow',
       modules: {
-        toolbar: '#resenha-toolbar'
+        toolbar: [
+          ['bold', 'italic', 'underline', 'strike'],
+          ['blockquote', 'code-block'],
+          [{ 'header': 1 }, { 'header': 2 }],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'color': [] }, { 'background': [] }],
+          [{ 'align': [] }],
+          ['link', 'image'],
+          ['clean']
+        ]
       },
       placeholder: 'Digite sua resenha aqui...'
     });
