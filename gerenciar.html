@@ -20,25 +20,6 @@
     }
   </script>
 
-  <!-- Firebase Config -->
-  <script>
-    const firebaseConfig = {
-      apiKey: 'FIREBASE_API_KEY',
-      authDomain: 'FIREBASE_PROJECT_ID.firebaseapp.com',
-      projectId: 'FIREBASE_PROJECT_ID',
-      storageBucket: 'FIREBASE_PROJECT_ID.appspot.com',
-      messagingSenderId: 'SEU_MESSAGING_SENDER_ID',
-      appId: 'SEU_APP_ID'
-    };
-    // Inicializa Firebase apenas se não estiver já inicializado
-    if (!firebase.apps.length) {
-      console.log('🔧 Inicializando Firebase com config...');
-      firebase.initializeApp(firebaseConfig);
-    } else {
-      console.log('♻️ Firebase já estava inicializado, usando app existente');
-    }
-  </script>
-
   <style>
     .editor-toolbar {
     display: flex;
@@ -153,6 +134,16 @@
     document.addEventListener('DOMContentLoaded', function() {
       console.log('🔄 DOMContentLoaded iniciado');
       console.log('📦 Apps Firebase disponíveis:', firebase.apps.length);
+      
+      // Verifica se Firebase foi inicializado
+      if (firebase.apps.length === 0) {
+        console.error('❌ ERRO CRÍTICO: Firebase não foi inicializado!');
+        console.error('Você precisa estar vindo de admin.html ou ter inicializado Firebase em outra página');
+        document.getElementById("login-message").style.display = "block";
+        document.getElementById("resenhas-container").style.display = "none";
+        document.getElementById("loading").style.display = "none";
+        return;
+      }
       
       // Obtém a app Firebase já inicializada (compartilhada com admin.html)
       try {
