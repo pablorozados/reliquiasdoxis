@@ -144,14 +144,27 @@
   
   <!-- Firebase Compat JS -->
   <script>
-    // Firebase já foi inicializado no head
-    const db = firebase.firestore();
-    const auth = firebase.auth();
-
-    let resenhasContainer, loginMessage, loadingElement, editModal;
+    let db, auth, resenhasContainer, loginMessage, loadingElement, editModal;
 
     // Aguarda o DOM estar completamente carregado
     document.addEventListener('DOMContentLoaded', function() {
+      console.log('🔄 DOMContentLoaded iniciado');
+      
+      // Inicializa Firebase Compat agora
+      db = firebase.firestore();
+      auth = firebase.auth();
+      console.log('✅ Firebase inicializado');
+      
+      // Elementos da UI
+      resenhasContainer = document.getElementById("resenhas-container");
+      loginMessage = document.getElementById("login-message");
+      loadingElement = document.getElementById("loading");
+      
+      console.log('✅ Elementos DOM obtidos:', {
+        resenhasContainer: !!resenhasContainer,
+        loginMessage: !!loginMessage,
+        loadingElement: !!loadingElement
+      });
       // Elementos da UI
       resenhasContainer = document.getElementById("resenhas-container");
       loginMessage = document.getElementById("login-message");
@@ -212,16 +225,18 @@
         editModal.style.display = 'none';
       };
 
-      // Monitora estado de autenticação com pequeno delay para garantir que Firebase está pronto
-      setTimeout(() => {
-        firebase.auth().onAuthStateChanged((user) => {
-          if (user) {
-            loadResenhas();
-          } else {
-            showLoginMessage();
-          }
-        });
-      }, 100);
+      // Monitora estado de autenticação
+      console.log('🔍 Verificando estado de autenticação...');
+      auth.onAuthStateChanged((user) => {
+        console.log('👤 Usuário:', user?.email || 'NÃO LOGADO');
+        if (user) {
+          console.log('✅ Usuário autenticado! Carregando resenhas...');
+          loadResenhas();
+        } else {
+          console.log('❌ Usuário NÃO autenticado. Mostrando mensagem de login.');
+          showLoginMessage();
+        }
+      });
 
       // Formulário de edição
       document.getElementById('editForm').addEventListener('submit', async (e) => {
