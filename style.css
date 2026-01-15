@@ -1,0 +1,184 @@
+body {
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  background: #ff6b6b;
+  color: white;
+  padding: 1rem;
+  text-align: center;
+}
+
+#map {
+  height: 70vh;
+  width: 100%;
+}
+
+.loading-message, .error, .info {
+  text-align: center;
+  padding: 2rem;
+  font-size: 1.2rem;
+}
+
+.info-window {
+  max-width: 250px;
+  padding: 10px;
+}
+
+.thumb {
+  max-width: 100%;
+  max-height: 150px;
+  cursor: pointer;
+}
+
+.star { color: #FFD700; }
+.hamburger { color: #8B4513; }
+.poo { color: #A0522D; }
+.empty { opacity: 0.3; }
+
+/* ===== ATUALIZAÇÕES SOLICITADAS ===== */
+/* Imagens em thumb com lightbox */
+.thumbnail {
+  max-width: 100%;
+  max-height: 150px;
+  border-radius: 8px;
+  cursor: zoom-in;
+  transition: all 0.3s;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.thumbnail:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+/* Lightbox */
+#lightbox {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.9);
+  z-index: 1000;
+  text-align: center;
+}
+
+#lightbox img {
+  max-width: 90%;
+  max-height: 90%;
+  margin-top: 5%;
+  border-radius: 8px;
+  border: 2px solid #ff6b6b;
+}
+
+/* Janela de informações padronizada */
+.info-window-content {
+  width: 100% !important;
+  min-width: 600px !important; /* igual ao maxWidth do InfoWindow */
+  max-width: 800px !important; /* igual ao maxWidth do InfoWindow */
+  box-sizing: border-box;
+  padding: 20px !important;
+  font-family: 'Poppins', sans-serif !important;
+}
+
+.pedido-destaque {
+  background-color: #fff5f5;
+  padding: 12px;
+  border-radius: 8px;
+  border-left: 4px solid #ff6b6b;
+  font-style: italic;
+  margin: 10px 0;
+}
+
+.resenha-texto {
+  background-color: #f9f9f9;
+  padding: 12px;
+  border-radius: 8px;
+  margin: 10px 0;
+  line-height: 1.5;
+}
+
+/* Tooltips melhorados */
+.tooltip-icon {
+  cursor: help;
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background-color: #ff6b6b;
+  color: white;
+  border-radius: 50%;
+  text-align: center;
+  font-size: 12px;
+  line-height: 18px;
+  margin-left: 5px;
+}
+
+/* Tooltips funcionais */
+.tooltip-icon {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  background-color: #ff6b6b;
+  color: white;
+  border-radius: 50%;
+  text-align: center;
+  font-size: 12px;
+  line-height: 18px;
+  margin-left: 5px;
+  position: relative;
+  cursor: help;
+}
+
+.tooltip-text {
+  visibility: hidden;
+  width: 200px;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px;
+  position: absolute;
+  z-index: 1000;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.3s;
+  font-size: 0.8rem;
+}
+
+.tooltip-icon:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Janela maior */
+.info-window-content {
+  width: 350px !important; /* Aumentei de 300 para 350 */
+  max-height: 600px !important; /* Aumentei a altura máxima */
+  padding: 20px !important;
+}
+
+/* Layout para múltiplas imagens */
+.thumbnail-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.thumbnail {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: zoom-in;
+  transition: transform 0.3s;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
