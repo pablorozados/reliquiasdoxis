@@ -18,26 +18,17 @@
   <!-- Quill Rich Text Editor -->
   <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
   
-  <!-- Config Local (apenas desenvolvimento) -->
-  <script>
-    if (window.location.hostname === 'localhost') {
-      const configScript = document.createElement('script');
-      configScript.src = 'secrets.js';
-      document.head.appendChild(configScript);
-    }
-  </script>
+  <!-- Config do Firebase e APIs -->
+  <script src="config.js"></script>
   
   <!-- Firebase Config -->
   <script>
-    const firebaseConfig = {
-      apiKey: 'FIREBASE_API_KEY',
-      authDomain: 'FIREBASE_PROJECT_ID.firebaseapp.com',
-      projectId: 'FIREBASE_PROJECT_ID',
-      storageBucket: 'FIREBASE_PROJECT_ID.appspot.com',
-      messagingSenderId: 'SEU_MESSAGING_SENDER_ID',
-      appId: 'SEU_APP_ID'
-    };
-    firebase.initializeApp(firebaseConfig);
+    if (typeof config !== 'undefined' && config.firebase) {
+      firebase.initializeApp(config.firebase);
+      console.log('✅ Firebase inicializado com config.js');
+    } else {
+      console.error('❌ config.js não foi carregado!');
+    }
   </script>
   
   <!-- Admin Script -->

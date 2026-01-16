@@ -6,29 +6,22 @@
   <title>Gerenciar Resenhas - Xis POA</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   
-  <!-- Firebase Compat (mesmo do admin.html) -->
+  <!-- Config do Firebase e APIs -->
+  <script src="config.js"></script>
+
+  <!-- Firebase Compat -->
   <script src="https://www.gstatic.com/firebasejs/10.6.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.6.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.6.0/firebase-firestore-compat.js"></script>
 
-  <!-- Config Local (apenas desenvolvimento) - carrega ANTES de Firebase Config -->
-  <script src="secrets.js" onerror="console.log('⚠️ secrets.js não encontrado, usando placeholders')"></script>
-
-  <!-- Firebase Config -->
+  <!-- Firebase Initialization -->
   <script>
-    // Usa firebaseConfig de secrets.js se disponível, senão usa placeholders
-    if (!window.firebaseConfig) {
-      window.firebaseConfig = {
-        apiKey: 'FIREBASE_API_KEY',
-        authDomain: 'FIREBASE_PROJECT_ID.firebaseapp.com',
-        projectId: 'FIREBASE_PROJECT_ID',
-        storageBucket: 'FIREBASE_PROJECT_ID.appspot.com',
-        messagingSenderId: 'SEU_MESSAGING_SENDER_ID',
-        appId: 'SEU_APP_ID'
-      };
+    if (typeof config !== 'undefined' && config.firebase) {
+      firebase.initializeApp(config.firebase);
+      console.log('✅ Firebase inicializado com config.js');
+    } else {
+      console.error('❌ config.js não foi carregado!');
     }
-    firebase.initializeApp(window.firebaseConfig);
-    console.log('✅ Firebase inicializado com projectId:', window.firebaseConfig.projectId);
   </script>
 
   <style>
