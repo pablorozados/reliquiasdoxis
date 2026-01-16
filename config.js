@@ -1,7 +1,7 @@
-// config.js - Arquivo para armazenar as chaves de API de forma segura
+// config.js - Configuração do Firebase para o browser
 const config = {
     firebase: {
-        apiKey: process.env.FIREBASE_API_KEY || "REDACTED_API_KEY",
+        apiKey: "AIzaSyAEcQDgKssjXZQ54Bsid3vPIKiGm36l4wM",
         authDomain: "reliquiasdoxis.firebaseapp.com",
         projectId: "reliquiasdoxis",
         storageBucket: "reliquiasdoxis.appspot.com",
@@ -9,6 +9,6 @@ const config = {
         appId: "1:673027539850:web:c8c5fa9e5dbff158cf92ed"
     },
     googleMaps: {
-        apiKey: process.env.GOOGLE_MAPS_API_KEY || "REDACTED_API_KEY"
+        apiKey: "AIzaSyBjfkEwQ_gpYGjRlY9deWCoddEmrBNOQDc"
     }
 };
